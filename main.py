@@ -17,7 +17,8 @@ def main():
     connection = setup()
 
     seek = Seek(connection)
-    seek.download_new_jobs('programmer')
+    for term in SEARCH_TERMS:
+        seek.download_new_jobs(term)
 
     deduplicate(connection)
     easy_filter(connection)
@@ -27,7 +28,7 @@ def setup():
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
     requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-    cursor.execute('CREATE TABLE IF NOT EXISTS jobs(id STRING UNIQUE, title STRING, company STRING, file STRING, duplicate BOOLEAN, status STRING)')
+    cursor.execute('CREATE TABLE IF NOT EXISTS jobs(id STRING UNIQUE, title STRING, company STRING, file STRING, duplicate BOOLEAN, status STRING, site STRING)')
     if not os.path.exists('job_descriptions'):
         os.mkdir('job_descriptions')
 

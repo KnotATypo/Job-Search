@@ -46,6 +46,14 @@ class Seek(Site):
     def download_new_jobs(self, query) -> None:
         print(f'Searching for "{query}"')
         seek_jobs = self.list_all_jobs(query)
+        remove_list = set()
+        for i, job_source in enumerate(seek_jobs):
+            for j, job_test in enumerate(seek_jobs):
+                if i == j: continue
+                if job_source.link == job_test.link:
+                    if job_source not in remove_list:
+                        remove_list.add(job_test)
+        seek_jobs = [x for x in seek_jobs if x not in remove_list]
 
         result = self.cursor.execute('SELECT id FROM jobs').fetchall()
         old_job_ids = [x[0] for x in result]
@@ -63,12 +71,9 @@ class Seek(Site):
                 # Potential to turn the HTML into Markdown
                 # text = html2text(str(match))
                 f.write(match.prettify())
-            try:
-                self.cursor.execute(f"INSERT INTO jobs VALUES('{i[0]}', '{i[1]}', '{i[2]}', '{file_name}', false, 'new')")
-                self.connection.commit()
-            except sqlite3.IntegrityError as ignored:
-                # Ocassionally the id checking breaks, we can just ignore the errors since the duplicate file just overwrites itself
-                pass
+            self.cursor.execute(f"INSERT INTO jobs VALUES('{i[0]}', '{i[1]}', '{i[2]}', '{file_name}', false, 'new', 'seek')")
+            self.connection.commit()
+
 
     def list_all_jobs(self, query) -> List[JobDetails]:
         page = 0
