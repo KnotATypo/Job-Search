@@ -1,7 +1,9 @@
 import re
 import sqlite3
 import os
-from collections import defaultdict
+from collections import defaultdict, namedtuple
+from bs4.element import Tag
+from typing_extensions import List, Tuple
 
 import requests
 from html2text import html2text
@@ -9,6 +11,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from urllib3.exceptions import InsecureRequestWarning
 
+JobDetails = namedtuple('JobDetails', ['link', 'title', 'company'])
 
 class Site:
     BASE_URL: str
@@ -17,19 +20,19 @@ class Site:
     connection: sqlite3.Connection
 
     def __init__(self):
-        pass
+        raise NotImplemented
 
-    def download_new_jobs(self, query):
-        pass
+    def download_new_jobs(self, query) -> None:
+        raise NotImplemented
 
-    def list_all_jobs(self, query):
-        pass
+    def list_all_jobs(self, query) -> List[JobDetails]:
+        raise NotImplemented
 
-    def get_jobs_from_page(self, page_number, query):
-        pass
+    def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
+        raise NotImplemented
 
-    def extract_job_info(self, job):
-        pass
+    def extract_job_info(self, job) -> JobDetails:
+        raise NotImplemented
 
 
 class Seek(Site):
@@ -40,7 +43,7 @@ class Seek(Site):
         self.connection = db_connection
         self.cursor = db_connection.cursor()
 
-    def download_new_jobs(self, query):
+    def download_new_jobs(self, query) -> None:
         print(f'Searching for "{query}"')
         seek_jobs = self.list_all_jobs(query)
 
@@ -52,7 +55,8 @@ class Seek(Site):
         for i in tqdm(seek_jobs, desc='Getting jobs', unit=' job'):
             response = requests.get(self.JOB_URL + i[0], verify=False)
             soup = BeautifulSoup(response.text, features="html.parser")
-            match = soup.find('div', attrs={'data-automation': 'jobAdDetails'}).contents[0]
+            body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
+            match: Tag = body.contents[0]
 
             file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
             with open('job_descriptions/' + file_name, 'w+') as f:
@@ -66,7 +70,7 @@ class Seek(Site):
                 # Ocassionally the id checking breaks, we can just ignore the errors since the duplicate file just overwrites itself
                 pass
 
-    def list_all_jobs(self, query):
+    def list_all_jobs(self, query) -> List[JobDetails]:
         page = 0
         seek_jobs = []
         this_page = []
@@ -83,17 +87,16 @@ class Seek(Site):
                 pbar.update()
         return seek_jobs
 
-    def get_jobs_from_page(self, page_number, query):
+    def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         response = requests.get(self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}', verify=False)
         if response.status_code != 200:
-            print('The response returned a non-200 status. Stopping...')
-            return
+            print('The response returned a non-200 status.')
 
         soup = BeautifulSoup(response.text, features="html.parser")
         matches = soup.find_all('a', attrs={'data-automation': 'jobTitle'})
         return [self.extract_job_info(x) for x in matches]
 
-    def extract_job_info(self, job):
+    def extract_job_info(self, job) -> JobDetails:
         link = job['href']
         link = link[link.rindex('/') + 1:link.index('?')]
         title = job.string
@@ -102,4 +105,4 @@ class Seek(Site):
             company = company_field.string
         else:
             company = 'Private Advertiser'
-        return link, title, company
+        return JobDetails(link, title, company)

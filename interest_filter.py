@@ -12,7 +12,7 @@ def main():
     last_file = ''
     for i, (name, file) in tqdm(enumerate(jobs)):
         choice = 0
-        while choice not in {'n', 'y', 'undo'}:
+        while choice not in {'n', 'y'}:
             choice = input(f'\n{name}\nAre you interested? [y/n/undo]: ')
             choice = choice.lower()
             if choice == 'undo':
