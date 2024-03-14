@@ -1,8 +1,6 @@
 import sqlite3
 import os
 
-from tqdm import tqdm
-
 def main():
     connection = sqlite3.connect('jobs.db')
     cursor = connection.cursor()
@@ -10,10 +8,11 @@ def main():
     jobs = cursor.execute("SELECT DISTINCT(title), file FROM jobs WHERE status='new'").fetchall()
     jobs.sort(key=lambda x: x[1])
     last_file = ''
-    for i, (name, file) in tqdm(enumerate(jobs)):
+    for i, (name, file) in enumerate(jobs):
         choice = 0
+        print(f'{i}/{len(jobs)}')
         while choice not in {'n', 'y'}:
-            choice = input(f'\n{name}\nAre you interested? [y/n/undo]: ')
+            choice = input(f'{name}\nAre you interested? [y/n/undo]: ')
             choice = choice.lower()
             if choice == 'undo':
                 cursor.execute(f"UPDATE jobs SET status='new' WHERE file='{jobs[i - 1][1]}'")

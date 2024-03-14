@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from urllib3.exceptions import InsecureRequestWarning
 
-JobDetails = namedtuple('JobDetails', ['link', 'title', 'company'])
+JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
 
 class Site:
     BASE_URL: str
@@ -50,7 +50,7 @@ class Seek(Site):
         for i, job_source in enumerate(seek_jobs):
             for j, job_test in enumerate(seek_jobs):
                 if i == j: continue
-                if job_source.link == job_test.link:
+                if job_source.id == job_test.id:
                     if job_source not in remove_list:
                         remove_list.add(job_test)
         seek_jobs = [x for x in seek_jobs if x not in remove_list]
@@ -66,12 +66,14 @@ class Seek(Site):
             body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
             match: Tag = body.contents[0]
 
+            # Removing the ' because it screws with db stuff
+            i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
             file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
             with open('job_descriptions/' + file_name, 'w+') as f:
                 # Potential to turn the HTML into Markdown
                 # text = html2text(str(match))
                 f.write(match.prettify())
-            self.cursor.execute(f"INSERT INTO jobs VALUES('{i[0]}', '{i[1]}', '{i[2]}', '{file_name}', false, 'new', 'seek')")
+            self.cursor.execute(f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'seek')")
             self.connection.commit()
 
 
@@ -103,11 +105,11 @@ class Seek(Site):
 
     def extract_job_info(self, job) -> JobDetails:
         link = job['href']
-        link = link[link.rindex('/') + 1:link.index('?')]
+        id = link[link.rindex('/') + 1:link.index('?')]
         title = job.string
         company_field = job.parent.parent.parent.find('a', attrs={'data-automation': 'jobCompany'})
         if company_field is not None:
             company = company_field.string
         else:
             company = 'Private Advertiser'
-        return JobDetails(link, title, company)
+        return JobDetails(id, title, company)
