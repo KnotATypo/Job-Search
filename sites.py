@@ -40,8 +40,9 @@ class Seek(Site):
         self.BASE_URL = 'https://www.seek.com.au/'
         self.JOB_URL = 'https://www.seek.com.au/job/'
 
-        self.connection = db_connection
-        self.cursor = db_connection.cursor()
+        if db_connection is not None:
+            self.connection = db_connection
+            self.cursor = db_connection.cursor()
 
     def download_new_jobs(self, query) -> None:
         print(f'Searching for "{query}"')

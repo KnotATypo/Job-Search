@@ -1,7 +1,10 @@
 import sqlite3
 import os
+import sites
 
 from flask import Flask, request
+
+from sites import Site
 
 app = Flask(__name__)
 
@@ -17,14 +20,21 @@ def hello_world():
             cursor.execute(f"UPDATE jobs SET status='interested_read' WHERE file='{file}'")
         elif 'not_interested' in request.form:
             cursor.execute(f"UPDATE jobs SET status='not_interested' WHERE file='{file}'")
-            os.remove(f'job_descriptions/{file}')
+            if os.path.exists(f'job_descriptions/{file}'):
+                os.remove(f'job_descriptions/{file}')
         connection.commit()
 
     result = cursor.execute("SELECT id, title, company, file FROM jobs WHERE status='interested'").fetchone()
+    print(result)
     if result is None:
         return 'You currently have no remaining <i>interested</i> jobs'
-    with open(f'job_descriptions/{result[3]}') as f:
-        content = f.read()
+
+    try:
+        with open(f'job_descriptions/{result[3]}') as f:
+            content = f.read()
+    except FileNotFoundError:
+        content = f"Could not find file. Try this link: <a target='_blank' href='{sites.Seek(None).JOB_URL}{result[0]}'>{sites.Seek(None).JOB_URL}{result[0]}</a>"
+
     return \
         '<style>input {border: none;color: white;padding: 15px 32px;text-align: center;text-decoration: none;display: inline-block;font-size: 16px;}</style>' + \
             '<form method="post">' + \
