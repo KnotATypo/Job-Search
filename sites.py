@@ -72,7 +72,10 @@ class Seek(Site):
             with open('job_descriptions/' + file_name, 'w+') as f:
                 # Potential to turn the HTML into Markdown
                 # text = html2text(str(match))
-                f.write(match.prettify())
+                try:
+                    f.write(match.prettify())
+                except UnicodeEncodeError as ignored:
+                    continue
             self.cursor.execute(f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'seek')")
             self.connection.commit()
 
