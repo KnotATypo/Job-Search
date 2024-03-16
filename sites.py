@@ -41,11 +41,14 @@ class Site:
     def extract_job_info(self, job) -> JobDetails:
         raise NotImplemented
 
+    def build_job_link(self, job_id) -> str:
+        return self.JOB_URL.replace('%%ID%%', str(job_id))
+
 
 class Seek(Site):
     def __init__(self, db_connection):
         self.BASE_URL = 'https://www.seek.com.au/'
-        self.JOB_URL = 'https://www.seek.com.au/job/'
+        self.JOB_URL = 'https://www.seek.com.au/job/%%ID%%'
 
         if db_connection is not None:
             self.connection = db_connection
@@ -69,7 +72,7 @@ class Seek(Site):
         seek_jobs = [x for x in seek_jobs if int(x[0]) not in old_job_ids]
 
         for i in tqdm(seek_jobs, desc='Getting jobs', unit=' job'):
-            response = requests.get(self.JOB_URL + i[0], verify=False)
+            response = requests.get(self.build_job_link(i[0]))
             soup = BeautifulSoup(response.text, features="html.parser")
             body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
             match = body.contents[0]
@@ -78,8 +81,6 @@ class Seek(Site):
             i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
             file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
             with open('job_descriptions/' + file_name, 'w+') as f:
-                # Potential to turn the HTML into Markdown
-                # text = html2text(str(match))
                 try:
                     f.write(match.prettify())
                 except UnicodeEncodeError:
@@ -113,8 +114,7 @@ class Seek(Site):
 class Indeed(Site):
     def __init__(self, db_connection):
         self.BASE_URL = 'https://au.indeed.com/jobs?q='
-        self.JOB_URL = 'https://au.indeed.com/viewjob?jk='
-        # jk=0a85ea12ae0127de
+        self.JOB_URL = 'https://au.indeed.com/viewjob?jk=%%ID%%'
 
         if db_connection is not None:
             self.connection = db_connection
