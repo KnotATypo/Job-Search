@@ -1,5 +1,6 @@
-import sqlite3
 import os
+import sqlite3
+
 
 def main():
     connection = sqlite3.connect('jobs.db')

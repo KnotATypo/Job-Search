@@ -1,26 +1,20 @@
-import re
 import sqlite3
-import os
-from collections import defaultdict, namedtuple
-from bs4.element import Tag
-from typing_extensions import List, Tuple
+from collections import namedtuple
+from typing_extensions import List
 
 import requests
-from html2text import html2text
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from tqdm import tqdm
-from urllib3.exceptions import InsecureRequestWarning
 
 JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
+
 
 class Site:
     BASE_URL: str
     JOB_URL: str
     cursor: sqlite3.Cursor
     connection: sqlite3.Connection
-
-    def __init__(self):
-        raise NotImplemented
 
     def download_new_jobs(self, query) -> None:
         raise NotImplemented
@@ -65,7 +59,7 @@ class Seek(Site):
             response = requests.get(self.JOB_URL + i[0], verify=False)
             soup = BeautifulSoup(response.text, features="html.parser")
             body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
-            match: Tag = body.contents[0]
+            match = body.contents[0]
 
             # Removing the ' because it screws with db stuff
             i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
@@ -75,16 +69,15 @@ class Seek(Site):
                 # text = html2text(str(match))
                 try:
                     f.write(match.prettify())
-                except UnicodeEncodeError as ignored:
+                except UnicodeEncodeError:
                     continue
-            self.cursor.execute(f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'seek')")
+            self.cursor.execute(
+                f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'seek')")
             self.connection.commit()
-
 
     def list_all_jobs(self, query) -> List[JobDetails]:
         page = 0
         seek_jobs = []
-        this_page = []
         new_results = True
         with tqdm(total=1, desc='Search pages', unit=' page') as pbar:
             while new_results:
@@ -99,7 +92,9 @@ class Seek(Site):
         return seek_jobs
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        response = requests.get(self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}', verify=False)
+        response = requests.get(
+            self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}',
+            verify=False)
         if response.status_code != 200:
             print('The response returned a non-200 status.')
 
@@ -109,11 +104,11 @@ class Seek(Site):
 
     def extract_job_info(self, job) -> JobDetails:
         link = job['href']
-        id = link[link.rindex('/') + 1:link.index('?')]
+        job_id = link[link.rindex('/') + 1:link.index('?')]
         title = job.string
         company_field = job.parent.parent.parent.find('a', attrs={'data-automation': 'jobCompany'})
         if company_field is not None:
             company = company_field.string
         else:
             company = 'Private Advertiser'
-        return JobDetails(id, title, company)
+        return JobDetails(job_id, title, company)

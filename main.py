@@ -1,14 +1,11 @@
-import re
-import sqlite3
 import os
-from sites import Seek
+import sqlite3
 from collections import defaultdict
 
 import requests
-from html2text import html2text
-from bs4 import BeautifulSoup
-from tqdm import tqdm
 from urllib3.exceptions import InsecureRequestWarning
+
+from sites import Seek
 
 SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software-developer']
 
@@ -28,7 +25,16 @@ def setup():
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
     requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-    cursor.execute('CREATE TABLE IF NOT EXISTS jobs(id STRING UNIQUE, title STRING, company STRING, file STRING, duplicate BOOLEAN, status STRING, site STRING)')
+    cursor.execute('CREATE TABLE IF NOT EXISTS '
+                   'jobs('
+                   'id STRING UNIQUE, '
+                   'title STRING, '
+                   'company STRING, '
+                   'file STRING, '
+                   'duplicate BOOLEAN, '
+                   'status STRING, '
+                   'site STRING'
+                   ')')
     if not os.path.exists('job_descriptions'):
         os.mkdir('job_descriptions')
 
@@ -47,7 +53,7 @@ def deduplicate(connection):
             lookup[(job_comp, job_source)] = source_name == comp_name
     duplicates = set()
     for key in lookup:
-        if lookup[key] == True:
+        if lookup[key]:
             duplicates.add(key[0][key[0].rindex('-') + 1:key[0].index('.html')])
             duplicates.add(key[1][key[1].rindex('-') + 1:key[1].index('.html')])
     cursor = connection.cursor()
@@ -61,7 +67,8 @@ def easy_filter(connection):
     cursor = connection.cursor()
     counter = 0
     for term in blacklist_terms:
-        results = cursor.execute(f'SELECT id, file FROM jobs WHERE title LIKE \'%{term}%\' AND status=\'new\'').fetchall()
+        results = cursor.execute(
+            f'SELECT id, file FROM jobs WHERE title LIKE \'%{term}%\' AND status=\'new\'').fetchall()
         for result in results:
             os.remove(f'job_descriptions/{result[1]}')
             cursor.execute(f"UPDATE jobs SET status='easy_filter' WHERE id={result[0]}")
