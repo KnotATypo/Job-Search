@@ -1,6 +1,6 @@
 import sqlite3
 from collections import namedtuple
-from typing_extensions import List
+from typing import List
 
 import requests
 from bs4 import BeautifulSoup
@@ -20,7 +20,20 @@ class Site:
         raise NotImplemented
 
     def list_all_jobs(self, query) -> List[JobDetails]:
-        raise NotImplemented
+        page = 0
+        jobs = []
+        new_results = True
+        with tqdm(total=1, desc='Search pages', unit=' page') as pbar:
+            while new_results:
+                page += 1
+                this_page = self.get_jobs_from_page(page, query)
+                jobs.extend(this_page)
+                if len(this_page) == 0:
+                    new_results = False
+                else:
+                    pbar.total = page + 1
+                pbar.update()
+        return jobs
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         raise NotImplemented
@@ -39,7 +52,7 @@ class Seek(Site):
             self.cursor = db_connection.cursor()
 
     def download_new_jobs(self, query) -> None:
-        print(f'Searching for "{query}"')
+        print(f'Searching on Seek for "{query}"')
         seek_jobs = self.list_all_jobs(query)
         remove_list = set()
         for i, job_source in enumerate(seek_jobs):
@@ -75,26 +88,9 @@ class Seek(Site):
                 f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'seek')")
             self.connection.commit()
 
-    def list_all_jobs(self, query) -> List[JobDetails]:
-        page = 0
-        seek_jobs = []
-        new_results = True
-        with tqdm(total=1, desc='Search pages', unit=' page') as pbar:
-            while new_results:
-                page += 1
-                this_page = self.get_jobs_from_page(page, query)
-                seek_jobs.extend(this_page)
-                if len(this_page) == 0:
-                    new_results = False
-                else:
-                    pbar.total = page + 1
-                pbar.update()
-        return seek_jobs
-
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         response = requests.get(
-            self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}',
-            verify=False)
+            self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}')
         if response.status_code != 200:
             print('The response returned a non-200 status.')
 
@@ -112,3 +108,29 @@ class Seek(Site):
         else:
             company = 'Private Advertiser'
         return JobDetails(job_id, title, company)
+
+
+class Indeed(Site):
+    def __init__(self, db_connection):
+        self.BASE_URL = 'https://au.indeed.com/jobs?q='
+        self.JOB_URL = 'https://au.indeed.com/viewjob?jk='
+        # jk=0a85ea12ae0127de
+
+        if db_connection is not None:
+            self.connection = db_connection
+            self.cursor = db_connection.cursor()
+
+    def download_new_jobs(self, query) -> None:
+        print(f'Searching on Indeed for "{query}"')
+        indeed_jobs = self.list_all_jobs(query)
+
+    def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
+        response = requests.get(
+            self.BASE_URL + f'{query}&l=Brisbane+QLD&radius=10&start={(page_number - 1) * 10}',
+            headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0'})
+        if response.status_code != 200:
+            print('The response returned a non-200 status.')
+
+        soup = BeautifulSoup(response.text, features="html.parser")
+        matches = soup.find_all('a', attrs={'class': 'jcs-JobTitle css-jspxzf eu4oa1w0'})
+        return [self.extract_job_info(x) for x in matches]
