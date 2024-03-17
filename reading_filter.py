@@ -47,7 +47,8 @@ def jobs():
         with open(f'job_descriptions/{result[3]}') as f:
             content = f.read()
     except FileNotFoundError:
-        content = f"Could not find file. Try this link: <a target='_blank' href='{sites.Seek(None).JOB_URL}{result[0]}'>{sites.Seek(None).JOB_URL}{result[0]}</a>"
+        link = sites.Seek(None).build_job_link(result[0])
+        content = f"Could not find file. Try this link: <a target='_blank' href='{link}'>{link}</a>"
 
     return \
             '<style>input {border: none;color: white;padding: 15px 32px;text-align: center;text-decoration: none;display: inline-block;font-size: 16px;}</style>' + \
