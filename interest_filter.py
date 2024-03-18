@@ -20,12 +20,12 @@ def main():
                 with open(f'job_descriptions/{jobs[i - 1][1]}', 'w+') as f:
                     f.write(last_file)
         if choice == 'y':
-            cursor.execute(f"UPDATE jobs SET status='interested' WHERE title='{name}'")
+            cursor.execute(f"UPDATE jobs SET status='interested' WHERE file='{file}'")
         elif choice == 'n':
             with open(f'job_descriptions/{file}') as f:
                 last_file = f.read()
             os.remove(f'job_descriptions/{file}')
-            cursor.execute(f"UPDATE jobs SET status='not_interested' WHERE title='{name}'")
+            cursor.execute(f"UPDATE jobs SET status='not_interested' WHERE file='{file}'")
         else:
             print('Oops')
             exit()
