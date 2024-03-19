@@ -1,3 +1,4 @@
+import asyncio
 import sqlite3
 from collections import namedtuple
 from typing import List
@@ -5,6 +6,7 @@ from typing import List
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
+from pyppeteer import launch
 from tqdm import tqdm
 
 JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
@@ -44,6 +46,20 @@ class Site:
     def build_job_link(self, job_id) -> str:
         return self.JOB_URL.replace('%%ID%%', str(job_id))
 
+    def remove_duplicates(self, jobs):
+        remove_list = set()
+        for i, job_source in enumerate(jobs):
+            for j, job_test in enumerate(jobs):
+                if i == j: continue
+                if job_source.id == job_test.id:
+                    if job_source not in remove_list:
+                        remove_list.add(job_test)
+        jobs = [x for x in jobs if x not in remove_list]
+        result = self.cursor.execute('SELECT id FROM jobs').fetchall()
+        old_job_ids = [str(x[0]) for x in result]
+        jobs = [x for x in jobs if str(x[0]) not in old_job_ids]
+        return jobs
+
 
 class Seek(Site):
     def __init__(self, db_connection):
@@ -56,22 +72,10 @@ class Seek(Site):
 
     def download_new_jobs(self, query) -> None:
         print(f'Searching on Seek for "{query}"')
-        seek_jobs = self.list_all_jobs(query)
-        remove_list = set()
-        for i, job_source in enumerate(seek_jobs):
-            for j, job_test in enumerate(seek_jobs):
-                if i == j: continue
-                if job_source.id == job_test.id:
-                    if job_source not in remove_list:
-                        remove_list.add(job_test)
-        seek_jobs = [x for x in seek_jobs if x not in remove_list]
+        jobs = self.list_all_jobs(query)
+        jobs = self.remove_duplicates(jobs)
 
-        result = self.cursor.execute('SELECT id FROM jobs').fetchall()
-        old_job_ids = [x[0] for x in result]
-
-        seek_jobs = [x for x in seek_jobs if int(x[0]) not in old_job_ids]
-
-        for i in tqdm(seek_jobs, desc='Getting jobs', unit=' job'):
+        for i in tqdm(jobs, desc='Getting jobs', unit=' job'):
             response = requests.get(self.build_job_link(i[0]))
             soup = BeautifulSoup(response.text, features="html.parser")
             body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
@@ -111,26 +115,63 @@ class Seek(Site):
         return JobDetails(job_id, title, company)
 
 
-class Indeed(Site):
+class Jora(Site):
     def __init__(self, db_connection):
-        self.BASE_URL = 'https://au.indeed.com/jobs?q='
-        self.JOB_URL = 'https://au.indeed.com/viewjob?jk=%%ID%%'
+        self.BASE_URL = 'https://au.jora.com/j?l=Brisbane+QLD&q='
+        self.JOB_URL = 'https://au.jora.com/job/%%ID%%'
 
         if db_connection is not None:
             self.connection = db_connection
             self.cursor = db_connection.cursor()
 
     def download_new_jobs(self, query) -> None:
-        print(f'Searching on Indeed for "{query}"')
-        indeed_jobs = self.list_all_jobs(query)
+        print(f'Searching on Jora for "{query}"')
+        jobs = self.list_all_jobs(query)
+        jobs = self.remove_duplicates(jobs)
+
+        for i in tqdm(jobs, desc='Getting jobs', unit=' job'):
+            loop = asyncio.get_event_loop()
+            content = loop.run_until_complete(get(self.build_job_link(i[0])))
+            soup = BeautifulSoup(content, features="html.parser")
+            body: Tag = soup.find('div', attrs={'id': 'job-description-container'})
+
+            # Removing the ' because it screws with db stuff
+            i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
+            file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
+            with open('job_descriptions/' + file_name, 'w+') as f:
+                try:
+                    f.write(body.prettify())
+                except UnicodeEncodeError:
+                    continue
+            self.cursor.execute(
+                f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'jora')")
+            self.connection.commit()
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        response = requests.get(
-            self.BASE_URL + f'{query}&l=Brisbane+QLD&radius=10&start={(page_number - 1) * 10}',
-            headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0'})
-        if response.status_code != 200:
-            print('The response returned a non-200 status.')
+        loop = asyncio.get_event_loop()
+        content = loop.run_until_complete(get(f'{self.BASE_URL}{query.replace('-', '+')}&p={page_number}'))
 
-        soup = BeautifulSoup(response.text, features="html.parser")
-        matches = soup.find_all('a', attrs={'class': 'jcs-JobTitle css-jspxzf eu4oa1w0'})
-        return [self.extract_job_info(x) for x in matches]
+        soup = BeautifulSoup(content, features="html.parser")
+        if soup.text.find('We have looked through all the results for you') != -1:
+            return []
+        matches = soup.find_all('a', attrs={'class': 'job-link -no-underline -desktop-only show-job-description'})
+        matches = [self.extract_job_info(x) for x in matches]
+        if len(matches) < 10:
+            return []
+        return matches
+
+    def extract_job_info(self, job) -> JobDetails:
+        link = job['href']
+        job_id = link[link.rindex('/') + 1:link.index('?')]
+        title = job.text
+        company = job.parent.parent.parent.parent.find('span', attrs={'class', 'job-company'}).text
+        return JobDetails(job_id, title, company)
+
+
+async def get(link) -> str:
+    browser = await launch()
+    page = await browser.newPage()
+    await page.goto(link)
+    page_content = await page.content()
+    await browser.close()
+    return page_content

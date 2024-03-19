@@ -5,7 +5,7 @@ from collections import defaultdict
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-from sites import Seek
+from sites import Seek, Jora
 
 SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software-developer']
 
@@ -13,11 +13,12 @@ SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software
 def main():
     connection = setup()
 
-    seek = Seek(connection)
-    for term in SEARCH_TERMS:
-        seek.download_new_jobs(term)
+    sites = [Seek(connection), Jora(connection)]
+    for site in sites:
+        for term in SEARCH_TERMS:
+            site.download_new_jobs(term)
 
-    deduplicate(connection)
+    mark_duplicates(connection)
     easy_filter(connection)
 
 
@@ -41,37 +42,35 @@ def setup():
     return conn
 
 
-def deduplicate(connection):
-    jobs = os.listdir('job_descriptions')
-    lookup = defaultdict(lambda: None)
-    for i, job_source in enumerate(jobs):
-        source_name = job_source[:job_source.rindex('-')]
-        for j, job_comp in enumerate(jobs):
-            if i == j or lookup[(job_source, job_comp)] is not None:
-                continue
-            comp_name = job_comp[:job_comp.rindex('-')]
-            lookup[(job_comp, job_source)] = source_name == comp_name
-    duplicates = set()
-    for key in lookup:
-        if lookup[key]:
-            duplicates.add(key[0][key[0].rindex('-') + 1:key[0].index('.html')])
-            duplicates.add(key[1][key[1].rindex('-') + 1:key[1].index('.html')])
+def mark_duplicates(connection):
     cursor = connection.cursor()
+    jobs = cursor.execute("SELECT id, title, company FROM jobs")
+    duplicates = set()
+    for i, (id_source, title_source, company_source) in enumerate(jobs):
+        for j, (id_target, title_target, company_target) in enumerate(jobs):
+            if i == j: continue
+            if title_source == title_target and company_source == company_target:
+                duplicates.add(id_source)
+                duplicates.add(id_target)
     for id in duplicates:
-        cursor.execute(f'UPDATE jobs SET duplicate=true WHERE id={id}')
+        cursor.execute(f"UPDATE jobs SET duplicate=true WHERE id='{id}'")
         connection.commit()
+    print('Duplicates found:', len(duplicates))
 
 
 def easy_filter(connection):
-    blacklist_terms = ['.net', 'senior', 'lead', 'architect', 'principal', 'graduate', 'director']
+    blacklist_terms = ['.net', 'senior', 'lead', 'architect', 'principal', 'graduate', 'director', 'business', 'manager']
     cursor = connection.cursor()
     counter = 0
     for term in blacklist_terms:
         results = cursor.execute(
             f'SELECT id, file FROM jobs WHERE title LIKE \'%{term}%\' AND status=\'new\'').fetchall()
         for result in results:
-            os.remove(f'job_descriptions/{result[1]}')
-            cursor.execute(f"UPDATE jobs SET status='easy_filter' WHERE id={result[0]}")
+            try:
+                os.remove(f'job_descriptions/{result[1]}')
+            except FileNotFoundError:
+                pass
+            cursor.execute(f"UPDATE jobs SET status='easy_filter' WHERE id='{result[0]}'")
             connection.commit()
             counter += 1
     print(f'Easy filter caught {counter} jobs')
