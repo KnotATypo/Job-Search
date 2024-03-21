@@ -149,7 +149,7 @@ class Jora(Site):
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         loop = asyncio.get_event_loop()
-        content = loop.run_until_complete(get(f'{self.BASE_URL}{query.replace('-', '+')}&p={page_number}'))
+        content = loop.run_until_complete(get(f"{self.BASE_URL}{query.replace('-', '+')}&p={page_number}"))
 
         soup = BeautifulSoup(content, features="html.parser")
         if soup.text.find('We have looked through all the results for you') != -1:
