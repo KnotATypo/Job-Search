@@ -76,7 +76,7 @@ class Seek(Site):
         jobs = self.remove_duplicates(jobs)
 
         for i in tqdm(jobs, desc='Getting jobs', unit=' job'):
-            response = requests.get(self.build_job_link(i[0]))
+            response = requests.get(self.build_job_link(i[0]), verify=False)
             soup = BeautifulSoup(response.text, features="html.parser")
             body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
             match = body.contents[0]
@@ -94,8 +94,7 @@ class Seek(Site):
             self.connection.commit()
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        response = requests.get(
-            self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}')
+        response = requests.get(self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}', verify=False)
         if response.status_code != 200:
             print('The response returned a non-200 status.')
 
