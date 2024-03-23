@@ -1,6 +1,5 @@
 import os
 import sqlite3
-from collections import defaultdict
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning
@@ -59,7 +58,9 @@ def mark_duplicates(connection):
 
 
 def easy_filter(connection):
-    blacklist_terms = ['.net', 'senior', 'lead', 'architect', 'principal', 'graduate', 'director', 'business', 'manager']
+    blacklist_terms = ['.net', 'senior', 'lead', 'architect', 'principal',
+                       'graduate', 'director', 'business', 'manager', 'support',
+                       'analyst', 'security']
     cursor = connection.cursor()
     counter = 0
     for term in blacklist_terms:

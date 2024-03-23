@@ -25,7 +25,7 @@ class Site:
         page = 0
         jobs = []
         new_results = True
-        with tqdm(total=1, desc='Search pages', unit=' page') as pbar:
+        with tqdm(total=1, desc='Search pages', unit='page') as pbar:
             while new_results:
                 page += 1
                 this_page = self.get_jobs_from_page(page, query)
@@ -60,6 +60,9 @@ class Site:
         jobs = [x for x in jobs if str(x[0]) not in old_job_ids]
         return jobs
 
+    def get_job_description(self, job_id) -> str:
+        raise NotImplemented
+
 
 class Seek(Site):
     def __init__(self, db_connection):
@@ -75,23 +78,24 @@ class Seek(Site):
         jobs = self.list_all_jobs(query)
         jobs = self.remove_duplicates(jobs)
 
-        for i in tqdm(jobs, desc='Getting jobs', unit=' job'):
-            response = requests.get(self.build_job_link(i[0]), verify=False)
-            soup = BeautifulSoup(response.text, features="html.parser")
-            body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
-            match = body.contents[0]
-
+        for i in tqdm(jobs, desc='Getting jobs', unit='job'):
             # Removing the ' because it screws with db stuff
             i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
             file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
             with open('job_descriptions/' + file_name, 'w+') as f:
                 try:
-                    f.write(match.prettify())
+                    f.write(self.get_job_description(i[0]))
                 except UnicodeEncodeError:
                     continue
             self.cursor.execute(
                 f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'seek')")
             self.connection.commit()
+
+    def get_job_description(self, job_id) -> str:
+        response = requests.get(self.build_job_link(job_id), verify=False)
+        soup = BeautifulSoup(response.text, features="html.parser")
+        body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
+        return body.contents[0].prettify()
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         response = requests.get(self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}', verify=False)
@@ -128,23 +132,25 @@ class Jora(Site):
         jobs = self.list_all_jobs(query)
         jobs = self.remove_duplicates(jobs)
 
-        for i in tqdm(jobs, desc='Getting jobs', unit=' job'):
-            loop = asyncio.get_event_loop()
-            content = loop.run_until_complete(get(self.build_job_link(i[0])))
-            soup = BeautifulSoup(content, features="html.parser")
-            body: Tag = soup.find('div', attrs={'id': 'job-description-container'})
-
+        for i in tqdm(jobs, desc='Getting jobs', unit='job'):
             # Removing the ' because it screws with db stuff
             i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
             file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
             with open('job_descriptions/' + file_name, 'w+') as f:
                 try:
-                    f.write(body.prettify())
+                    f.write(self.get_job_description(i[0]))
                 except UnicodeEncodeError:
                     continue
             self.cursor.execute(
                 f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'jora')")
             self.connection.commit()
+
+    def get_job_description(self, job_id):
+        loop = asyncio.get_event_loop()
+        content = loop.run_until_complete(get(self.build_job_link(job_id)))
+        soup = BeautifulSoup(content, features="html.parser")
+        body: Tag = soup.find('div', attrs={'id': 'job-description-container'})
+        return body.prettify()
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         loop = asyncio.get_event_loop()
