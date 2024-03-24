@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from difflib import SequenceMatcher
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning
@@ -43,12 +44,15 @@ def setup():
 
 def mark_duplicates(connection):
     cursor = connection.cursor()
+    new_jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status = 'new'")
     jobs = cursor.execute("SELECT id, title, company FROM jobs")
     duplicates = set()
-    for i, (id_source, title_source, company_source) in enumerate(jobs):
+    for i, (id_source, title_source, company_source) in enumerate(new_jobs):
         for j, (id_target, title_target, company_target) in enumerate(jobs):
             if i == j: continue
-            if title_source == title_target and company_source == company_target:
+            title_score = SequenceMatcher(None, title_source, title_target).ratio()
+            company_score = SequenceMatcher(None, company_source, company_target).ratio()
+            if (title_score + company_score) / 2 > 0.98:
                 duplicates.add(id_source)
                 duplicates.add(id_target)
     for id in duplicates:

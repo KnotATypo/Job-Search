@@ -1,7 +1,7 @@
 import asyncio
 import sqlite3
 from collections import namedtuple
-from typing import List
+from typing import List, Any
 
 import requests
 from bs4 import BeautifulSoup
@@ -60,7 +60,7 @@ class Site:
         jobs = [x for x in jobs if str(x[0]) not in old_job_ids]
         return jobs
 
-    def get_job_description(self, job_id) -> str:
+    def get_job_description(self, job_id) -> str | None:
         raise NotImplemented
 
 
@@ -91,14 +91,17 @@ class Seek(Site):
                 f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'seek')")
             self.connection.commit()
 
-    def get_job_description(self, job_id) -> str:
-        response = requests.get(self.build_job_link(job_id), verify=False)
+    def get_job_description(self, job_id) -> str | None:
+        response = requests.get(self.build_job_link(job_id))
         soup = BeautifulSoup(response.text, features="html.parser")
         body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
-        return body.contents[0].prettify()
+        if body is not None:
+            return body.contents[0].prettify()
+        else:
+            return None
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        response = requests.get(self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}', verify=False)
+        response = requests.get(self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}')
         if response.status_code != 200:
             print('The response returned a non-200 status.')
 
@@ -145,12 +148,15 @@ class Jora(Site):
                 f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', false, 'new', 'jora')")
             self.connection.commit()
 
-    def get_job_description(self, job_id):
+    def get_job_description(self, job_id) -> str | None:
         loop = asyncio.get_event_loop()
         content = loop.run_until_complete(get(self.build_job_link(job_id)))
         soup = BeautifulSoup(content, features="html.parser")
         body: Tag = soup.find('div', attrs={'id': 'job-description-container'})
-        return body.prettify()
+        if body is not None:
+            return body.prettify()
+        else:
+            return None
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         loop = asyncio.get_event_loop()
