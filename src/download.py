@@ -24,7 +24,7 @@ def main():
 
 
 def setup():
-    conn = sqlite3.connect('jobs.db')
+    conn = sqlite3.connect('../jobs.db')
     cursor = conn.cursor()
     requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
     cursor.execute('CREATE TABLE IF NOT EXISTS '
@@ -37,8 +37,8 @@ def setup():
                    'status STRING, '
                    'site STRING'
                    ')')
-    if not os.path.exists('job_descriptions'):
-        os.mkdir('job_descriptions')
+    if not os.path.exists('../job_descriptions'):
+        os.mkdir('../job_descriptions')
 
     return conn
 

@@ -24,7 +24,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def jobs():
-    connection = sqlite3.connect('jobs.db')
+    connection = sqlite3.connect('../jobs.db')
     cursor = connection.cursor()
 
     if request.method == 'POST':

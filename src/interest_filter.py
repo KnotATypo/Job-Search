@@ -3,7 +3,7 @@ import sqlite3
 
 
 def main():
-    connection = sqlite3.connect('jobs.db')
+    connection = sqlite3.connect('../jobs.db')
     cursor = connection.cursor()
 
     jobs = cursor.execute("SELECT DISTINCT(title), file FROM jobs WHERE status='new'").fetchall()

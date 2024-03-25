@@ -6,7 +6,7 @@ from sites import Seek
 
 def main():
     seek = Seek(None)
-    connection = sqlite3.connect('jobs.db')
+    connection = sqlite3.connect('../jobs.db')
     cursor = connection.cursor()
     jobs = cursor.execute("SELECT * FROM jobs WHERE status='interested_read'").fetchall()
     for job in jobs:
