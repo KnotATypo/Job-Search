@@ -14,10 +14,10 @@ SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software
 def main():
     connection = setup()
 
-    # sites = [Seek(connection), Jora(connection)]
-    # for site in sites:
-    #     for term in SEARCH_TERMS:
-    #         site.download_new_jobs(term)
+    sites = [Seek(connection), Jora(connection)]
+    for site in sites:
+        for term in SEARCH_TERMS:
+            site.download_new_jobs(term)
 
     mark_duplicates(connection)
     easy_filter(connection)

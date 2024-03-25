@@ -37,6 +37,7 @@ def main():
 
     print('That\'s all for now!')
 
+
 def get_duplicate_status(id_source, cursor):
     status = []
     for id_target in str(cursor.execute(f"SELECT duplicate FROM jobs WHERE id='{id_source}'").fetchone()[0]).split(','):
@@ -49,7 +50,7 @@ def get_duplicate_status(id_source, cursor):
         return 'interested_read'
     if 'interested' in status:
         return 'interested'
-    if all([x=='not_interested' for x in status]):
+    if all([x == 'not_interested' for x in status]):
         return 'not_interested'
     return '???'
 
