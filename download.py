@@ -3,6 +3,7 @@ import sqlite3
 from difflib import SequenceMatcher
 
 import requests
+from tqdm import tqdm
 from urllib3.exceptions import InsecureRequestWarning
 
 from sites import Seek, Jora
@@ -45,18 +46,19 @@ def setup():
 def mark_duplicates(connection):
     cursor = connection.cursor()
     new_jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status = 'new'")
-    jobs = cursor.execute("SELECT id, title, company FROM jobs")
-    duplicates = set()
-    for i, (id_source, title_source, company_source) in enumerate(new_jobs):
-        for j, (id_target, title_target, company_target) in enumerate(jobs):
-            if i == j: continue
+    jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status != 'new'")
+    duplicates = []
+    for id_source, title_source, company_source in tqdm(new_jobs):
+        temp_duplicates = []
+        for id_target, title_target, company_target in jobs:
             title_score = SequenceMatcher(None, title_source, title_target).ratio()
             company_score = SequenceMatcher(None, company_source, company_target).ratio()
-            if (title_score + company_score) / 2 > 0.98:
-                duplicates.add(id_source)
-                duplicates.add(id_target)
-    for id in duplicates:
-        cursor.execute(f"UPDATE jobs SET duplicate=true WHERE id='{id}'")
+            if title_score > 0.9 and company_score > 0.9:
+                temp_duplicates.append(id_target)
+        duplicates.append((id_source, temp_duplicates))
+    duplicates = [x for x in duplicates if len(x[1]) != 0]
+    for id_source, temp_duplicates in duplicates:
+        cursor.execute(f"UPDATE jobs SET duplicate='{','.join(temp_duplicates)}' WHERE id='{id_source}'")
         connection.commit()
     print('Duplicates found:', len(duplicates))
 
