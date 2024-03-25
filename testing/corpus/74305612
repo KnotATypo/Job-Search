@@ -1,0 +1,69 @@
+** Overview **
+
+** Software Engineer: Shaping the future of video **   
+  
+Clipchamp is the go-to video platform with one simple mission: to empower
+anyone to tell stories worth sharing. Since 2016 we’ve attracted over 50
+million registered users globally and counting, and that’s only the beginning.
+We've now joined Microsoft's Office Product Group (OPG).  
+  
+Building and maintaining strong connections across location and time is
+critical in the world we live in, and the emotional power of media – video,
+audio, and photos – makes it perfect for fostering personal connections and
+sharing information.  
+  
+Our in-browser platform and native Windows app gives users access to
+professional video editing tools and features alongside a 1 million asset-
+strong stock library and hundreds of editable video templates. We're the go-to
+platform that's built with everyday editors and creators in mind.  
+  
+** About the Team **   
+  
+While Clipchamp is predominantly based in Australia, OPG is a global team,
+with offices in multiple countries. Joining Clipchamp means you'll join a team
+of colleagues who live all around the world. We’re committed to each team
+member feeling connected, regardless of where they work and live.  
+  
+** Clipchamp’s Technical Stack **   
+  
+Our video editing experience lives completely in-browser, which means pushing
+the boundaries of what web technologies can do. We hold a high bar for
+performance and user experience and invest in unique technologies like in-
+browser file caching, video composition, and video encoders.  
+  
+Our frontend codebase is built on React, TypeScript, WebAssembly,
+ServiceWorkers, and WebGL. On the backend we use Python and are introducing C#
+for native apps and services. We deploy code to production daily, supported by
+a culture of automated testing and our dedicated engineering productivity
+team.
+
+** Qualifications **
+
+** Who we’re looking for: **
+
+  * 3+ years demonstrated experience in frontend or full stack development 
+  * Proficiency in JavaScript or TypeScript and experience with web app development using frameworks like React or Vue 
+  * Passion for learning new skills with the ability to thrive in a feedback-driven environment 
+  * Someone who drives collaboration in your own team and across squads - you're able to consider others ideas, implement new methods, surface and resolve disagreements and empathize with users without breaking a sweat.   
+
+** Bonus points if you love: **
+
+  * Learning new languages and APIs 
+  * Building scalable services in C#, Python or Node. 
+  * Optimising performance and tracking down and fixing customer-facing issues 
+  * Online video and contributing to the technically challenging problems we’re solving 
+  * Maxing out what browsers can do, that’s what we’re about! We were told you can’t build a video editing platform in browser, including encoding the final video – but we did! 
+
+Please note: All new employees of OMG/Clipchamp will be required to partake in
+a background check.
+
+** Responsibilities **
+
+** As a Software Engineer you will be: **
+
+  * Expanding your knowledge of React, Typescript, Python, and cutting-edge web technologies 
+  * Developing solutions including new product features, content plugins, or APIs 
+  * Learning from customer feedback, running experiments, measuring and optimising performance 
+  * Working with product managers, growth hackers, designers, and other developers to contribute ideas and plan the team’s roadmap 
+  * Accelerating your career in a truly innovative and global engineering team 
+

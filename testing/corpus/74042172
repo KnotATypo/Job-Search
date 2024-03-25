@@ -1,0 +1,112 @@
+** About Tritium   
+**   
+Founded in 2001, Tritium (NASDAQ: DCFC) designs and manufactures proprietary
+hardware and software to create advanced and reliable DC fast chargers for
+electric vehicles. Tritium’s compact and robust chargers are designed to look
+great on Main Street and thrive in harsh conditions, through technology
+engineered to be easy to install, own, and use. Tritium is focused on
+continuous innovation in support of our customers around the world.  
+  
+Reporting directly to the Onboard Software Team Lead at TRITIUM PTY LTD as
+part of the Onboard Software team and part of the wider engineering division
+you will deliver software solutions that enhance the performance and
+functionality or our high-power charging systems, primarily in the areas of
+software performance and network security.  
+  
+The Senior Software Development Engineer - Onboard Software role requires a
+candidate who has a deep and broad experience of working in complex
+Engineering programs across the functional boundaries of technical disciplines
+/ commodity groups, in an environment with often competing deliverables /
+priorities / levels of ambiguity.  
+  
+This role requires extensive project management experience contributing to
+complex cross-functional projects in domains such as telecommunications, IoT
+communications, Payment terminals, systems, and integration.  
+  
+The role is based in Murarrie, Brisbane  
+  
+  
+** About the role **   
+Key responsibilities for this role include, but are not limited to:  
+  
+Project Development:  
+
+  * Drive your allocated development projects to completion, including defining and developing innovative, modular and maintainable software/firmware products. 
+  * Improve existing solutions for onboard charger software, charger connectivity, telemetry, preventive maintenance, etc. 
+  * Collaborate with development partners and external partners to ensure product compatibility with a wide range of backend solutions. 
+  * Participate actively in all aspects of the software development life cycle, including scope definition, design, troubleshooting, testing, and showcasing. 
+Agile Practices and Team Collaboration:  
+
+  * Follow Agile Software Development Life Cycle (SDLC) practices, including participation in daily stand-ups, sprint planning, review, and retrospectives. 
+  * Collaborate with cross-functional teams to deliver high-quality products. 
+  * Communicate effectively with both technical and non-technical stakeholders. 
+Design and Specification Analysis:  
+
+  * Take requirements to design software with reusability in mind across multiple platforms and standardizing software modules where feasible. 
+  * Analyse system specifications and translate system requirements to task specifications. 
+Field Support and Issue Resolution:  
+
+  * Support field issue investigation and troubleshooting activities, including site visits and remote support for customer test sessions. 
+  * Provide innovative solutions to technology challenges. 
+Technology Research and Hardware Involvement:  
+
+  * Stay current with new and developing software technologies and assist in prototyping and determining the feasibility of implementing new technologies. 
+  * Actively support the selection or development of hardware platforms for control and communication systems. 
+Documentation and Compliance:  
+
+  * Generate documentation to support testing and compliance certification activities. 
+Professional Conduct and Collaboration:  
+
+  * Contribute to the growth of the business reputation and always act promptly to uphold the business reputation. 
+  * Assist other areas of the business when required or as directed by any member of the Senior Leadership Team. 
+Continuous Learning and Quality Assurance:  
+
+  * Stay up to date with state-of-the-art technologies, tools, and techniques for automation, quality, and security as applied to software development. 
+  * Work within ISO9001 Quality standards and ensure compliance with relevant industry standards and regulations. 
+** About You **   
+Educational and Work Experience Requirements:  
+
+  * Bachelor's degree in computer science, Software/Electronics Engineering, or a related technology field 
+  * Minimum 5 years of experience in embedded software development, preferably in C++ and/or Python on Linux platforms 
+  * Proven track record in developing software solutions for remotely monitored and controlled devices, ideally within complex public infrastructures 
+  * Experience with hardware-software integration, particularly on embedded devices. 
+  * Experience with hardware-software integration with communications and/or payment systems devices. 
+Operating System, Networking and Protocol Expertise:  
+
+  * Proficiency in Linux system management, including shell (bash) scripting and tools like Ansible. 
+  * Strong grasp of IoT technologies and protocols – MQTT, HTTP, TCP/IP, CAN bus protocol 
+  * Experience with Cryptography (TLS 1.2), TCP/UDP, x509 certificates management, and Over the Air updates 
+  * Familiarity with asynchronous programming patterns (e.g., epoll in Linux, asyncio in Python) 
+  * Familiarity with real-time operating systems (RTOS) for embedded systems 
+Software Development Practices and Tools:  
+
+  * Knowledge of testing methodologies and frameworks, like unit testing, integration testing, and test-driven development 
+  * Extensive experience with source code version control systems, particularly Git (GitHub/Bitbucket/etc.) 
+  * Experience with CI/CD tools such as Bitbucket Pipelines, Azure DevOps, or Jenkins 
+  * Knowledge of Agile and DevOps methodologies, with a focus on automation, quality assurance, and security in software development 
+  * Experience with containerisation and orchestration technologies, such as Docker and Kubernetes 
+Technical Documentation and Communication Skills:  
+
+  * Ability to produce clear and comprehensive technical documentation, including design specs, processes, and procedures. 
+  * Strong communication skills with attention to detail 
+Analytical and Problem-Solving Skills:  
+
+  * Strong problem-solving skills, including excellent analytical and critical thinking abilities. 
+  * Proven debugging capabilities within complex software systems 
+  
+Teamwork and Self-Management:  
+
+  * Ability to work effectively in an Agile/Scrum team environment and independently manage tasks. 
+  * Adaptability to shifting priorities and deadlines. 
+  * Capacity to consistently deliver high-quality work with minimal supervision; self-motivated. 
+** Benefit   
+**   
+Join a fast-paced and dynamic business in green tech. We want to change the
+world for the better and we work hard to do it every day. Tritium offers
+competitive salaries, free EV charging at available offices, and a diverse
+range of learning opportunities and career paths.  
+  
+_ Tritium is an equal opportunity employer. We celebrate diversity and are
+committed to creating an inclusive environment for all employees. If you
+require an adjustment to the recruitment process, just ask. _
+

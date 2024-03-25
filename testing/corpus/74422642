@@ -1,0 +1,98 @@
+** Who is Transmax? **
+
+Transmax is a transport solutions provider of the ITS platform, STREAMS. We
+exist to improve people’s quality of life and helps move millions of commuters
+around Australian road networks every day. We partner with customers to
+deliver creative solutions that optimise transport networks and support safer
+and more reliable road journeys.
+
+It’s an exciting time in our history as we modernise our core STREAMS product
+and work with customers to enable the future of mobility.
+
+  
+** About the role: **
+
+Transmax has grown significantly over the last 18 months, and we are not
+slowing down!
+
+We’re in the next exciting stage of our growth phase which is why we are now
+recruiting for a Edge Device Platform Engineer to play a vital role in our
+company’s future.  
+  
+As Edge Device Platform Engineer your role will be to develop and maintain
+technologies and applications deployed at the edge of a massively-distributed
+system to provide a capable and contemporary edge platform. This platform is
+core to the success of our business and securely integrate a vast array of
+road traffic control sensors and devices, manages real-time communications
+protocols, perform complex event processing, and action responses in fractions
+of a second.  
+  
+** Your day-to-day will include: **
+
+  * Working closely with technical teams to achieve sprint goals, ensuring delivered and enduring product quality, reliability, and performance. 
+  * Build and maintain a Linux platform for STREAMS edge devices (custom hardware). 
+  * Undertake software design, development, maintenance and test coding/automation activities to implement applications, protocols and APIs compliant with a technical reference architecture and design patterns. 
+  * Maintain continuous integration and deployment pipelines capable of achieving highly.   
+repeatable and reliable deployments across a fleet of geographically-
+distributed devices.
+
+  * Identify and promptly patch third-party software components to proactively protect against reported defects and emergent security vulnerabilities. 
+  * Assemble and configure analogues of roadside device environments using wide area network communications and either real-world ITS device hardware or emulators to validate site functionality, reliability and performance. 
+  * Perform analysis and optimisation of systems in production, diagnosing and rectifying issues, and improving product resilience, scalability and performance (such as reducing memory footprint, data latency, and/or processing duration). 
+  * Have an urge to document and communicate designs, findings, and actions so they become more widely known and reliably repeatable, automating them wherever possible. 
+
+  
+** About You: **   
+  
+We’re on the look out for an empathetic, values driven self-starter
+comfortable with working in team oriented fast paced environment.  
+  
+You will be tertiary-level qualified in Software Engineering, Information
+Technology or Computer Science, with at least 3-5 years of industry experience
+in software product development and/or systems operations roles.
+
+  
+** Your toolkit for success will include: **
+
+  * Experience working in a software-as-a-service environment that utilises DevOps and SRE practices (with an emphasis on automation) to continuously develop, test, deploy and support scalable, highly-available software solutions. 
+  * Comfortability working in both Windows and Linux environments, and familiar with either private/on-prem or public cloud infrastructure, such as Amazon Web Services (AWS). 
+  * Proficiency in developing libraries, applications and APIs using a range of languages and technologies such as C++, Rust, Python, message queues, emulation, and unit test frameworks, with exposure to application containerisation technologies, such as Docker. 
+  * Aware of the specific challenges involved in working in compute, memory and/or network constrained environments, including algorithm optimisation and data compression. 
+  * Proficient with interpreting data communications protocol specifications and implementing robust handlers, serialisers and deserialisers to achieve integrations. 
+  * Familiarity with data networking, internet protocols and application interface technologies such as serial I/O, HDLC, AMQP, MQTT, REST, JSON, XML and Protobuf. 
+  * Accustomed to working with open-source platforms, components and libraries, including different Linux distributions, managing packages, patching, and configuration, and customising a Linux OS for hardware using tools such as multistrap and yocto. 
+  * Accustomed to working with open-source platforms, components and libraries including an understanding of different Linux distributions (and OSS license types and constraints), with an ability to manage OS packages, patching, configuration and administration. 
+  * Competency with source code control, artefact repository, and CI/CD pipeline technologies, including tools such as GitLab, Artifactory, Jira and Confluence. 
+
+  
+** What does Transmax offer? **
+
+We offer:
+
+  * A competitive salary 
+  * A high-trust, high-empowering, openly supportive working environment & culture 
+  * WFH options (2 days in office per week) 
+  * Uncapped training budgets to support your career development 
+  * Employee Assistance Program with access up to 10 sessions 
+  * A recently renovated office in Milton (with some pretty great views, if you ask us) 
+  * Corporate private health discounts through Bupa 
+  * Flexible working hours & arrangements (the right to disconnect & enjoy life!) 
+  * Lots of support for your career plans and advancement 
+  * An environment where you’re encouraged to succeed. 
+
+  
+With our culture of recognition, career development, and a supportive and
+stimulating and satisfying work environment - your next career chapter is
+waiting for you at Transmax.  
+  
+If you’re interested in pursuing this opportunity, please apply by submitting
+your CV and a brief cover letter outlining your experience and suitability for
+the role. We would love to hear from you!  
+  
+  
+_ ** Successful applicants will be subject to a National Criminal History
+Check and a Qualification check. ** _  
+_ ** Applicants must hold full working rights within Australia. ** _  
+_ ** We do not accept unsolicited agency resumes and are not responsible for
+any fees related to unsolicited resumes. ** _
+

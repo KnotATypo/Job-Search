@@ -1,0 +1,72 @@
+** Senior Software Engineer - Data Engineer **   
+
+Clipchamp is the go-to video platform with one simple mission: to empower
+anyone to tell stories worth sharing. Since 2016 we’ve attracted over 50
+million registered users globally and counting, and that’s only the beginning.
+We've now joined Microsoft's Office Product Group (OPG)  
+  
+Building and maintaining strong connections across location and time is
+critical in the world we live in, and the emotional power of media – video,
+audio, and photos – makes it perfect for fostering personal connections and
+sharing information.  
+  
+Our in-browser platform and native Windows app gives users access to
+professional video editing tools and features alongside a 1 million asset-
+strong stock library and hundreds of editable video templates. We're the go-to
+platform that's built with everyday editors and creators in mind.  
+  
+** About the Team **   
+  
+While Clipchamp is predominantly based in Australia, OPG is a global team,
+with offices in multiple countries. Joining Clipchamp means you'll join a team
+of colleagues who live all around the world. We’re committed to each team
+member feeling connected, regardless of where they work and live.  
+  
+** Clipchamp’s Technical Stack **   
+  
+As part of Microsoft, we use tools such as Azure Data Explorer (aka Kusto),
+Cosmos, Scuba and Power BI. We also heavily use product metrics captured by
+Amplitude.  
+  
+Our video editing experience lives completely in-browser, which means pushing
+the boundaries of what web technologies can do. We hold a high bar for
+performance and user experience and invest in unique technologies like in-
+browser file caching, video composition, and video encoders.  
+  
+Our frontend codebase is built on React, TypeScript, WebAssembly,
+ServiceWorkers, and WebGL. On the backend we use Python and are introducing C#
+for native apps and services. We deploy code to production daily, supported by
+a culture of automated testing and our dedicated engineering productivity
+team.
+
+** Responsibilities **
+
+** As a Data Engineer you will be: **
+
+  * Building and improving the data infrastructure and processes necessary to empower a diverse team of engineers, product managers, designers and growth specialists to derive value from data reliably and efficiently. 
+  * Designing metrics and frameworks that will be used to drive decisions across the Clipchamp business. 
+  * Working closely with product engineers to uplift Clipchamp’s data capabilities and drive non-functional outcomes. 
+  * A driving force in Clipchamp’s privacy and GDPR compliance initiatives. 
+  * Accelerating your career in a truly innovative and global engineering team.   
+
+** Qualifications **
+
+** Who we’re looking for: **
+
+  * 5+ years demonstrated experience in a data engineering role, building ETL pipelines and transforming datasets for consumption by a wide audience of roles. 
+  * Experience with Azure data tooling would be a plus 
+  * Proficiency in a big data querying language such as SQL or Spark. 
+  * A strong collaborator with a demonstrated ability to teach technical concepts and uplift organisational capabilities 
+  * Passion for learning new skills with the ability to thrive in a feedback-driven environment. 
+  * Someone who drives collaboration in your own team and across squads - you're able to consider others ideas, implement new methods, surface and resolve disagreements and empathize with users without breaking a sweat. 
+
+  
+** Bonus points if you love: **
+
+  * Online video and contributing to the technically challenging problems we’re solving 
+  * Maxing out what browsers can do, that’s what we’re about! We were told you can’t build a video editing platform in browser, including encoding the final video – but we did! 
+
+  
+Please note: All new employees of Clipchamp will be required to partake in a
+background check.
+
