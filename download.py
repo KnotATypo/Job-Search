@@ -15,8 +15,8 @@ def main():
     connection = setup()
 
     sites = [Seek(connection), Jora(connection)]
-    for site in sites:
-        for term in SEARCH_TERMS:
+    for site in tqdm(sites, desc='Sites', unit='site'):
+        for term in tqdm(SEARCH_TERMS, desc='Terms', unit='term', leave=False):
             site.download_new_jobs(term)
 
     mark_duplicates(connection)
@@ -48,7 +48,7 @@ def mark_duplicates(connection):
     new_jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status = 'new'").fetchall()
     jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status != 'new'").fetchall()
     duplicates = []
-    for id_source, title_source, company_source in tqdm(new_jobs):
+    for id_source, title_source, company_source in new_jobs:
         temp_duplicates = []
         for id_target, title_target, company_target in jobs:
             title_score = SequenceMatcher(None, title_source, title_target).ratio()

@@ -21,13 +21,12 @@ class Site:
     connection: sqlite3.Connection
 
     def download_new_jobs(self, query) -> None:
-        print(f'Searching on {self.site_string} for "{query}"')
         jobs = self.list_all_jobs(query)
         jobs = self.remove_duplicates(jobs)
 
         if len(jobs) == 0:
             return
-        for i in tqdm(jobs, desc='Getting jobs', unit='job'):
+        for i in tqdm(jobs, desc=f'{self.site_string} - {query} jobs', unit='job', leave=False):
             # Removing the ' because it screws with db stuff
             i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
             file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
@@ -51,7 +50,7 @@ class Site:
         else:
             expected_pages = fetchone[0]
 
-        with tqdm(total=expected_pages, desc='Search pages', unit='page') as pbar:
+        with tqdm(total=expected_pages, desc=f'{self.site_string} - {query} pages', unit='page', leave=False) as pbar:
             while new_results:
                 page += 1
                 this_page = self.get_jobs_from_page(page, query)
