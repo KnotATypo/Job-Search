@@ -55,9 +55,9 @@ def mark_duplicates(connection):
     new_jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status = 'new'").fetchall()
     jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status != 'new'").fetchall()
     duplicates = []
-    for id_source, title_source, company_source in new_jobs:
+    for id_source, title_source, company_source in tqdm(new_jobs, desc='Checking for duplicates', unit='job'):
         temp_duplicates = []
-        for id_target, title_target, company_target in jobs:
+        for id_target, title_target, company_target in tqdm(jobs, leave=False):
             title_score = SequenceMatcher(None, title_source, title_target).ratio()
             company_score = SequenceMatcher(None, company_source, company_target).ratio()
             if title_score > 0.9 and company_score > 0.9:
@@ -72,7 +72,7 @@ def mark_duplicates(connection):
 
 def easy_filter(connection):
     blacklist_terms = ['.net', 'senior', 'lead', 'architect', 'principal',
-                       'graduate', 'director', 'business', 'manager', 'support',
+                       'director', 'business', 'manager', 'support',
                        'analyst', 'security']
     cursor = connection.cursor()
     counter = 0
