@@ -8,20 +8,6 @@ import sites
 app = Flask(__name__)
 
 
-# @app.route('/', methods=['GET'])
-# def home():
-#     connection = sqlite3.connect('jobs.db')
-#     cursor = connection.cursor()
-#
-#     new_count = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status IS 'new'").fetchone()[0]
-#     interested_count = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status IS 'interested'").fetchone()[0]
-#     not_interested_count = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status IS 'not_interested'").fetchone()[0]
-#     interested_read_count = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status IS 'interested_read'").fetchone()[0]
-#     easy_filter_count = cursor.execute("SELECT COUNT(*) FROM jobs WHERE status IS 'easy_filter'").fetchone()[0]
-#
-#     return
-
-
 @app.route('/', methods=['GET', 'POST'])
 def jobs():
     connection = sqlite3.connect('jobs.db')

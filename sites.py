@@ -11,6 +11,8 @@ from pyppeteer import launch
 from selenium.webdriver.firefox.webdriver import WebDriver
 from tqdm import tqdm
 
+HTML_PARSER = 'html.parser'
+
 JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
 
 
@@ -60,7 +62,7 @@ class Site:
         self.connection.commit()
 
     def download_jobs(self, jobs: List) -> None:
-        for job in tqdm(jobs, desc=f'Jobs', unit='job', leave=False):
+        for job in tqdm(jobs, desc='Jobs', unit='job', leave=False):
             # Removing the ' because it screws with db stuff
             job = JobDetails(job.id, job.title.replace("'", ""), job.company.replace("'", ""))
             file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
@@ -71,10 +73,10 @@ class Site:
             self.connection.commit()
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        raise NotImplemented
+        raise NotImplementedError
 
     def extract_job_info(self, job) -> JobDetails:
-        raise NotImplemented
+        raise NotImplementedError
 
     def build_job_link(self, job_id) -> str:
         return self.JOB_URL.replace('%%ID%%', str(job_id))
@@ -89,7 +91,7 @@ class Site:
         return jobs
 
     def get_job_description(self, job_id) -> str | None:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class Seek(Site):
@@ -103,7 +105,7 @@ class Seek(Site):
 
     def get_job_description(self, job_id) -> str | None:
         response = requests.get(self.build_job_link(job_id))
-        soup = BeautifulSoup(response.text, features="html.parser")
+        soup = BeautifulSoup(response.text, features=HTML_PARSER)
         body: Tag = soup.find('div', attrs={'data-automation': 'jobAdDetails'})
         if body is not None:
             return body.contents[0].prettify()
@@ -115,7 +117,7 @@ class Seek(Site):
         if response.status_code != 200:
             print('The response returned a non-200 status.')
 
-        soup = BeautifulSoup(response.text, features="html.parser")
+        soup = BeautifulSoup(response.text, features=HTML_PARSER)
         matches = soup.find_all('a', attrs={'data-automation': 'jobTitle'})
         return [self.extract_job_info(x) for x in matches]
 
@@ -143,7 +145,7 @@ class Jora(Site):
     def get_job_description(self, job_id) -> str | None:
         loop = asyncio.get_event_loop()
         content = loop.run_until_complete(get(self.build_job_link(job_id)))
-        soup = BeautifulSoup(content, features="html.parser")
+        soup = BeautifulSoup(content, features=HTML_PARSER)
         body: Tag = soup.find('div', attrs={'id': 'job-description-container'})
         if body is not None:
             return body.prettify()
@@ -154,7 +156,7 @@ class Jora(Site):
         loop = asyncio.get_event_loop()
         content = loop.run_until_complete(get(self.build_page_link(query.replace('-', '+'), page_number)))
 
-        soup = BeautifulSoup(content, features="html.parser")
+        soup = BeautifulSoup(content, features=HTML_PARSER)
         if soup.text.find('We have looked through all the results for you') != -1:
             return []
         last_page = int(re.findall(r'\d+', soup.find_all('div', 'search-results-page-number')[0].text)[-1])
@@ -186,7 +188,7 @@ class Indeed(Site):
 
     def get_job_description(self, job_id) -> str | None:
         self.browser.get(self.build_job_link(job_id))
-        soup = BeautifulSoup(self.browser.page_source, features="html.parser")
+        soup = BeautifulSoup(self.browser.page_source, features=HTML_PARSER)
         body: Tag = soup.find('div', attrs={'class': 'jobsearch-JobComponent-description'})
         if body is not None:
             return body.prettify()
@@ -196,7 +198,7 @@ class Indeed(Site):
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         self.browser.get(self.build_page_link(query.replace('-', '+'), page_number * 10))
         content = self.browser.page_source
-        soup = BeautifulSoup(content, features="html.parser")
+        soup = BeautifulSoup(content, features=HTML_PARSER)
 
         result = soup.find('a', attrs={'data-testid': 'pagination-page-current'})
         if result is None or int(result.text) <= page_number:
