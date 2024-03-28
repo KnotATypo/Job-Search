@@ -8,8 +8,6 @@ import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from pyppeteer import launch
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webdriver import WebDriver
 from tqdm import tqdm
 
@@ -19,13 +17,22 @@ JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
 class Site:
     BASE_URL: str
     JOB_URL: str
-    site_string: str
+    SITE_STRING: str
     cursor: sqlite3.Cursor
     connection: sqlite3.Connection
 
+    def __init__(self, base_url: str, job_url: str, site_string: str, connection: sqlite3) -> None:
+        self.BASE_URL = base_url
+        self.JOB_URL = job_url
+        self.SITE_STRING = site_string
+
+        if connection is not None:
+            self.connection = connection
+            self.cursor = connection.cursor()
+
     def download_new_jobs(self, query) -> None:
         fetchone = self.cursor.execute(
-            f"SELECT pages FROM page_size WHERE site = '{self.site_string.lower()}' and search = '{query}'").fetchone()
+            f"SELECT pages FROM page_size WHERE site = '{self.SITE_STRING.lower()}' and search = '{query}'").fetchone()
         if fetchone is None:
             expected_pages = 1
         else:
@@ -33,10 +40,10 @@ class Site:
 
         page = 0
         new_results = True
-        with tqdm(total=expected_pages, desc=f'{self.site_string} - {query} pages', unit='page', leave=False) as pbar:
+        with tqdm(total=expected_pages, desc=f'{self.SITE_STRING} - {query} pages', unit='page', leave=False) as pbar:
             while new_results:
-                page += 1
                 jobs = self.get_jobs_from_page(page, query)
+                page += 1
                 if len(jobs) == 0:
                     new_results = False
                 else:
@@ -47,9 +54,9 @@ class Site:
 
         if expected_pages > 1:
             self.cursor.execute(
-                f"UPDATE page_size SET pages = '{page}' WHERE site = '{self.site_string.lower()}' and search = '{query}'")
+                f"UPDATE page_size SET pages = '{page}' WHERE site = '{self.SITE_STRING.lower()}' and search = '{query}'")
         else:
-            self.cursor.execute(f"INSERT INTO page_size VALUES ('{self.site_string.lower()}', '{query}', '{page}')")
+            self.cursor.execute(f"INSERT INTO page_size VALUES ('{self.SITE_STRING.lower()}', '{query}', '{page}')")
         self.connection.commit()
 
     def download_jobs(self, jobs: List) -> None:
@@ -63,38 +70,8 @@ class Site:
                 except UnicodeEncodeError:
                     continue
             self.cursor.execute(
-                f"INSERT INTO jobs VALUES('{job.id}', '{job.title}', '{job.company}', '{file_name}', null, 'new', '{self.site_string.lower()}')")
+                f"INSERT INTO jobs VALUES('{str(job.id)}', '{job.title}', '{job.company}', '{file_name}', null, 'new', '{self.SITE_STRING.lower()}')")
             self.connection.commit()
-
-    # def list_all_jobs(self, query) -> List[JobDetails]:
-    #     page = 0
-    #     jobs = []
-    #     new_results = True
-    #
-    #     fetchone = self.cursor.execute(f"SELECT pages FROM page_size WHERE site = '{self.site_string.lower()}' and search = '{query}'").fetchone()
-    #     if fetchone is None:
-    #         expected_pages = 1
-    #     else:
-    #         expected_pages = fetchone[0]
-    #
-    #     with tqdm(total=expected_pages, desc=f'{self.site_string} - {query} pages', unit='page', leave=False) as pbar:
-    #         while new_results:
-    #             page += 1
-    #             this_page = self.get_jobs_from_page(page, query)
-    #             jobs.extend(this_page)
-    #             if len(this_page) == 0:
-    #                 new_results = False
-    #             if page > expected_pages:
-    #                 pbar.total += 1
-    #             pbar.update()
-    #
-    #     if expected_pages > 1:
-    #         self.cursor.execute(f"UPDATE page_size SET pages = '{page}' WHERE site = '{self.site_string.lower()}' and search = '{query}'")
-    #     else:
-    #         self.cursor.execute(f"INSERT INTO page_size VALUES ('{self.site_string.lower()}', '{query}', '{page}')")
-    #     self.connection.commit()
-    #
-    #     return jobs
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         raise NotImplemented
@@ -117,13 +94,7 @@ class Site:
 
 class Seek(Site):
     def __init__(self, db_connection):
-        self.BASE_URL = 'https://www.seek.com.au/'
-        self.JOB_URL = 'https://www.seek.com.au/job/%%ID%%'
-        self.site_string = 'Seek'
-
-        if db_connection is not None:
-            self.connection = db_connection
-            self.cursor = db_connection.cursor()
+        super().__init__('https://www.seek.com.au/', 'https://www.seek.com.au/job/%%ID%%', 'Seek', db_connection)
 
     def get_job_description(self, job_id) -> str | None:
         response = requests.get(self.build_job_link(job_id))
@@ -158,13 +129,8 @@ class Seek(Site):
 
 class Jora(Site):
     def __init__(self, db_connection):
-        self.BASE_URL = 'https://au.jora.com/j?l=Brisbane+QLD&q='
-        self.JOB_URL = 'https://au.jora.com/job/%%ID%%'
-        self.site_string = 'Jora'
-
-        if db_connection is not None:
-            self.connection = db_connection
-            self.cursor = db_connection.cursor()
+        super().__init__('https://au.jora.com/j?l=Brisbane+QLD&q=', 'https://au.jora.com/job/%%ID%%', 'Jora',
+                         db_connection)
 
     def get_job_description(self, job_id) -> str | None:
         loop = asyncio.get_event_loop()
@@ -200,15 +166,10 @@ class Jora(Site):
 
 class Indeed(Site):
     browser: WebDriver
-    def __init__(self, db_connection, browser):
-        self.BASE_URL = 'https://au.indeed.com/'
-        self.JOB_URL = 'https://au.indeed.com/viewjob?jk=%%ID%%'
-        self.site_string = 'Seek'
-        self.browser = browser
 
-        if db_connection is not None:
-            self.connection = db_connection
-            self.cursor = db_connection.cursor()
+    def __init__(self, db_connection, browser):
+        super().__init__('https://au.indeed.com/', 'https://au.indeed.com/viewjob?jk=%%ID%%', 'Indeed', db_connection)
+        self.browser = browser
 
     def get_job_description(self, job_id) -> str | None:
         self.browser.get(self.build_job_link(job_id))
@@ -220,10 +181,15 @@ class Indeed(Site):
             return None
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        self.browser.get(self.BASE_URL + f'jobs?q={query.replace('-', '+')}&l=Brisbane+QLD&radius=10&start={page_number * 10}')
+        self.browser.get(
+            self.BASE_URL + f'jobs?q={query.replace('-', '+')}&l=Brisbane+QLD&radius=10&start={page_number * 10}')
         content = self.browser.page_source
-
         soup = BeautifulSoup(content, features="html.parser")
+
+        result = soup.find('a', attrs={'data-testid': 'pagination-page-current'})
+        if result is None or int(result.text) <= page_number:
+            return []
+
         matches = soup.find_all("td", {"class": "resultContent"})
         return [self.extract_job_info(x) for x in matches]
 

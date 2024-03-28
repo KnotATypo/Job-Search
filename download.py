@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import sys
 from difflib import SequenceMatcher
 
 import requests
@@ -24,8 +25,6 @@ def main():
     for site in tqdm(sites, desc='Sites', unit='site'):
         for term in tqdm(SEARCH_TERMS, desc='Terms', unit='term', leave=False):
             site.download_new_jobs(term)
-
-    driver.close()
 
     mark_duplicates(connection)
     easy_filter(connection)
