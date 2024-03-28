@@ -15,14 +15,14 @@ JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
 
 
 class Site:
-    BASE_URL: str
+    PAGE_URL: str
     JOB_URL: str
     SITE_STRING: str
     cursor: sqlite3.Cursor
     connection: sqlite3.Connection
 
-    def __init__(self, base_url: str, job_url: str, site_string: str, connection: sqlite3) -> None:
-        self.BASE_URL = base_url
+    def __init__(self, page_url: str, job_url: str, site_string: str, connection: sqlite3) -> None:
+        self.PAGE_URL = page_url
         self.JOB_URL = job_url
         self.SITE_STRING = site_string
 
@@ -79,6 +79,9 @@ class Site:
     def build_job_link(self, job_id) -> str:
         return self.JOB_URL.replace('%%ID%%', str(job_id))
 
+    def build_page_link(self, query, page_number):
+        return self.PAGE_URL.replace('%%QUERY%%', str(query)).replace('%%PAGE%%', str(page_number))
+
     def remove_duplicates(self, jobs):
         result = self.cursor.execute('SELECT id FROM jobs').fetchall()
         old_job_ids = [str(x[0]) for x in result]
@@ -91,7 +94,12 @@ class Site:
 
 class Seek(Site):
     def __init__(self, db_connection):
-        super().__init__('https://www.seek.com.au/', 'https://www.seek.com.au/job/%%ID%%', 'Seek', db_connection)
+        super().__init__(
+            'https://www.seek.com.au/%%QUERY%%-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page=%%PAGE%%',
+            'https://www.seek.com.au/job/%%ID%%',
+            'Seek',
+            db_connection
+        )
 
     def get_job_description(self, job_id) -> str | None:
         response = requests.get(self.build_job_link(job_id))
@@ -103,8 +111,7 @@ class Seek(Site):
             return None
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        response = requests.get(
-            self.BASE_URL + f'{query}-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD?page={page_number}')
+        response = requests.get(self.build_page_link(query, page_number))
         if response.status_code != 200:
             print('The response returned a non-200 status.')
 
@@ -126,8 +133,12 @@ class Seek(Site):
 
 class Jora(Site):
     def __init__(self, db_connection):
-        super().__init__('https://au.jora.com/j?l=Brisbane+QLD&q=', 'https://au.jora.com/job/%%ID%%', 'Jora',
-                         db_connection)
+        super().__init__(
+            'https://au.jora.com/j?l=Brisbane+QLD&q=%%QUERY%%&p=%%PAGE%%',
+            'https://au.jora.com/job/%%ID%%',
+            'Jora',
+            db_connection
+        )
 
     def get_job_description(self, job_id) -> str | None:
         loop = asyncio.get_event_loop()
@@ -141,7 +152,7 @@ class Jora(Site):
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         loop = asyncio.get_event_loop()
-        content = loop.run_until_complete(get(f"{self.BASE_URL}{query.replace('-', '+')}&p={page_number}"))
+        content = loop.run_until_complete(get(self.build_page_link(query.replace('-', '+'), page_number)))
 
         soup = BeautifulSoup(content, features="html.parser")
         if soup.text.find('We have looked through all the results for you') != -1:
@@ -165,7 +176,12 @@ class Indeed(Site):
     browser: WebDriver
 
     def __init__(self, db_connection, browser):
-        super().__init__('https://au.indeed.com/', 'https://au.indeed.com/viewjob?jk=%%ID%%', 'Indeed', db_connection)
+        super().__init__(
+            'https://au.indeed.com/jobs?q=%%QUERY%%&l=Brisbane+QLD&radius=10&start=%%PAGE%%',
+            'https://au.indeed.com/viewjob?jk=%%ID%%',
+            'Indeed',
+            db_connection
+        )
         self.browser = browser
 
     def get_job_description(self, job_id) -> str | None:
@@ -178,8 +194,7 @@ class Indeed(Site):
             return None
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
-        self.browser.get(
-            self.BASE_URL + f'jobs?q={query.replace('-', '+')}&l=Brisbane+QLD&radius=10&start={page_number * 10}')
+        self.browser.get(self.build_page_link(query.replace('-', '+'), page_number * 10))
         content = self.browser.page_source
         soup = BeautifulSoup(content, features="html.parser")
 
