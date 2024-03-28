@@ -21,53 +21,77 @@ class Site:
     connection: sqlite3.Connection
 
     def download_new_jobs(self, query) -> None:
-        jobs = self.list_all_jobs(query)
-        jobs = self.remove_duplicates(jobs)
-
-        if len(jobs) == 0:
-            return
-        for i in tqdm(jobs, desc=f'{self.site_string} - {query} jobs', unit='job', leave=False):
-            # Removing the ' because it screws with db stuff
-            i = JobDetails(i.id, i.title.replace("'", ""), i.company.replace("'", ""))
-            file_name = f'{i[1]}-{i[2]}-{i[0]}.html'.replace('/', '_')
-            with open('job_descriptions/' + file_name, 'w+') as f:
-                try:
-                    f.write(self.get_job_description(i[0]))
-                except UnicodeEncodeError:
-                    continue
-            self.cursor.execute(
-                f"INSERT INTO jobs VALUES('{i.id}', '{i.title}', '{i.company}', '{file_name}', null, 'new', '{self.site_string.lower()}')")
-            self.connection.commit()
-
-    def list_all_jobs(self, query) -> List[JobDetails]:
-        page = 0
-        jobs = []
-        new_results = True
-
-        fetchone = self.cursor.execute(f"SELECT pages FROM page_size WHERE site = '{self.site_string.lower()}' and search = '{query}'").fetchone()
+        fetchone = self.cursor.execute(
+            f"SELECT pages FROM page_size WHERE site = '{self.site_string.lower()}' and search = '{query}'").fetchone()
         if fetchone is None:
             expected_pages = 1
         else:
             expected_pages = fetchone[0]
 
+        page = 0
+        new_results = True
         with tqdm(total=expected_pages, desc=f'{self.site_string} - {query} pages', unit='page', leave=False) as pbar:
             while new_results:
                 page += 1
-                this_page = self.get_jobs_from_page(page, query)
-                jobs.extend(this_page)
-                if len(this_page) == 0:
+                jobs = self.get_jobs_from_page(page, query)
+                if len(jobs) == 0:
                     new_results = False
+                else:
+                    self.download_jobs(self.remove_duplicates(jobs))
                 if page > expected_pages:
                     pbar.total += 1
                 pbar.update()
 
         if expected_pages > 1:
-            self.cursor.execute(f"UPDATE page_size SET pages = '{page}' WHERE site = '{self.site_string.lower()}' and search = '{query}'")
+            self.cursor.execute(
+                f"UPDATE page_size SET pages = '{page}' WHERE site = '{self.site_string.lower()}' and search = '{query}'")
         else:
             self.cursor.execute(f"INSERT INTO page_size VALUES ('{self.site_string.lower()}', '{query}', '{page}')")
         self.connection.commit()
 
-        return jobs
+    def download_jobs(self, jobs: List) -> None:
+        for job in tqdm(jobs, desc=f'Jobs', unit='job', leave=False):
+            # Removing the ' because it screws with db stuff
+            job = JobDetails(job.id, job.title.replace("'", ""), job.company.replace("'", ""))
+            file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
+            with open('job_descriptions/' + file_name, 'w+') as f:
+                try:
+                    f.write(self.get_job_description(job[0]))
+                except UnicodeEncodeError:
+                    continue
+            self.cursor.execute(
+                f"INSERT INTO jobs VALUES('{job.id}', '{job.title}', '{job.company}', '{file_name}', null, 'new', '{self.site_string.lower()}')")
+            self.connection.commit()
+
+    # def list_all_jobs(self, query) -> List[JobDetails]:
+    #     page = 0
+    #     jobs = []
+    #     new_results = True
+    #
+    #     fetchone = self.cursor.execute(f"SELECT pages FROM page_size WHERE site = '{self.site_string.lower()}' and search = '{query}'").fetchone()
+    #     if fetchone is None:
+    #         expected_pages = 1
+    #     else:
+    #         expected_pages = fetchone[0]
+    #
+    #     with tqdm(total=expected_pages, desc=f'{self.site_string} - {query} pages', unit='page', leave=False) as pbar:
+    #         while new_results:
+    #             page += 1
+    #             this_page = self.get_jobs_from_page(page, query)
+    #             jobs.extend(this_page)
+    #             if len(this_page) == 0:
+    #                 new_results = False
+    #             if page > expected_pages:
+    #                 pbar.total += 1
+    #             pbar.update()
+    #
+    #     if expected_pages > 1:
+    #         self.cursor.execute(f"UPDATE page_size SET pages = '{page}' WHERE site = '{self.site_string.lower()}' and search = '{query}'")
+    #     else:
+    #         self.cursor.execute(f"INSERT INTO page_size VALUES ('{self.site_string.lower()}', '{query}', '{page}')")
+    #     self.connection.commit()
+    #
+    #     return jobs
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         raise NotImplemented
@@ -79,14 +103,14 @@ class Site:
         return self.JOB_URL.replace('%%ID%%', str(job_id))
 
     def remove_duplicates(self, jobs):
-        remove_list = set()
-        for i, job_source in enumerate(jobs):
-            for j, job_test in enumerate(jobs):
-                if i == j: continue
-                if job_source.id == job_test.id:
-                    if job_source not in remove_list:
-                        remove_list.add(job_test)
-        jobs = [x for x in jobs if x not in remove_list]
+        # remove_list = set()
+        # for i, job_source in enumerate(jobs):
+        #     for j, job_test in enumerate(jobs):
+        #         if i == j: continue
+        #         if job_source.id == job_test.id:
+        #             if job_source not in remove_list:
+        #                 remove_list.add(job_test)
+        # jobs = [x for x in jobs if x not in remove_list]
         result = self.cursor.execute('SELECT id FROM jobs').fetchall()
         old_job_ids = [str(x[0]) for x in result]
         jobs = [x for x in jobs if str(x[0]) not in old_job_ids]
@@ -164,7 +188,7 @@ class Jora(Site):
         soup = BeautifulSoup(content, features="html.parser")
         if soup.text.find('We have looked through all the results for you') != -1:
             return []
-        last_page = int(re.findall(r'\d+', soup.find_all('div', 'search-results-count')[0].text)[-1])
+        last_page = int(re.findall(r'\d+', soup.find_all('div', 'search-results-page-number')[0].text)[-1])
         if page_number > last_page:
             return []
         matches = soup.find_all('a', attrs={'class': 'job-link -no-underline -desktop-only show-job-description'})
