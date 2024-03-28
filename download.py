@@ -3,10 +3,12 @@ import sqlite3
 from difflib import SequenceMatcher
 
 import requests
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 from tqdm import tqdm
 from urllib3.exceptions import InsecureRequestWarning
 
-from sites import Seek, Jora
+from sites import Seek, Jora, Indeed
 
 SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software-developer']
 
@@ -14,10 +16,16 @@ SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software
 def main():
     connection = setup()
 
-    sites = [Seek(connection), Jora(connection)]
+    options = Options()
+    options.add_argument("--headless")
+    driver = webdriver.Firefox(options=options)
+
+    sites = [Seek(connection), Jora(connection), Indeed(connection, driver)]
     for site in tqdm(sites, desc='Sites', unit='site'):
         for term in tqdm(SEARCH_TERMS, desc='Terms', unit='term', leave=False):
             site.download_new_jobs(term)
+
+    driver.close()
 
     mark_duplicates(connection)
     easy_filter(connection)
@@ -73,10 +81,7 @@ def easy_filter(connection):
         results = cursor.execute(
             f'SELECT id, file FROM jobs WHERE title LIKE \'%{term}%\' AND status=\'new\'').fetchall()
         for result in results:
-            try:
-                os.remove(f'job_descriptions/{result[1]}')
-            except FileNotFoundError:
-                pass
+            os.remove(f'job_descriptions/{result[1]}')
             cursor.execute(f"UPDATE jobs SET status='easy_filter' WHERE id='{result[0]}'")
             connection.commit()
             counter += 1

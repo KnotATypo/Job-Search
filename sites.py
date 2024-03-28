@@ -8,6 +8,9 @@ import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from pyppeteer import launch
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.webdriver import WebDriver
 from tqdm import tqdm
 
 JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
@@ -103,14 +106,6 @@ class Site:
         return self.JOB_URL.replace('%%ID%%', str(job_id))
 
     def remove_duplicates(self, jobs):
-        # remove_list = set()
-        # for i, job_source in enumerate(jobs):
-        #     for j, job_test in enumerate(jobs):
-        #         if i == j: continue
-        #         if job_source.id == job_test.id:
-        #             if job_source not in remove_list:
-        #                 remove_list.add(job_test)
-        # jobs = [x for x in jobs if x not in remove_list]
         result = self.cursor.execute('SELECT id FROM jobs').fetchall()
         old_job_ids = [str(x[0]) for x in result]
         jobs = [x for x in jobs if str(x[0]) not in old_job_ids]
@@ -200,6 +195,44 @@ class Jora(Site):
         job_id = link[link.rindex('/') + 1:link.index('?')]
         title = job.text
         company = job.parent.parent.parent.parent.find('span', attrs={'class', 'job-company'}).text
+        return JobDetails(job_id, title, company)
+
+
+class Indeed(Site):
+    browser: WebDriver
+    def __init__(self, db_connection, browser):
+        self.BASE_URL = 'https://au.indeed.com/'
+        self.JOB_URL = 'https://au.indeed.com/viewjob?jk=%%ID%%'
+        self.site_string = 'Seek'
+        self.browser = browser
+
+        if db_connection is not None:
+            self.connection = db_connection
+            self.cursor = db_connection.cursor()
+
+    def get_job_description(self, job_id) -> str | None:
+        self.browser.get(self.build_job_link(job_id))
+        soup = BeautifulSoup(self.browser.page_source, features="html.parser")
+        body: Tag = soup.find('div', attrs={'class': 'jobsearch-JobComponent-description'})
+        if body is not None:
+            return body.prettify()
+        else:
+            return None
+
+    def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
+        self.browser.get(self.BASE_URL + f'jobs?q={query.replace('-', '+')}&l=Brisbane+QLD&radius=10&start={page_number * 10}')
+        content = self.browser.page_source
+
+        soup = BeautifulSoup(content, features="html.parser")
+        matches = soup.find_all("td", {"class": "resultContent"})
+        return [self.extract_job_info(x) for x in matches]
+
+    def extract_job_info(self, job) -> JobDetails:
+        job_id = job.find('a')['id']
+        job_id = job_id[job_id.index('_') + 1:]
+        title = job.find('a').text
+        company = job.find('span', {'data-testid': 'company-name'}).text
+
         return JobDetails(job_id, title, company)
 
 

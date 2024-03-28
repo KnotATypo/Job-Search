@@ -4,3 +4,4 @@ tqdm~=4.66.2
 urllib3~=2.2.1
 Flask~=3.0.2
 pyppeteer~=2.0.0
+selenium~=4.19.0
