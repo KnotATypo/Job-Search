@@ -15,7 +15,6 @@ def jobs():
 
     if request.method == 'POST':
         file = request.form['file']
-        print(file)
         if 'interested' in request.form:
             cursor.execute(f"UPDATE jobs SET status='interested_read' WHERE file='{file}'")
         elif 'not_interested' in request.form:
@@ -42,7 +41,6 @@ def jobs():
     duplicate_status = False
     if result[5] is not None:
         duplicate_status = get_duplicate_status(result[0], cursor)
-    print(duplicate_status)
 
     return \
             '<style>input {border: none;color: white;padding: 15px 32px;text-align: center;text-decoration: none;display: inline-block;font-size: 16px;}</style>' + \
