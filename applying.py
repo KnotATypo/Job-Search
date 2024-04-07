@@ -1,13 +1,14 @@
 import os
 import sqlite3
 
-from sites import Seek, Jora
+from sites import Seek, Jora, Indeed
 
 
 def main():
-    seek = Seek(None)
-    jora = Jora(None)
     connection = sqlite3.connect('jobs.db')
+    seek = Seek(connection)
+    jora = Jora(connection)
+    indeed = Indeed(connection, None)
     cursor = connection.cursor()
     jobs = cursor.execute("SELECT * FROM jobs WHERE status='interested_read'").fetchall()
     for job in jobs:
@@ -16,6 +17,10 @@ def main():
             link = seek.build_job_link(job[0])
         elif job[6] == 'jora':
             link = jora.build_job_link(job[0])
+        elif job[6] == 'indeed':
+            link = indeed.build_job_link(job[0])
+        else:
+            raise Exception('Unknown job site')
         print(f'{job[1]} - {job[2]}\n{link}')
         while choice not in {'y', 'n', 'not available'}:
             choice = input('Have you applied? [y/n/not available]: ')
