@@ -53,11 +53,13 @@ def setup():
 def mark_duplicates(connection):
     cursor = connection.cursor()
     new_jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status = 'new'").fetchall()
-    jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status != 'new'").fetchall()
+    jobs = cursor.execute("SELECT id, title, company FROM jobs").fetchall()
     duplicates = []
     for id_source, title_source, company_source in tqdm(new_jobs, desc='Checking for duplicates', unit='job'):
         temp_duplicates = []
         for id_target, title_target, company_target in tqdm(jobs, leave=False):
+            if id_source == id_target:
+                continue
             title_score = SequenceMatcher(None, title_source, title_target).ratio()
             company_score = SequenceMatcher(None, company_source, company_target).ratio()
             if title_score > 0.9 and company_score > 0.9:
