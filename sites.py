@@ -66,11 +66,18 @@ class Site:
             # Removing the ' because it screws with db stuff
             job = JobDetails(job.id, job.title.replace("'", ""), job.company.replace("'", ""))
             file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
+
+            # Idk why but seek will sometimes give me duplicate ID's
+            try:
+                self.cursor.execute(
+                    f"INSERT INTO jobs VALUES('{str(job.id)}', '{job.title}', '{job.company}', '{file_name}', null, 'new', '{self.SITE_STRING.lower()}')")
+                self.connection.commit()
+            except sqlite3.IntegrityError:
+                continue
+
             with open('job_descriptions/' + file_name, 'w+') as f:
                 f.write(self.get_job_description(job[0]))
-            self.cursor.execute(
-                f"INSERT INTO jobs VALUES('{str(job.id)}', '{job.title}', '{job.company}', '{file_name}', null, 'new', '{self.SITE_STRING.lower()}')")
-            self.connection.commit()
+
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         raise NotImplementedError
