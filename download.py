@@ -75,7 +75,8 @@ def mark_duplicates(connection):
 def easy_filter(connection):
     blacklist_terms = ['.net', 'senior', 'lead', 'architect', 'principal',
                        'director', 'business', 'manager', 'support',
-                       'analyst', 'security', '2025', 'design']
+                       'analyst', 'security', '2025', 'design', 'clinic',
+                       'service', 'manage', 'coordinator', 'sale']
     cursor = connection.cursor()
     counter = 0
     for term in blacklist_terms:

@@ -78,7 +78,6 @@ class Site:
             with open('job_descriptions/' + file_name, 'w+') as f:
                 f.write(self.get_job_description(job[0]))
 
-
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         raise NotImplementedError
 
