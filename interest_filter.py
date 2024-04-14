@@ -52,6 +52,8 @@ def get_duplicate_status(id_source, cursor):
         return 'interested'
     if all([x == 'not_interested' for x in status]):
         return 'not_interested'
+    if all([x == 'new' for x in status]):
+        return 'new'
     return '???'
 
 
