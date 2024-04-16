@@ -1,0 +1,28 @@
+{
+  "search-terms": [
+    "programmer",
+    "computer-science",
+    "software-engineer",
+    "software-developer"
+  ],
+  "title-blacklist": [
+    ".net",
+    "senior",
+    "lead",
+    "architect",
+    "principal",
+    "director",
+    "business",
+    "manager",
+    "support",
+    "analyst",
+    "security",
+    "2025",
+    "design",
+    "clinic",
+    "service",
+    "manage",
+    "coordinator",
+    "sale"
+  ]
+}

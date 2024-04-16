@@ -1,3 +1,4 @@
+import json
 from difflib import SequenceMatcher
 
 import psycopg2
@@ -5,10 +6,10 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from tqdm import tqdm
 
-import util
 from sites import Seek, Jora, Indeed
 
-SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software-developer']
+SEARCH = []
+BLACKLIST = []
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
 
     sites = [Seek(connection), Jora(connection), Indeed(connection, driver)]
     for site in tqdm(sites, desc='Sites', unit='site'):
-        for term in tqdm(SEARCH_TERMS, desc='Terms', unit='term', leave=False):
+        for term in tqdm(SEARCH, desc='Terms', unit='term', leave=False):
             site.download_new_jobs(term)
 
     mark_duplicates(connection)
@@ -56,19 +57,24 @@ def mark_duplicates(connection):
 
 
 def easy_filter(connection):
-    blacklist_terms = ['.net', 'senior', 'lead', 'architect', 'principal',
-                       'director', 'business', 'manager', 'support',
-                       'analyst', 'security', '2025', 'design', 'clinic',
-                       'service', 'manage', 'coordinator', 'sale']
     cursor = connection.cursor()
     counter = 0
-    for term in blacklist_terms:
+    for term in BLACKLIST:
         cursor.execute(f'SELECT id, file FROM job_search WHERE title ILIKE \'%{term}%\' AND status=\'new\'')
         results = cursor.fetchall()
         for result in results:
             cursor.execute(f"UPDATE job_search SET status='easy_filter' WHERE id='{result[0]}'")
             counter += 1
     print(f'Easy filter caught {counter} jobs')
+
+
+def load_config():
+    global SEARCH, BLACKLIST
+
+    with open('../config.json', 'r') as f:
+        config = json.load(f)
+    SEARCH = config['search-terms']
+    BLACKLIST = config['title-blacklist']
 
 
 if __name__ == '__main__':
