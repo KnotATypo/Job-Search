@@ -23,6 +23,13 @@
     "service",
     "manage",
     "coordinator",
-    "sale"
+    "sale",
+    "cnc",
+    "electric",
+    "civil",
+    "mechanic",
+    "field",
+    "health",
+    "365"
   ]
 }

@@ -40,19 +40,16 @@ def jobs():
 
     try:
         if result[4] == 'seek':
+            link = seek.build_job_link(result[0])
             util.download_job_description(result, seek)
         elif result[4] == 'jora':
+            link = jora.build_job_link(result[0])
             util.download_job_description(result, jora)
         elif result[4] == 'indeed':
-            util.download_job_description(result, indeed)
-        util.get_job_description(result[3])
-    except FileNotFoundError:
-        if result[4] == 'seek':
-            link = seek.build_job_link(result[0])
-        elif result[4] == 'jora':
-            link = jora.build_job_link(result[0])
-        elif result[4] == 'indeed':
             link = indeed.build_job_link(result[0])
+            util.download_job_description(result, indeed)
+        content = util.get_job_description(result[3])
+    except FileNotFoundError:
         content = f"Could not find file. Try this link: <a target='_blank' href='{link}'>{link}</a>"
 
     duplicate_status = False

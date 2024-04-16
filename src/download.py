@@ -4,7 +4,7 @@ from difflib import SequenceMatcher
 
 import psycopg2
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from tqdm import tqdm
 
 from sites import Seek, Jora, Indeed
@@ -21,7 +21,7 @@ def main():
 
     options = Options()
     options.add_argument("--headless")
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Firefox(options=options)
 
     sites = [Seek(connection), Jora(connection), Indeed(connection, driver)]
     for site in tqdm(sites, desc='Sites', unit='site'):

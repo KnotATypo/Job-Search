@@ -12,14 +12,18 @@ def del_job_description(job_file):
 
 
 def get_job_description(job_file):
-    with open(job_file, 'r') as f:
+    with open(f'{root_path}/job_descriptions/{job_file}', 'r') as f:
         return f.read()
 
 
 def download_job_description(job, clas):
     file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
     with open(f'{root_path}/job_descriptions/{file_name}', 'w+') as f:
-        f.write(clas.get_job_description(job[0]))
+        description = clas.get_job_description(job[0])
+        if description is not None:
+            f.write(description)
+        else:
+            raise FileNotFoundError
 
 
 def connect_sqlite():
