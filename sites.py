@@ -12,6 +12,8 @@ from pyppeteer import launch
 from selenium.webdriver.firefox.webdriver import WebDriver
 from tqdm import tqdm
 
+import util
+
 HTML_PARSER = 'html.parser'
 
 JobDetails = namedtuple('JobDetails', ['id', 'title', 'company'])
@@ -35,8 +37,7 @@ class Site:
             self.connection = connection
             self.cursor = connection.cursor()
 
-        self.connection_lite = sqlite3.connect('jobs.db')
-        self.cursor_lite = self.connection_lite.cursor()
+        self.connection_lite, self.cursor_lite = util.connect_sqlite()
 
     def download_new_jobs(self, query) -> None:
         fetchone = self.cursor_lite.execute(f"SELECT pages FROM page_size "
@@ -56,7 +57,8 @@ class Site:
                 if len(jobs) == 0:
                     new_results = False
                 else:
-                    self.download_jobs(self.remove_duplicates(jobs))
+                    for job_id in self.remove_duplicates(jobs):
+                        self.save_job(job_id)
                 if page > expected_pages:
                     pbar.total += 1
                 pbar.update()
@@ -68,25 +70,21 @@ class Site:
             self.cursor_lite.execute(f"INSERT INTO page_size VALUES ('{self.SITE_STRING.lower()}', '{query}', '{page}')")
         self.connection_lite.commit()
 
-    def download_jobs(self, jobs: List) -> None:
-        for job in tqdm(jobs, desc='Jobs', unit='job', leave=False):
-            # Removing the ' because it screws with db stuff
-            job = JobDetails(job.id, job.title.replace("'", ""), job.company.replace("'", ""))
-            file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
+    def save_job(self, job: JobDetails) -> None:
+        # Removing the ' because it screws with db stuff
+        job = JobDetails(job.id, job.title.replace("'", ""), job.company.replace("'", ""))
+        file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
 
-            # Idk why but seek will sometimes give me duplicate ID's
-            self.cursor.execute(f"INSERT INTO job_search VALUES("
-                                f"'{str(job.id)}', "
-                                f"'{job.title}', "
-                                f"'{job.company}', "
-                                f"'{file_name}', "
-                                f"null, "
-                                f"'new', "
-                                f"'{self.SITE_STRING.lower()}'"
-                                f")")
-
-            with open('job_descriptions/' + file_name, 'w+') as f:
-                f.write(self.get_job_description(job[0]))
+        # Idk why but seek will sometimes give me duplicate ID's
+        self.cursor.execute(f"INSERT INTO job_search VALUES("
+                            f"'{str(job.id)}', "
+                            f"'{job.title}', "
+                            f"'{job.company}', "
+                            f"'{file_name}', "
+                            f"null, "
+                            f"'new', "
+                            f"'{self.SITE_STRING.lower()}'"
+                            f")")
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         raise NotImplementedError

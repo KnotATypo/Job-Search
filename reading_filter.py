@@ -1,17 +1,27 @@
-import os
-
 import psycopg2
 from flask import Flask, request
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 import sites
+import util
 
 app = Flask(__name__)
+
+connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
+connection.autocommit = True
+
+options = Options()
+options.add_argument("--headless")
+driver = webdriver.Firefox(options=options)
+
+seek = sites.Seek(connection)
+jora = sites.Jora(connection)
+indeed = sites.Indeed(connection, driver)
 
 
 @app.route('/', methods=['GET', 'POST'])
 def jobs():
-    connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
-    connection.autocommit = True
     cursor = connection.cursor()
 
     if request.method == 'POST':
@@ -20,8 +30,7 @@ def jobs():
             cursor.execute(f"UPDATE job_search SET status='interested_read' WHERE file='{file}'")
         elif 'not_interested' in request.form:
             cursor.execute(f"UPDATE job_search SET status='not_interested' WHERE file='{file}'")
-            if os.path.exists(f'job_descriptions/{file}'):
-                os.remove(f'job_descriptions/{file}')
+            util.del_job_description(file)
         connection.commit()
 
     cursor.execute("SELECT id, title, company, file, site, duplicate FROM job_search WHERE status='interested'")
@@ -30,18 +39,25 @@ def jobs():
         return 'You currently have no remaining <i>interested</i> jobs'
 
     try:
-        with open(f'job_descriptions/{result[3]}') as f:
-            content = f.read()
+        if result[4] == 'seek':
+            util.download_job_description(result, seek)
+        elif result[4] == 'jora':
+            util.download_job_description(result, jora)
+        elif result[4] == 'indeed':
+            util.download_job_description(result, indeed)
+        util.get_job_description(result[3])
     except FileNotFoundError:
         if result[4] == 'seek':
-            link = sites.Seek(None).build_job_link(result[0])
-        else:
-            link = sites.Jora(None).build_job_link(result[0])
+            link = seek.build_job_link(result[0])
+        elif result[4] == 'jora':
+            link = jora.build_job_link(result[0])
+        elif result[4] == 'indeed':
+            link = indeed.build_job_link(result[0])
         content = f"Could not find file. Try this link: <a target='_blank' href='{link}'>{link}</a>"
 
     duplicate_status = False
     if result[5] is not None:
-        duplicate_status = get_duplicate_status(result[0], cursor)
+        duplicate_status = util.get_duplicate_status(result[0], cursor)
 
     return \
             '<style>input {border: none;color: white;padding: 15px 32px;text-align: center;text-decoration: none;display: inline-block;font-size: 16px;}</style>' + \
@@ -54,25 +70,6 @@ def jobs():
             '<input type="submit" name="interested" style="background-color: #04AA6D" value="Interested"/>' + \
             '<input type="submit" name="not_interested" style="background-color: #f44336" value="Not Interested"/>' + \
             '</form>'
-
-
-def get_duplicate_status(id_source, cursor):
-    status = []
-    cursor.execute(f"SELECT duplicate FROM job_search WHERE id='{id_source}'")
-    for id_target in str(cursor.fetchone()[0]).split(','):
-        cursor.execute(f"SELECT status FROM job_search WHERE id='{id_target}'")
-        status.append(cursor.fetchone()[0])
-    if 'applied' in status:
-        return 'applied'
-    if 'easy_filter' in status:
-        return 'easy_filter'
-    if 'interested_read' in status:
-        return 'interested_read'
-    if 'interested' in status:
-        return 'interested'
-    if all([x == 'not_interested' for x in status]):
-        return 'not_interested'
-    return '???'
 
 
 if __name__ == '__main__':

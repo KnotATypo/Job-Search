@@ -1,7 +1,6 @@
-import os
-
 import psycopg2
 
+import util
 from sites import Seek, Jora, Indeed
 
 
@@ -33,10 +32,7 @@ def main():
             cursor.execute(f"UPDATE job_search SET status='applied' WHERE id='{str(job[0])}'")
         if choice in {'not available'}:
             cursor.execute(f"UPDATE job_search SET status='not_interested' WHERE id='{str(job[0])}'")
-            try:
-                os.remove(f'job_descriptions/{job[3]}')
-            except FileNotFoundError:
-                print('Could not find file to remove, skipping.')
+            util.del_job_description(job[3])
         connection.commit()
         print()
 
