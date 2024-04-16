@@ -66,7 +66,6 @@ def easy_filter(connection):
         cursor.execute(f'SELECT id, file FROM job_search WHERE title ILIKE \'%{term}%\' AND status=\'new\'')
         results = cursor.fetchall()
         for result in results:
-            util.del_job_description(result[1])
             cursor.execute(f"UPDATE job_search SET status='easy_filter' WHERE id='{result[0]}'")
             counter += 1
     print(f'Easy filter caught {counter} jobs')

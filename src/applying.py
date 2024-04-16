@@ -32,7 +32,6 @@ def main():
             cursor.execute(f"UPDATE job_search SET status='applied' WHERE id='{str(job[0])}'")
         if choice in {'not available'}:
             cursor.execute(f"UPDATE job_search SET status='not_interested' WHERE id='{str(job[0])}'")
-            util.del_job_description(job[3])
         connection.commit()
         print()
 
