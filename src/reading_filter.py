@@ -16,7 +16,7 @@ options.add_argument("--headless")
 driver = webdriver.Firefox(options=options)
 
 seek = sites.Seek(connection)
-jora = sites.Jora(connection)
+jora = sites.Jora(connection, driver)
 indeed = sites.Indeed(connection, driver)
 
 

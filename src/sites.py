@@ -149,18 +149,21 @@ class Seek(Site):
 
 
 class Jora(Site):
-    def __init__(self, db_connection):
+    browser: WebDriver
+
+    def __init__(self, db_connection, browser):
         super().__init__(
             'https://au.jora.com/j?l=Brisbane+QLD&q=%%QUERY%%&p=%%PAGE%%',
             'https://au.jora.com/job/%%ID%%',
             'Jora',
             db_connection
         )
+        self.browser = browser
 
     def get_job_description(self, job_id) -> str | None:
-        loop = asyncio.get_event_loop()
-        content = loop.run_until_complete(get(self.build_job_link(job_id)))
-        soup = BeautifulSoup(content, features=HTML_PARSER)
+        self.browser.get(self.build_job_link(job_id))
+        soup = BeautifulSoup(self.browser.page_source, features=HTML_PARSER)
+        # soup = BeautifulSoup(content, features=HTML_PARSER)
         body: Tag = soup.find('div', attrs={'id': 'job-description-container'})
         if body is not None:
             return body.prettify()

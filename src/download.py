@@ -23,7 +23,7 @@ def main():
     options.add_argument("--headless")
     driver = webdriver.Firefox(options=options)
 
-    sites = [Seek(connection), Jora(connection), Indeed(connection, driver)]
+    sites = [Seek(connection), Jora(connection, driver), Indeed(connection, driver)]
     for site in tqdm(sites, desc='Sites', unit='site'):
         for term in tqdm(SEARCH, desc='Terms', unit='term', leave=False):
             site.download_new_jobs(term)
