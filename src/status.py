@@ -3,10 +3,10 @@ import sqlite3
 
 
 def main():
-    connection = sqlite3.Connection('jobs.db')
+    connection = sqlite3.Connection('../jobs.db')
     cursor = connection.cursor()
 
-    files = os.listdir("job_descriptions")
+    files = os.listdir("../job_descriptions")
     status = []
     for file in files:
         try:
