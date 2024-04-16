@@ -1,9 +1,10 @@
 import json
+import os
 from difflib import SequenceMatcher
 
 import psycopg2
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 from tqdm import tqdm
 
 from sites import Seek, Jora, Indeed
@@ -13,12 +14,14 @@ BLACKLIST = []
 
 
 def main():
+    load_config()
+
     connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
     connection.autocommit = True
 
     options = Options()
     options.add_argument("--headless")
-    driver = webdriver.Firefox(options=options)
+    driver = webdriver.Chrome(options=options)
 
     sites = [Seek(connection), Jora(connection), Indeed(connection, driver)]
     for site in tqdm(sites, desc='Sites', unit='site'):
@@ -70,8 +73,8 @@ def easy_filter(connection):
 
 def load_config():
     global SEARCH, BLACKLIST
-
-    with open('../config.json', 'r') as f:
+    root_path = os.path.realpath(__file__)[:os.path.realpath(__file__).rindex('Job-Search') + 10]
+    with open(f'{root_path}/config.json', 'r') as f:
         config = json.load(f)
     SEARCH = config['search-terms']
     BLACKLIST = config['title-blacklist']
