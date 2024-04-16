@@ -1,6 +1,6 @@
 import os
-import sqlite3
 
+import psycopg2
 from flask import Flask, request
 
 import sites
@@ -10,21 +10,22 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def jobs():
-    connection = sqlite3.connect('jobs.db')
+    connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
+    connection.autocommit = True
     cursor = connection.cursor()
 
     if request.method == 'POST':
         file = request.form['file']
         if 'interested' in request.form:
-            cursor.execute(f"UPDATE jobs SET status='interested_read' WHERE file='{file}'")
+            cursor.execute(f"UPDATE job_search SET status='interested_read' WHERE file='{file}'")
         elif 'not_interested' in request.form:
-            cursor.execute(f"UPDATE jobs SET status='not_interested' WHERE file='{file}'")
+            cursor.execute(f"UPDATE job_search SET status='not_interested' WHERE file='{file}'")
             if os.path.exists(f'job_descriptions/{file}'):
                 os.remove(f'job_descriptions/{file}')
         connection.commit()
 
-    result = cursor.execute(
-        "SELECT id, title, company, file, site, duplicate FROM jobs WHERE status='interested'").fetchone()
+    cursor.execute("SELECT id, title, company, file, site, duplicate FROM job_search WHERE status='interested'")
+    result = cursor.fetchone()
     if result is None:
         return 'You currently have no remaining <i>interested</i> jobs'
 
@@ -57,8 +58,10 @@ def jobs():
 
 def get_duplicate_status(id_source, cursor):
     status = []
-    for id_target in str(cursor.execute(f"SELECT duplicate FROM jobs WHERE id='{id_source}'").fetchone()[0]).split(','):
-        status.append(cursor.execute(f"SELECT status FROM jobs WHERE id='{id_target}'").fetchone()[0])
+    cursor.execute(f"SELECT duplicate FROM job_search WHERE id='{id_source}'")
+    for id_target in str(cursor.fetchone()[0]).split(','):
+        cursor.execute(f"SELECT status FROM job_search WHERE id='{id_target}'")
+        status.append(cursor.fetchone()[0])
     if 'applied' in status:
         return 'applied'
     if 'easy_filter' in status:

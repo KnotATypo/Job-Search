@@ -1,13 +1,10 @@
 import os
-import sqlite3
-import sys
 from difflib import SequenceMatcher
 
-import requests
+import psycopg2
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from tqdm import tqdm
-from urllib3.exceptions import InsecureRequestWarning
 
 from sites import Seek, Jora, Indeed
 
@@ -15,7 +12,8 @@ SEARCH_TERMS = ['programmer', 'computer-science', 'software-engineer', 'software
 
 
 def main():
-    connection = setup()
+    connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
+    connection.autocommit = True
 
     options = Options()
     options.add_argument("--headless")
@@ -30,30 +28,15 @@ def main():
     easy_filter(connection)
 
 
-def setup():
-    conn = sqlite3.connect('jobs.db')
-    cursor = conn.cursor()
-    requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-    cursor.execute('CREATE TABLE IF NOT EXISTS '
-                   'jobs('
-                   'id STRING UNIQUE, '
-                   'title STRING, '
-                   'company STRING, '
-                   'file STRING, '
-                   'duplicate BOOLEAN, '
-                   'status STRING, '
-                   'site STRING'
-                   ')')
-    if not os.path.exists('job_descriptions'):
-        os.mkdir('job_descriptions')
-
-    return conn
-
-
 def mark_duplicates(connection):
     cursor = connection.cursor()
-    new_jobs = cursor.execute("SELECT id, title, company FROM jobs WHERE status = 'new'").fetchall()
-    jobs = cursor.execute("SELECT id, title, company FROM jobs").fetchall()
+
+    cursor.execute("SELECT id, title, company FROM job_search WHERE status = 'new'")
+    new_jobs = cursor.fetchall()
+
+    cursor.execute("SELECT id, title, company FROM job_search")
+    jobs = cursor.fetchall()
+
     duplicates = []
     for id_source, title_source, company_source in tqdm(new_jobs, desc='Checking for duplicates', unit='job'):
         temp_duplicates = []
@@ -67,8 +50,7 @@ def mark_duplicates(connection):
         duplicates.append((id_source, temp_duplicates))
     duplicates = [x for x in duplicates if len(x[1]) != 0]
     for id_source, temp_duplicates in duplicates:
-        cursor.execute(f"UPDATE jobs SET duplicate='{','.join([str(x) for x in temp_duplicates])}' WHERE id='{id_source}'")
-        connection.commit()
+        cursor.execute(f"UPDATE job_search SET duplicate='{','.join([str(x) for x in temp_duplicates])}' WHERE id='{id_source}'")
     print('Duplicates found:', len(duplicates))
 
 
@@ -80,12 +62,11 @@ def easy_filter(connection):
     cursor = connection.cursor()
     counter = 0
     for term in blacklist_terms:
-        results = cursor.execute(
-            f'SELECT id, file FROM jobs WHERE title LIKE \'%{term}%\' AND status=\'new\'').fetchall()
+        cursor.execute(f'SELECT id, file FROM job_search WHERE title LIKE \'%{term}%\' AND status=\'new\'')
+        results = cursor.fetchall()
         for result in results:
             os.remove(f'job_descriptions/{result[1]}')
-            cursor.execute(f"UPDATE jobs SET status='easy_filter' WHERE id='{result[0]}'")
-            connection.commit()
+            cursor.execute(f"UPDATE job_search SET status='easy_filter' WHERE id='{result[0]}'")
             counter += 1
     print(f'Easy filter caught {counter} jobs')
 

@@ -10,7 +10,7 @@ def main():
     status = []
     for file in files:
         try:
-            job = cursor.execute(f"SELECT id, status FROM jobs WHERE file='{file}'").fetchone()
+            job = cursor.execute(f"SELECT id, status FROM job_search WHERE file='{file}'").fetchone()
             if job is not None:
                 if job[1] == 'not_interested':
                     os.remove(f'job_descriptions/{file}')

@@ -1,16 +1,21 @@
 import os
-import sqlite3
+
+import psycopg2
 
 from sites import Seek, Jora, Indeed
 
 
 def main():
-    connection = sqlite3.connect('jobs.db')
+    connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
+    connection.autocommit = True
+
     seek = Seek(connection)
     jora = Jora(connection)
     indeed = Indeed(connection, None)
+
     cursor = connection.cursor()
-    jobs = cursor.execute("SELECT * FROM jobs WHERE status='interested_read'").fetchall()
+    cursor.execute("SELECT * FROM job_search WHERE status='interested_read'")
+    jobs = cursor.fetchall()
     for job in jobs:
         choice = 0
         if job[6] == 'seek':
@@ -25,9 +30,9 @@ def main():
         while choice not in {'y', 'n', 'not available'}:
             choice = input('Have you applied? [y/n/not available]: ')
         if choice == 'y':
-            cursor.execute(f"UPDATE jobs SET status='applied' WHERE id='{str(job[0])}'")
+            cursor.execute(f"UPDATE job_search SET status='applied' WHERE id='{str(job[0])}'")
         if choice in {'not available'}:
-            cursor.execute(f"UPDATE jobs SET status='not_interested' WHERE id='{str(job[0])}'")
+            cursor.execute(f"UPDATE job_search SET status='not_interested' WHERE id='{str(job[0])}'")
             try:
                 os.remove(f'job_descriptions/{job[3]}')
             except FileNotFoundError:

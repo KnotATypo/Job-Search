@@ -4,6 +4,7 @@ import sqlite3
 from collections import namedtuple
 from typing import List
 
+import psycopg2
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -20,8 +21,10 @@ class Site:
     PAGE_URL: str
     JOB_URL: str
     SITE_STRING: str
-    cursor: sqlite3.Cursor
-    connection: sqlite3.Connection
+    cursor: psycopg2.extensions.cursor
+    connection: psycopg2.extensions.connection
+    connection_lite: sqlite3.Connection
+    cursor_lite: sqlite3.Cursor
 
     def __init__(self, page_url: str, job_url: str, site_string: str, connection: sqlite3) -> None:
         self.PAGE_URL = page_url
@@ -32,9 +35,13 @@ class Site:
             self.connection = connection
             self.cursor = connection.cursor()
 
+        self.connection_lite = sqlite3.connect('jobs.db')
+        self.cursor_lite = self.connection_lite.cursor()
+
     def download_new_jobs(self, query) -> None:
-        fetchone = self.cursor.execute(
-            f"SELECT pages FROM page_size WHERE site = '{self.SITE_STRING.lower()}' and search = '{query}'").fetchone()
+        fetchone = self.cursor_lite.execute(f"SELECT pages FROM page_size "
+                                            f"WHERE site = '{self.SITE_STRING.lower()}' "
+                                            f"and search = '{query}'").fetchone()
         if fetchone is None:
             expected_pages = 1
         else:
@@ -55,11 +62,11 @@ class Site:
                 pbar.update()
 
         if expected_pages > 1:
-            self.cursor.execute(
-                f"UPDATE page_size SET pages = '{page}' WHERE site = '{self.SITE_STRING.lower()}' and search = '{query}'")
+            self.cursor_lite.execute(f"UPDATE page_size SET pages = '{page}' "
+                                     f"WHERE site = '{self.SITE_STRING.lower()}' and search = '{query}'")
         else:
-            self.cursor.execute(f"INSERT INTO page_size VALUES ('{self.SITE_STRING.lower()}', '{query}', '{page}')")
-        self.connection.commit()
+            self.cursor_lite.execute(f"INSERT INTO page_size VALUES ('{self.SITE_STRING.lower()}', '{query}', '{page}')")
+        self.connection_lite.commit()
 
     def download_jobs(self, jobs: List) -> None:
         for job in tqdm(jobs, desc='Jobs', unit='job', leave=False):
@@ -68,12 +75,15 @@ class Site:
             file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
 
             # Idk why but seek will sometimes give me duplicate ID's
-            try:
-                self.cursor.execute(
-                    f"INSERT INTO jobs VALUES('{str(job.id)}', '{job.title}', '{job.company}', '{file_name}', null, 'new', '{self.SITE_STRING.lower()}')")
-                self.connection.commit()
-            except sqlite3.IntegrityError:
-                continue
+            self.cursor.execute(f"INSERT INTO job_search VALUES("
+                                f"'{str(job.id)}', "
+                                f"'{job.title}', "
+                                f"'{job.company}', "
+                                f"'{file_name}', "
+                                f"null, "
+                                f"'new', "
+                                f"'{self.SITE_STRING.lower()}'"
+                                f")")
 
             with open('job_descriptions/' + file_name, 'w+') as f:
                 f.write(self.get_job_description(job[0]))
@@ -91,7 +101,8 @@ class Site:
         return self.PAGE_URL.replace('%%QUERY%%', str(query)).replace('%%PAGE%%', str(page_number))
 
     def remove_duplicates(self, jobs):
-        result = self.cursor.execute('SELECT id FROM jobs').fetchall()
+        self.cursor.execute('SELECT id FROM job_search')
+        result = self.cursor.fetchall()
         old_job_ids = [str(x[0]) for x in result]
         jobs = [x for x in jobs if str(x[0]) not in old_job_ids]
         return jobs
