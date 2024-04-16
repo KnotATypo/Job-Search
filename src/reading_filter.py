@@ -15,10 +15,6 @@ options = Options()
 options.add_argument("--headless")
 driver = webdriver.Firefox(options=options)
 
-seek = sites.Seek(connection)
-jora = sites.Jora(connection, driver)
-indeed = sites.Indeed(connection, driver)
-
 
 @app.route('/', methods=['GET', 'POST'])
 def jobs():
@@ -38,18 +34,12 @@ def jobs():
     if result is None:
         return 'You currently have no remaining <i>interested</i> jobs'
 
+    site = sites.get_site_instance(result[4], connection, driver)
     try:
-        if result[4] == 'seek':
-            link = seek.build_job_link(result[0])
-            util.download_job_description(result, seek)
-        elif result[4] == 'jora':
-            link = jora.build_job_link(result[0])
-            util.download_job_description(result, jora)
-        elif result[4] == 'indeed':
-            link = indeed.build_job_link(result[0])
-            util.download_job_description(result, indeed)
+        util.download_job_description(result, site)
         content = util.get_job_description(result[3])
     except FileNotFoundError:
+        link = site.build_job_link(result[0])
         content = f"Could not find file. Try this link: <a target='_blank' href='{link}'>{link}</a>"
 
     duplicate_status = False

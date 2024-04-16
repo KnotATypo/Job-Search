@@ -67,7 +67,8 @@ class Site:
             self.cursor_lite.execute(f"UPDATE page_size SET pages = '{page}' "
                                      f"WHERE site = '{self.SITE_STRING.lower()}' and search = '{query}'")
         else:
-            self.cursor_lite.execute(f"INSERT INTO page_size VALUES ('{self.SITE_STRING.lower()}', '{query}', '{page}')")
+            self.cursor_lite.execute(
+                f"INSERT INTO page_size VALUES ('{self.SITE_STRING.lower()}', '{query}', '{page}')")
         self.connection_lite.commit()
 
     def save_job(self, job: JobDetails) -> None:
@@ -171,6 +172,14 @@ class Jora(Site):
             return None
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
+        async def get(link) -> str:
+            browser = await launch()
+            page = await browser.newPage()
+            await page.goto(link)
+            page_content = await page.content()
+            await browser.close()
+            return page_content
+
         loop = asyncio.get_event_loop()
         content = loop.run_until_complete(get(self.build_page_link(query.replace('-', '+'), page_number)))
 
@@ -234,10 +243,16 @@ class Indeed(Site):
         return JobDetails(job_id, title, company)
 
 
-async def get(link) -> str:
-    browser = await launch()
-    page = await browser.newPage()
-    await page.goto(link)
-    page_content = await page.content()
-    await browser.close()
-    return page_content
+class UnknownSiteException(Exception):
+    pass
+
+
+def get_site_instance(site_string, db_connection, webdriver):
+    if site_string == 'seek':
+        return Seek(db_connection)
+    elif site_string == 'jora':
+        return Jora(db_connection, webdriver)
+    elif site_string == 'indeed':
+        return Indeed(db_connection, webdriver)
+    else:
+        raise UnknownSiteException('Unknown job site')
