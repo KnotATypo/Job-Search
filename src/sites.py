@@ -77,15 +77,18 @@ class Site:
         file_name = f'{job[1]}-{job[2]}-{job[0]}.html'.replace('/', '_')
 
         # Idk why but seek will sometimes give me duplicate ID's
-        self.cursor.execute(f"INSERT INTO job_search VALUES("
-                            f"'{str(job.id)}', "
-                            f"'{job.title}', "
-                            f"'{job.company}', "
-                            f"'{file_name}', "
-                            f"null, "
-                            f"'new', "
-                            f"'{self.SITE_STRING.lower()}'"
-                            f")")
+        try:
+            self.cursor.execute(f"INSERT INTO job_search VALUES("
+                                f"'{str(job.id)}', "
+                                f"'{job.title}', "
+                                f"'{job.company}', "
+                                f"'{file_name}', "
+                                f"null, "
+                                f"'new', "
+                                f"'{self.SITE_STRING.lower()}'"
+                                f")")
+        except psycopg2.errors.UniqueViolation:
+            pass
 
     def get_jobs_from_page(self, page_number, query) -> List[JobDetails]:
         raise NotImplementedError

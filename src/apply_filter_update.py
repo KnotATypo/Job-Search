@@ -1,12 +1,13 @@
 import json
+import sqlite3
 
 import psycopg2
 
-connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
+connection = sqlite3.connect(database="jobs.db")
 connection.autocommit = True
 cursor = connection.cursor()
 
-with open('../config.json') as f:
+with open('config.json') as f:
     config = json.load(f)
     blacklist = config['title-blacklist']
 

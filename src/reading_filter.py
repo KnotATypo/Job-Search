@@ -1,4 +1,5 @@
-import psycopg2
+import sqlite3
+
 from flask import Flask, request
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -8,9 +9,6 @@ import util
 
 app = Flask(__name__)
 
-connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
-connection.autocommit = True
-
 options = Options()
 options.add_argument("--headless")
 driver = webdriver.Firefox(options=options)
@@ -18,6 +16,8 @@ driver = webdriver.Firefox(options=options)
 
 @app.route('/', methods=['GET', 'POST'])
 def jobs():
+    connection = sqlite3.connect(database="jobs.db")
+    connection.autocommit = True
     cursor = connection.cursor()
 
     if request.method == 'POST':
@@ -45,6 +45,8 @@ def jobs():
     duplicate_status = False
     if result[5] is not None:
         duplicate_status = util.get_duplicate_status(result[0], cursor)
+
+    connection.close()
 
     return \
             '<style>input {border: none;color: white;padding: 15px 32px;text-align: center;text-decoration: none;display: inline-block;font-size: 16px;}</style>' + \

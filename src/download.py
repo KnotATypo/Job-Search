@@ -1,8 +1,8 @@
 import json
 import os
+import sqlite3
 from difflib import SequenceMatcher
 
-import psycopg2
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from tqdm import tqdm
@@ -16,7 +16,7 @@ BLACKLIST = []
 def main():
     load_config()
 
-    connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
+    connection = sqlite3.connect(database="jobs.db")
     connection.autocommit = True
 
     options = Options()
@@ -63,7 +63,7 @@ def easy_filter(connection):
     cursor = connection.cursor()
     counter = 0
     for term in BLACKLIST:
-        cursor.execute(f'SELECT id, file FROM job_search WHERE title ILIKE \'%{term}%\' AND status=\'new\'')
+        cursor.execute(f'SELECT id, file FROM job_search WHERE title LIKE \'%{term}%\' AND status=\'new\'')
         results = cursor.fetchall()
         for result in results:
             cursor.execute(f"UPDATE job_search SET status='easy_filter' WHERE id='{result[0]}'")

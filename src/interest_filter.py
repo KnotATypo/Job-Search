@@ -1,10 +1,10 @@
-import psycopg2
+import sqlite3
 
 import util
 
 
 def main():
-    connection = psycopg2.connect(database="monitoring", host="monitoring.lan", user="job_search", password="jobs")
+    connection = sqlite3.connect(database="jobs.db")
     connection.autocommit = True
     cursor = connection.cursor()
 
