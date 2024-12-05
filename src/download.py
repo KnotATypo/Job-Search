@@ -24,8 +24,8 @@ def main():
     driver = webdriver.Firefox(options=options)
 
     sites = [Seek(connection), Jora(connection, driver), Indeed(connection, driver)]
-    for site in tqdm(sites, desc='Sites', unit='site'):
-        for term in tqdm(SEARCH, desc='Terms', unit='term', leave=False):
+    for site in tqdm(sites, desc="Sites", unit="site"):
+        for term in tqdm(SEARCH, desc="Terms", unit="term", leave=False):
             site.download_new_jobs(term)
 
     mark_duplicates(connection)
@@ -42,7 +42,9 @@ def mark_duplicates(connection):
     jobs = cursor.fetchall()
 
     duplicates = []
-    for id_source, title_source, company_source in tqdm(new_jobs, desc='Checking for duplicates', unit='job'):
+    for id_source, title_source, company_source in tqdm(
+        new_jobs, desc="Checking for duplicates", unit="job"
+    ):
         temp_duplicates = []
         for id_target, title_target, company_target in tqdm(jobs, leave=False):
             if id_source == id_target:
@@ -55,30 +57,33 @@ def mark_duplicates(connection):
     duplicates = [x for x in duplicates if len(x[1]) != 0]
     for id_source, temp_duplicates in duplicates:
         cursor.execute(
-            f"UPDATE job_search SET duplicate='{','.join([str(x) for x in temp_duplicates])}' WHERE id='{id_source}'")
-    print('Duplicates found:', len(duplicates))
+            f"UPDATE job_search SET duplicate='{','.join([str(x) for x in temp_duplicates])}' WHERE id='{id_source}'"
+        )
+    print("Duplicates found:", len(duplicates))
 
 
 def easy_filter(connection):
     cursor = connection.cursor()
     counter = 0
     for term in BLACKLIST:
-        cursor.execute(f'SELECT id, file FROM job_search WHERE title LIKE \'%{term}%\' AND status=\'new\'')
+        cursor.execute(
+            f"SELECT id, file FROM job_search WHERE title LIKE '%{term}%' AND status='new'"
+        )
         results = cursor.fetchall()
         for result in results:
             cursor.execute(f"UPDATE job_search SET status='easy_filter' WHERE id='{result[0]}'")
             counter += 1
-    print(f'Easy filter caught {counter} jobs')
+    print(f"Easy filter caught {counter} jobs")
 
 
 def load_config():
     global SEARCH, BLACKLIST
-    root_path = os.path.realpath(__file__)[:os.path.realpath(__file__).rindex('Job-Search') + 10]
-    with open(f'{root_path}/config.json', 'r') as f:
+    root_path = os.path.realpath(__file__)[: os.path.realpath(__file__).rindex("Job-Search") + 10]
+    with open(f"{root_path}/config.json", "r") as f:
         config = json.load(f)
-    SEARCH = config['search-terms']
-    BLACKLIST = config['title-blacklist']
+    SEARCH = config["search-terms"]
+    BLACKLIST = config["title-blacklist"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -15,9 +15,7 @@
     "business",
     "manager",
     "support",
-    "analyst",
     "security",
-    "2025",
     "design",
     "clinic",
     "service",
@@ -29,9 +27,16 @@
     "civil",
     "mechanic",
     "field",
-    "health",
     "365",
     "head",
-    "doctor"
+    "doctor",
+    "assist",
+    "lab",
+    "account",
+    "mining",
+    "intern",
+    "graduate",
+    "devops",
+    "analyst"
   ]
 }
