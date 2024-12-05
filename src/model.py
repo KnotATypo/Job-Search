@@ -16,6 +16,7 @@ class Job(Model):
     id = AutoField(primary_key=True)
     title = CharField()
     company = CharField()
+    type = CharField()
     status = CharField(default="new")
 
     class Meta:
@@ -42,11 +43,12 @@ class JobToListing(Model):
 class PageCount(Model):
     site = CharField()
     query = CharField()
+    type = CharField()
     pages = IntegerField(default=1)
 
     class Meta:
         database = db
-        primary_key = CompositeKey("site", "query")
+        primary_key = CompositeKey("site", "query", "type")
 
 
 db.create_tables([Job, Listing, JobToListing, PageCount], safe=True)

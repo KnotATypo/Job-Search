@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, Tag
 from selenium.webdriver.firefox.webdriver import WebDriver
 
 from model import Listing, Job
-from sites.site import Site, HTML_PARSER
+from sites.site import Site, HTML_PARSER, JobType
 from util import new_browser
 
 
@@ -14,10 +14,9 @@ class Indeed(Site):
     def __init__(self):
         super().__init__(
             "https://au.indeed.com/jobs?q=%%QUERY%%&l=Brisbane+QLD&radius=10&start=%%PAGE%%",
-            "https://au.indeed.com/viewjob?jk=%%ID%%",
+            "https://au.indeed.com/viewjob?jk=%%ID%%&sc=0kf%3Ajt(%%TYPE%%)%3B",
             "Indeed",
         )
-
         self.browser = new_browser()
 
     def get_job_description(self, job_id) -> str | None:
@@ -29,10 +28,16 @@ class Indeed(Site):
         else:
             return None
 
-    def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
+        if job_type == JobType.FULL:
+            type_str = "fulltime"
+        elif job_type == JobType.PART:
+            type_str = "parttime"
+        elif job_type == JobType.CASUAL:
+            type_str = "casual"
+        link = self.build_page_link(page_number * 10, query.replace("-", "+"), type_str)
         retry_count = 0
         while True:
-            link = self.build_page_link(query.replace("-", "+"), page_number * 10)
             self.browser.get(link)
             content = self.browser.page_source
             soup = BeautifulSoup(content, features=HTML_PARSER)

@@ -8,6 +8,7 @@ from model import Job
 from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.seek import Seek
+from sites.site import JobType
 
 
 def main():
@@ -15,8 +16,9 @@ def main():
 
     sites = [Seek(), Jora(), Indeed()]
     for site in tqdm(sites, desc="Sites", unit="site"):
-        for term in tqdm(search_terms, desc="Terms", unit="term", leave=False):
-            site.download_new_listings(term)
+        for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
+            for job_type in tqdm(JobType, desc="Job Types", unit="type", leave=False):
+                site.download_new_listings(query, job_type)
 
     easy_filter(blacklist_terms)
 
