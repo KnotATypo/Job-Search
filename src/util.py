@@ -1,6 +1,9 @@
 import os
 import re
 
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+
 root_path = os.path.realpath(__file__)[: os.path.realpath(__file__).rindex("Job-Search") + 10]
 
 
@@ -49,3 +52,9 @@ def get_duplicate_status(id_source, cursor):
     if all([x == "new" for x in status]):
         return "new"
     return "???"
+
+
+def new_browser():
+    options = Options()
+    options.add_argument("--headless")
+    return webdriver.Firefox(options=options)

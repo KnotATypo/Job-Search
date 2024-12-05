@@ -3,9 +3,6 @@ from typing import List, Tuple
 from tqdm import tqdm
 
 from model import PageCount, Job, Listing, JobToListing
-from sites.indeed import Indeed
-from sites.jora import Jora
-from sites.seek import Seek
 from util import strip_string
 
 HTML_PARSER = "html.parser"
@@ -77,18 +74,3 @@ class Site:
 
     def get_job_description(self, job_id) -> str | None:
         raise NotImplementedError
-
-
-class UnknownSiteException(Exception):
-    pass
-
-
-def get_site_instance(site_string, webdriver):
-    if site_string == "seek":
-        return Seek()
-    elif site_string == "jora":
-        return Jora(webdriver)
-    elif site_string == "indeed":
-        return Indeed(webdriver)
-    else:
-        raise UnknownSiteException("Unknown job site")

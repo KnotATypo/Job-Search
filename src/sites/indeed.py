@@ -5,18 +5,20 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 
 from model import Listing, Job
 from sites.site import Site, HTML_PARSER
+from util import new_browser
 
 
 class Indeed(Site):
     browser: WebDriver
 
-    def __init__(self, browser):
+    def __init__(self):
         super().__init__(
             "https://au.indeed.com/jobs?q=%%QUERY%%&l=Brisbane+QLD&radius=10&start=%%PAGE%%",
             "https://au.indeed.com/viewjob?jk=%%ID%%",
             "Indeed",
         )
-        self.browser = browser
+
+        self.browser = new_browser()
 
     def get_job_description(self, job_id) -> str | None:
         self.browser.get(self.build_job_link(job_id))
@@ -28,9 +30,18 @@ class Indeed(Site):
             return None
 
     def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
-        self.browser.get(self.build_page_link(query.replace("-", "+"), page_number * 10))
-        content = self.browser.page_source
-        soup = BeautifulSoup(content, features=HTML_PARSER)
+        retry_count = 0
+        while True:
+            link = self.build_page_link(query.replace("-", "+"), page_number * 10)
+            self.browser.get(link)
+            content = self.browser.page_source
+            soup = BeautifulSoup(content, features=HTML_PARSER)
+            if soup.find("title").string != "Just a moment...":
+                break
+            retry_count += 1
+            if retry_count > 10:
+                return []
+            self.browser = new_browser()
 
         result = soup.find("a", attrs={"data-testid": "pagination-page-current"})
         if result is None or int(result.text) <= page_number:

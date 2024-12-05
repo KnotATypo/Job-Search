@@ -2,22 +2,18 @@ import json
 import os
 from typing import List, Tuple
 
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 from tqdm import tqdm
 
-from sites import Seek, jora, Indeed
 from model import Job
+from sites.indeed import Indeed
+from sites.jora import Jora
+from sites.seek import Seek
 
 
 def main():
     search_terms, blacklist_terms = load_config()
 
-    options = Options()
-    options.add_argument("--headless")
-    driver = webdriver.Firefox(options=options)
-
-    sites = [Seek(), Jora(driver), Indeed(driver)]
+    sites = [Seek(), Jora(), Indeed()]
     for site in tqdm(sites, desc="Sites", unit="site"):
         for term in tqdm(search_terms, desc="Terms", unit="term", leave=False):
             site.download_new_listings(term)
@@ -26,8 +22,12 @@ def main():
 
 
 def easy_filter(blacklist_terms: List[str]):
+    new_jobs = Job.select().where(Job.status == "new")
     for term in blacklist_terms:
-        Job.update(status="easy_filter").where((Job.title.contains(term)) | (Job.status == "new")).execute()
+        for job in new_jobs:
+            if term in job.title:
+                job.status = "easy_filter"
+                job.save()
 
 
 def load_config() -> Tuple[List[str], List[str]]:

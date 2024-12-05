@@ -8,18 +8,19 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 
 from model import Listing, Job
 from sites.site import Site, HTML_PARSER
+from util import new_browser
 
 
 class Jora(Site):
     browser: WebDriver
 
-    def __init__(self, browser):
+    def __init__(self):
         super().__init__(
             "https://au.jora.com/j?l=Brisbane+QLD&q=%%QUERY%%&p=%%PAGE%%",
             "https://au.jora.com/job/%%ID%%",
             "Jora",
         )
-        self.browser = browser
+        self.browser = new_browser()
 
     def get_job_description(self, job_id) -> str | None:
         self.browser.get(self.build_job_link(job_id))
