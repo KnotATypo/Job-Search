@@ -1,5 +1,5 @@
 import os
-import sqlite3
+import re
 
 root_path = os.path.realpath(__file__)[: os.path.realpath(__file__).rindex("Job-Search") + 10]
 
@@ -26,9 +26,8 @@ def download_job_description(job, clas):
             raise FileNotFoundError
 
 
-def connect_sqlite():
-    connection = sqlite3.connect(root_path + "/jobs.db")
-    return connection, connection.cursor()
+def strip_string(s: str) -> str:
+    return re.sub(r"\W", "", s.lower())
 
 
 def get_duplicate_status(id_source, cursor):
