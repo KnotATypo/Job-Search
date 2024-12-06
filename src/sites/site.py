@@ -4,7 +4,7 @@ from typing import List, Tuple
 from tqdm import tqdm
 
 from model import PageCount, Job, Listing, JobToListing
-from util import strip_string
+from util import strip_string, root_path
 
 HTML_PARSER = "html.parser"
 
@@ -13,24 +13,6 @@ class JobType(Enum):
     FULL = "full"
     PART = "part"
     CASUAL = "casual"
-
-
-def save_listings(listings: List[Tuple[Listing, Job]]):
-    new_listings = []
-    for listing, job in listings:
-        listing, created = Listing.get_or_create(id=listing.id, site=listing.site)
-        if created:
-            new_listings.append((listing, job))
-
-    jobs: List[Job] = Job.select()
-    existing_map = {strip_string(j.title) + "-" + strip_string(j.company): j.id for j in jobs}
-    for listing, job in new_listings:
-        new_key = strip_string(job.title) + "-" + strip_string(job.company)
-        if new_key in existing_map:
-            JobToListing.create(job_id=existing_map[new_key], listing_id=listing.id)
-        else:
-            job.save()
-            JobToListing.create(job_id=job.id, listing_id=listing.id)
 
 
 class Site:
@@ -58,7 +40,7 @@ class Site:
                 listings = self.get_listings_from_page(page, query, job_type)
                 if len(listings) == 0:
                     break
-                save_listings(listings)
+                self.save_listings(listings)
                 page += 1
                 if page > expected_pages:
                     pbar.total += 1
@@ -66,6 +48,33 @@ class Site:
 
         page_count.pages = page
         page_count.save()
+
+    def save_listings(self, listings: List[Tuple[Listing, Job]]):
+        new_listings = []
+        for listing, job in listings:
+            listing, created = Listing.get_or_create(id=listing.id, site=listing.site)
+            if created:
+                new_listings.append((listing, job))
+                description = self.get_listing_description(listing.id)
+                with open(f"{root_path}/job_descriptions/{listing.id}.txt", "w+") as f:
+                    f.write(description)
+
+        jobs: List[Job] = Job.select()
+        existing_map = {strip_string(j.title) + "-" + strip_string(j.company): j.id for j in jobs}
+        for listing, job in new_listings:
+            new_key = strip_string(job.title) + "-" + strip_string(job.company)
+            if new_key in existing_map:
+                JobToListing.create(job_id=existing_map[new_key], listing_id=listing.id)
+            else:
+                job.save()
+                JobToListing.create(job_id=job.id, listing_id=listing.id)
+
+    def build_page_link(self, page_number: int, query: str, job_type: str):
+        return (
+            self.PAGE_URL.replace("%%QUERY%%", query)
+            .replace("%%PAGE%%", str(page_number))
+            .replace("%%TYPE%%", job_type)
+        )
 
     def get_listings_from_page(self, page_number, query: str, job_type: JobType) -> List[Tuple[Listing, Job]]:
         raise NotImplementedError
@@ -76,12 +85,5 @@ class Site:
     def build_job_link(self, job_id) -> str:
         return self.LISTING_URL.replace("%%ID%%", str(job_id))
 
-    def build_page_link(self, page_number: int, query: str, job_type: str):
-        return (
-            self.PAGE_URL.replace("%%QUERY%%", query)
-            .replace("%%PAGE%%", str(page_number))
-            .replace("%%TYPE%%", job_type)
-        )
-
-    def get_job_description(self, job_id) -> str | None:
+    def get_listing_description(self, listing_id) -> str:
         raise NotImplementedError

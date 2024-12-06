@@ -15,14 +15,11 @@ class Seek(Site):
             "Seek",
         )
 
-    def get_job_description(self, job_id) -> str | None:
-        response = requests.get(self.build_job_link(job_id))
+    def get_listing_description(self, listing_id) -> str:
+        response = requests.get(self.build_job_link(listing_id))
         soup = BeautifulSoup(response.text, features=HTML_PARSER)
         body: Tag = soup.find("div", attrs={"data-automation": "jobAdDetails"})
-        if body is not None:
-            return body.contents[0].prettify()
-        else:
-            return None
+        return body.contents[0].text
 
     def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
         if job_type == JobType.FULL:

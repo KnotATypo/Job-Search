@@ -22,7 +22,7 @@ def get_job_description(job_file):
 def download_job_description(job, clas):
     file_name = f"{job[1]}-{job[2]}-{job[0]}.html".replace("/", "_")
     with open(f"{root_path}/job_descriptions/{file_name}", "w+") as f:
-        description = clas.get_job_description(job[0])
+        description = clas.get_listing_description(job[0])
         if description is not None:
             f.write(description)
         else:

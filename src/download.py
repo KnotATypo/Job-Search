@@ -14,7 +14,7 @@ from sites.site import JobType
 def main():
     search_terms, blacklist_terms = load_config()
 
-    sites = [Seek(), Jora(), Indeed()]
+    sites = [Indeed()]
     for site in tqdm(sites, desc="Sites", unit="site"):
         for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
             for job_type in tqdm(JobType, desc="Job Types", unit="type", leave=False):

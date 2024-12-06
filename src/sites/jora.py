@@ -22,14 +22,11 @@ class Jora(Site):
         )
         self.browser = new_browser()
 
-    def get_job_description(self, job_id) -> str | None:
-        self.browser.get(self.build_job_link(job_id))
+    def get_listing_description(self, listing_id) -> str:
+        self.browser.get(self.build_job_link(listing_id))
         soup = BeautifulSoup(self.browser.page_source, features=HTML_PARSER)
         body: Tag = soup.find("div", attrs={"id": "job-description-container"})
-        if body is not None:
-            return body.prettify()
-        else:
-            return None
+        return body.text
 
     def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
         async def get(link) -> str:

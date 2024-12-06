@@ -11,7 +11,7 @@ def main():
     cursor.execute("SELECT * FROM job_search WHERE status='interested_read'")
     jobs = cursor.fetchall()
     for job in jobs:
-        site = sites.get_site_instance(job[6], connection, None)
+        site = sites.get_site_instance(job[6], None)
         link = site.build_job_link(job[0])
 
         print(f"{job[1]} - {job[2]}\n{link}")
@@ -21,9 +21,7 @@ def main():
         if choice == "y":
             cursor.execute(f"UPDATE job_search SET status='applied' WHERE id='{str(job[0])}'")
         if choice in {"not available"}:
-            cursor.execute(
-                f"UPDATE job_search SET status='not_interested' WHERE id='{str(job[0])}'"
-            )
+            cursor.execute(f"UPDATE job_search SET status='not_interested' WHERE id='{str(job[0])}'")
         connection.commit()
         print()
 

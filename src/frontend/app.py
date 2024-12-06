@@ -1,39 +1,38 @@
 import json
-import sqlite3
 import tkinter as tk
 from time import sleep
 from tkinter.font import Font
-from typing import List, Tuple
+from typing import List
+
+from model import Job
 
 
 class TriageWindow:
     window: tk.Toplevel
-    jobs: List[Tuple[str, str]]
+    jobs: List[Job]
     font: Font
     index = 0
     title_label: tk.Label
     company_label: tk.Label
 
     def __init__(self, window: tk.Toplevel) -> None:
-        connection = sqlite3.connect(database="../jobs.db")
-        cursor = connection.cursor()
-        self.jobs = cursor.execute("SELECT title, company FROM job_search LIMIT 100").fetchall()
+        self.jobs = Job.select()
 
         self.window = window
         self.font = Font(family="Calibri", size=20)
 
         max_width = 0
         for job in self.jobs:
-            max_width = max(self.font.measure(job[0]), max_width)
-            max_width = max(self.font.measure(job[1]), max_width)
+            max_width = max(self.font.measure(job.title), max_width)
+            max_width = max(self.font.measure(job.company), max_width)
         window.geometry(f"{max_width}x{max(int(max_width / 5), 300)}")
 
         job = self.jobs[0]
 
         frame_a = tk.Frame(master=window)
         frame_b = tk.Frame(master=window)
-        self.title_label = tk.Label(master=frame_a, text=job[0], font=self.font)
-        self.company_label = tk.Label(master=frame_b, text=job[1], font=self.font)
+        self.title_label = tk.Label(master=frame_a, text=job.title, font=self.font)
+        self.company_label = tk.Label(master=frame_b, text=job.company, font=self.font)
         self.title_label.pack(pady=30)
         self.company_label.pack()
         frame_a.pack()
@@ -65,8 +64,8 @@ class TriageWindow:
 
     def next_job(self):
         self.index += 1
-        self.title_label.configure(text=self.jobs[self.index][0])
-        self.company_label.configure(text=self.jobs[self.index][1])
+        self.title_label.configure(text=self.jobs[self.index].title)
+        self.company_label.configure(text=self.jobs[self.index].company)
         self.window.update()
 
 

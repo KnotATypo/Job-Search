@@ -29,14 +29,12 @@ def jobs():
             util.del_job_description(file)
         connection.commit()
 
-    cursor.execute(
-        "SELECT id, title, company, file, site, duplicate FROM job_search WHERE status='interested'"
-    )
+    cursor.execute("SELECT id, title, company, file, site, duplicate FROM job_search WHERE status='interested'")
     result = cursor.fetchone()
     if result is None:
         return "You currently have no remaining <i>interested</i> jobs"
 
-    site = sites.get_site_instance(result[4], connection, driver)
+    site = sites.get_site_instance(result[4], driver)
     try:
         util.download_job_description(result, site)
         content = util.get_job_description(result[3])
