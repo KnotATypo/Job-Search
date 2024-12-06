@@ -5,3 +5,4 @@ Flask~=3.0.2
 pyppeteer~=2.0.0
 selenium~=4.19.0
 peewee~=3.17.8
+transformers~=4.47.0
