@@ -5,6 +5,7 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from model import Listing
+from util import is_server
 
 model_name = "Qwen/Qwen2.5-1.5B-Instruct"
 model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", device_map="auto")
@@ -12,11 +13,8 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
 def main():
-    hostname = socket.getfqdn()
-    ip = socket.gethostbyname_ex(hostname)[2][1]
-
     listings = Listing.select().where(Listing.summary == "").execute()
-    if ip == "192.168.4.109":
+    if is_server():
         for listing in tqdm(listings):
             with open(f"/home/josh/Job-Search/descriptions/{listing.id}.txt") as f:
                 description = f.read()

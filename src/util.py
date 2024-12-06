@@ -1,5 +1,6 @@
 import os
 import re
+import socket
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -58,3 +59,7 @@ def new_browser():
     options = Options()
     options.add_argument("--headless")
     return webdriver.Firefox(options=options)
+
+
+def is_server() -> bool:
+    return socket.gethostname() == "jobs"

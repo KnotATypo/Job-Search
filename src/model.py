@@ -8,7 +8,9 @@ from peewee import (
     CompositeKey,
 )
 
-db = MySQLDatabase("job_search", user="dev", password="password", host="jobs.lan")
+from util import is_server
+
+db = MySQLDatabase("job_search", user="dev", password="password", host="localhost" if is_server() else "jobs.lan")
 db.connect()
 
 
