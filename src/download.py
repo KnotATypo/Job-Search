@@ -9,13 +9,10 @@ from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.seek import Seek
 from sites.site import JobType
-from util import root_path
 
 
 def main():
     search_terms, blacklist_terms = load_config()
-
-    os.mkdir(f"{root_path}/job_descriptions")
 
     sites = [Seek(), Jora(), Indeed()]
     for site in tqdm(sites, desc="Sites", unit="site"):

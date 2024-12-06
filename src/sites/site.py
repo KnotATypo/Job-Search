@@ -4,7 +4,7 @@ from typing import List, Tuple
 from tqdm import tqdm
 
 from model import PageCount, Job, Listing, JobToListing
-from util import strip_string, root_path
+from util import strip_string, open_description_file
 
 HTML_PARSER = "html.parser"
 
@@ -56,8 +56,8 @@ class Site:
             if created:
                 new_listings.append((listing, job))
                 description = self.get_listing_description(listing.id)
-                with open(f"{root_path}/job_descriptions/{listing.id}.txt", "w+") as f:
-                    description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
+                description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
+                with open_description_file(listing.id) as f:
                     f.write(description_utf)
 
         jobs: List[Job] = Job.select()

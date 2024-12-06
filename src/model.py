@@ -6,6 +6,7 @@ from peewee import (
     ForeignKeyField,
     IntegerField,
     CompositeKey,
+    TextField,
 )
 
 from util import is_server
@@ -16,8 +17,8 @@ db.connect()
 
 class Job(Model):
     id = AutoField(primary_key=True)
-    title = CharField()
-    company = CharField()
+    title = TextField()
+    company = TextField()
     type = CharField()
     status = CharField(default="new")
 
@@ -28,7 +29,7 @@ class Job(Model):
 class Listing(Model):
     id = CharField(primary_key=True)
     site = CharField()
-    summary = CharField()
+    summary = TextField()
 
     class Meta:
         database = db

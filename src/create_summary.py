@@ -1,10 +1,10 @@
-import socket
+from typing import TextIO
 
 from fabric import Connection
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from model import Listing
+from model import Listing, JobToListing
 from util import is_server
 
 model_name = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -13,25 +13,27 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
 def main():
-    listings = Listing.select().where(Listing.summary == "").execute()
+    listings = Listing.select(Listing, JobToListing).join(JobToListing).execute()
+    listings = [l for l in listings if l.jobtolisting.job_id.status == "new" and l.summary == ""]
     if is_server():
         for listing in tqdm(listings):
             with open(f"/home/josh/Job-Search/descriptions/{listing.id}.txt") as f:
-                description = f.read()
-                if description == "":
-                    continue
-                response = summary(str(description))
+                summarise_and_save(f, listing)
     else:
         with Connection("jobs.lan", "josh") as c, c.sftp() as sftp:
             for listing in tqdm(listings):
                 with sftp.open(f"Job-Search/descriptions/{listing.id}.txt") as f:
-                    description = f.read()
-                    if description == "":
-                        continue
-                    response = summary(str(description))
+                    summarise_and_save(f, listing)
 
 
-# Please create a single sentence summary of this job description.
+def summarise_and_save(file: TextIO, listing: Listing):
+    description = file.read()
+    if description == "":
+        response = "N/A"
+    else:
+        response = summary(str(description))
+    listing.summary = response
+    listing.save()
 
 
 def summary(description):
