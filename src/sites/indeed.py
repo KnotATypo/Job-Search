@@ -57,7 +57,10 @@ class Indeed(Site):
             return []
 
         matches = soup.find_all("td", {"class": "resultContent"})
-        return [self.extract_info(x) for x in matches]
+        matches = [self.extract_info(x) for x in matches]
+        for m in matches:
+            m[1].type = job_type.value
+        return matches
 
     def extract_info(self, job) -> Tuple[Listing, Job]:
         listing_id = job.find("a")["id"]

@@ -32,6 +32,8 @@ def summarise_and_save(file: TextIO, listing: Listing):
         response = "N/A"
     else:
         response = summary(str(description))
+        if "!!!!!!" in response:
+            response = summary(str(description))
     listing.summary = response
     listing.save()
 

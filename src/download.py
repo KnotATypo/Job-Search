@@ -27,7 +27,7 @@ def easy_filter(blacklist_terms: List[str]):
     new_jobs = Job.select().where(Job.status == "new")
     for term in blacklist_terms:
         for job in new_jobs:
-            if term in job.title:
+            if term.lower() in job.title.lower():
                 job.status = "easy_filter"
                 job.save()
 

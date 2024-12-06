@@ -72,29 +72,36 @@ class TriageWindow:
 
     def no(self, arg):
         self.flash("#FE4A49")
+        self.jobs[self.index].status = "not_interested"
+        self.jobs[self.index].save()
         self.next_job()
 
     def yes(self, arg):
         self.flash("#388659")
+        self.jobs[self.index].status = "interested"
+        self.jobs[self.index].save()
         self.next_job()
 
     def undo(self, arg):
         self.flash("#2081C3")
+        self.jobs[self.index - 1].status = "new"
+        self.jobs[self.index - 1].save()
 
     def flash(self, colour: str) -> None:
         self.title_label.configure(fg=colour)
         self.company_label.configure(fg=colour)
+        self.summary_label.configure(fg=colour)
         self.window.update()
         sleep(0.2)
-        self.title_label.configure(fg="black")
-        self.company_label.configure(fg="black")
-        self.window.update()
+        # self.title_label.configure(fg="black")
+        # self.company_label.configure(fg="black")
+        # self.window.update()
 
     def next_job(self):
         self.index += 1
-        self.title_label.configure(text=self.jobs[self.index].title)
-        self.company_label.configure(text=self.jobs[self.index].company)
-        self.summary_label.configure(text=self.summaries[self.index][0])
+        self.title_label.configure(text=self.jobs[self.index].title, fg="black")
+        self.company_label.configure(text=self.jobs[self.index].company, fg="black")
+        self.summary_label.configure(text=self.summaries[self.index][0], fg="black")
         self.window.update()
 
     def next_summary_arg(self, arg):
