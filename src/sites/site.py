@@ -57,7 +57,8 @@ class Site:
                 new_listings.append((listing, job))
                 description = self.get_listing_description(listing.id)
                 with open(f"{root_path}/job_descriptions/{listing.id}.txt", "w+") as f:
-                    f.write(description)
+                    description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
+                    f.write(description_utf)
 
         jobs: List[Job] = Job.select()
         existing_map = {strip_string(j.title) + "-" + strip_string(j.company): j.id for j in jobs}
