@@ -12,20 +12,19 @@ from util import new_browser
 
 
 class Jora(Site):
-    browser: WebDriver
-
     def __init__(self):
         super().__init__(
             "https://au.jora.com/j?l=Brisbane+QLD&q=%%QUERY%%&p=%%PAGE%%&jt=%%TYPE%%",
             "https://au.jora.com/job/%%ID%%",
             "Jora",
         )
-        self.browser = new_browser()
 
     def get_listing_description(self, listing_id) -> str:
-        self.browser.get(self.build_job_link(listing_id))
+        browser = new_browser()
+        browser.get(self.build_job_link(listing_id))
         soup = BeautifulSoup(self.browser.page_source, features=HTML_PARSER)
         body: Tag = soup.find("div", attrs={"id": "job-description-container"})
+        browser.close()
         return body.text
 
     def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
