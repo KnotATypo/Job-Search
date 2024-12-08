@@ -22,7 +22,7 @@ class Jora(Site):
     def get_listing_description(self, listing_id) -> str:
         browser = new_browser()
         browser.get(self.build_job_link(listing_id))
-        soup = BeautifulSoup(self.browser.page_source, features=HTML_PARSER)
+        soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
         body: Tag = soup.find("div", attrs={"id": "job-description-container"})
         browser.close()
         return body.text
