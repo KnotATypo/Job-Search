@@ -1,11 +1,16 @@
 {
   "sites": [
-    "jora"
+    "indeed"
   ],
   "types": [
-    "part"
+    "full",
+    "part",
+    "casual"
   ],
   "search-terms": [
+    "programmer",
+    "computer-science",
+    "software-engineer",
     "software-developer"
   ],
   "title-blacklist": [
