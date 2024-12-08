@@ -1,6 +1,7 @@
 import os
 from typing import TextIO
 
+import torch
 from fabric import Connection
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -8,7 +9,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from model import Listing, JobToListing
 from util import is_server
 
-os.environ["OPENMP_NUM_THREADS"] = "4"
+torch.set_num_threads(1)
 
 model_name = "Qwen/Qwen2.5-1.5B-Instruct"
 model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", device_map="auto")
