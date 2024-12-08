@@ -8,16 +8,15 @@ from model import Job
 from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.seek import Seek
-from sites.site import JobType
+from sites.site import JobType, Site
 
 
 def main():
-    search_terms, blacklist_terms = load_config()
+    search_terms, blacklist_terms, sites, types = load_config()
 
-    sites = [Seek(), Jora(), Indeed()]
     for site in tqdm(sites, desc="Sites", unit="site"):
         for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
-            for job_type in tqdm(JobType, desc="Job Types", unit="type", leave=False):
+            for job_type in tqdm(types, desc="Job Types", unit="type", leave=False):
                 site.download_new_listings(query, job_type)
 
     easy_filter(blacklist_terms)
@@ -32,11 +31,32 @@ def easy_filter(blacklist_terms: List[str]):
                 job.save()
 
 
-def load_config() -> Tuple[List[str], List[str]]:
+def load_config() -> Tuple[List[str], List[str], List[Site], List[JobType]]:
     root_path = os.path.realpath(__file__)[: os.path.realpath(__file__).rindex("Job-Search") + 10]
-    with open(f"{root_path}/config/config_fulltime.json", "r") as f:
+    with open(f"{root_path}/config/config.json", "r") as f:
         config = json.load(f)
-    return config["search-terms"], config["title-blacklist"]
+
+    sites = []
+    for site in config["sites"]:
+        match site:
+            case "indeed":
+                sites.append(Indeed())
+            case "jora":
+                sites.append(Jora())
+            case "seek":
+                sites.append(Seek())
+
+    types = []
+    for type in config["types"]:
+        match type:
+            case "full":
+                types.append(JobType.FULL)
+            case "part":
+                types.append(JobType.PART)
+            case "casual":
+                types.append(JobType.CASUAL)
+
+    return config["search-terms"], config["title-blacklist"], sites, types
 
 
 if __name__ == "__main__":

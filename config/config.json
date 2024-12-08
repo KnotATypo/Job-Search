@@ -1,4 +1,14 @@
 {
+  "sites": [
+    "seek",
+    "jora",
+    "indeed"
+  ],
+  "types": [
+    "full",
+    "part",
+    "casual"
+  ],
   "search-terms": [
     "programmer",
     "computer-science",

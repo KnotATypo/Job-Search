@@ -123,7 +123,7 @@ class ConfigWindow:
         self.window = window
         self.font = Font(family="Calibri", size=16)
 
-        with open("../config/config_fulltime.json", "r") as file:
+        with open("../config/config.json", "r") as file:
             config = json.load(file)
 
         button_frame = tk.Frame(master=self.window)
