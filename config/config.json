@@ -1,6 +1,7 @@
 {
   "sites": [
-    "indeed"
+    "seek",
+    "jora"
   ],
   "types": [
     "full",
