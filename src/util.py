@@ -14,7 +14,7 @@ def is_server() -> bool:
     return socket.gethostname() == "jobs"
 
 
-if is_server():
+if not is_server():
     sftp = Connection("jobs.lan", "josh").sftp()
 
 
