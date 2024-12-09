@@ -6,11 +6,10 @@ from tkinter.font import Font
 from typing import List, Tuple
 
 from model import Job, JobToListing, Listing
-from site.seek import Seek
-
-from site.jora import Jora
-
-from site.indeed import Indeed
+from sites.indeed import Indeed
+from sites.jora import Jora
+from sites.seek import Seek
+from sites.site import Site
 
 
 class TriageWindow:
