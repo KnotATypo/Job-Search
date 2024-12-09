@@ -1,13 +1,11 @@
 from typing import TextIO
 
-
 from fabric import Connection
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from model import Listing, JobToListing
 from util import is_server
-
 
 model_name = "Qwen/Qwen2.5-1.5B-Instruct"
 model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", device_map="auto")

@@ -9,27 +9,27 @@ from util import new_browser
 
 
 class Indeed(Site):
-    browser: WebDriver
-
     def __init__(self):
         super().__init__(
             "https://au.indeed.com/jobs?q=%%QUERY%%&l=Brisbane+QLD&radius=10&start=%%PAGE%%",
             "https://au.indeed.com/viewjob?jk=%%ID%%&sc=0kf%3Ajt(%%TYPE%%)%3B",
             "Indeed",
         )
-        self.browser = new_browser()
 
     def get_listing_description(self, listing_id) -> str:
         retry_count = 0
         while True:
-            self.browser.get(self.build_job_link(listing_id))
-            soup = BeautifulSoup(self.browser.page_source, features=HTML_PARSER)
+            browser = new_browser()
+            browser.get(self.build_job_link(listing_id))
+            soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
             if soup.find("title").string != "Just a moment...":
                 break
             retry_count += 1
             if retry_count > 10:
+                browser.close()
                 return ""
         body: Tag = soup.find("div", attrs={"class": "jobsearch-JobComponent-description"})
+        browser.close()
         return body.text
 
     def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
@@ -42,15 +42,17 @@ class Indeed(Site):
         link = self.build_page_link(page_number * 10, query.replace("-", "+"), type_str)
         retry_count = 0
         while True:
-            self.browser.get(link)
-            content = self.browser.page_source
+            browser = new_browser()
+            browser.get(link)
+            content = browser.page_source
             soup = BeautifulSoup(content, features=HTML_PARSER)
             if soup.find("title").string != "Just a moment...":
                 break
             retry_count += 1
             if retry_count > 10:
+                browser.close()
                 return []
-            self.browser = new_browser()
+        browser.close()
 
         result = soup.find("a", attrs={"data-testid": "pagination-page-current"})
         if result is None or int(result.text) <= page_number:
