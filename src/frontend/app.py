@@ -1,10 +1,16 @@
 import json
 import tkinter as tk
+import webbrowser
 from time import sleep
 from tkinter.font import Font
-from typing import List
+from typing import List, Tuple
 
 from model import Job, JobToListing, Listing
+from site.seek import Seek
+
+from site.jora import Jora
+
+from site.indeed import Indeed
 
 
 class TriageWindow:
@@ -123,7 +129,7 @@ class ConfigWindow:
         self.window = window
         self.font = Font(family="Calibri", size=16)
 
-        with open("../config/config.json", "r") as file:
+        with open("../../config/config.json", "r") as file:
             config = json.load(file)
 
         button_frame = tk.Frame(master=self.window)
@@ -137,6 +143,106 @@ class ConfigWindow:
         text.insert(tk.INSERT, json.dumps(config, indent=4))
 
         self.window.geometry("600x700")
+
+
+class ReadingWindow:
+    window: tk.Toplevel
+    font: Font
+    jobs: List[Tuple[Job, List[Listing]]]
+    index: int
+    tc_label: tk.Label
+    seek_button: tk.Button
+    jora_button: tk.Button
+    indeed_button: tk.Button
+
+    def __init__(self, window: tk.Toplevel) -> None:
+        self.jobs = []
+        jobs = Job.select(Job).where(Job.status == "interested").execute()
+        for index, job in enumerate(jobs):
+            job_id = job.id
+            listings = JobToListing.select().where(JobToListing.job_id == job_id).join(Listing).execute()
+            self.jobs.append((job, [l.listing_id for l in listings]))
+
+        self.window = window
+        self.font = Font(family="Calibri", size=20)
+        self.window.geometry("500x400")
+
+        self.index = -1
+
+        heading_frame = tk.Frame(master=self.window)
+        self.tc_label = tk.Label(master=heading_frame, font=self.font)
+        self.tc_label.pack(pady=15)
+        heading_frame.pack()
+
+        listing_frame = tk.Frame(master=self.window)
+        tk.Label(master=listing_frame, text="Listings", font=self.font).pack(pady=10)
+        self.seek_button = tk.Button(
+            master=listing_frame, text="Seek", font=self.font, command=lambda: self.open_link(Seek())
+        )
+        self.jora_button = tk.Button(
+            master=listing_frame, text="Jora", font=self.font, command=lambda: self.open_link(Jora())
+        )
+        self.indeed_button = tk.Button(
+            master=listing_frame, text="Indeed", font=self.font, command=lambda: self.open_link(Indeed())
+        )
+        listing_frame.pack()
+
+        action_frame = tk.Frame(master=self.window)
+        tk.Label(master=action_frame, text="Actions", font=self.font).pack(pady=10)
+        tk.Button(master=action_frame, text="Like", font=self.font, command=self.like).pack(
+            padx=10, pady=10, side="left"
+        )
+        tk.Button(master=action_frame, text="Dislike", font=self.font, command=self.dislike).pack(
+            padx=10, pady=10, side="left"
+        )
+        action_frame.pack(padx=10, pady=10)
+
+        self.next_job()
+
+    def next_job(self):
+        self.index += 1
+        job = self.jobs[self.index]
+        self.tc_label.configure(text=f"{job[0].title}")
+
+        sites = ["seek", "jora", "indeed"]
+        for listing in job[1]:
+            match listing.site:
+                case "seek":
+                    self.seek_button.pack(padx=10, pady=10, side="left")
+                    sites.remove("seek")
+                case "jora":
+                    self.jora_button.pack(padx=10, pady=10, side="left")
+                    sites.remove("jora")
+                case "indeed":
+                    self.indeed_button.pack(padx=10, pady=10, side="left")
+                    sites.remove("indeed")
+
+        for site in sites:
+            match site:
+                case "seek":
+                    self.seek_button.pack_forget()
+                case "jora":
+                    self.jora_button.pack_forget()
+                case "indeed":
+                    self.indeed_button.pack_forget()
+
+        self.window.update()
+
+    def open_link(self, site: Site):
+        listings = self.jobs[self.index][1]
+        job_id = [l for l in listings if l.site == site.SITE_STRING][0].id
+        link = site.build_job_link(job_id)
+        webbrowser.open(link)
+
+    def like(self):
+        self.jobs[self.index][0].status = "liked"
+        self.jobs[self.index][0].save()
+        self.next_job()
+
+    def dislike(self):
+        self.jobs[self.index][0].status = "not_interested"
+        self.jobs[self.index][0].save()
+        self.next_job()
 
 
 class App:
@@ -155,6 +261,9 @@ class App:
         config_button = tk.Button(window, text="Config", font=self.font, command=self.spawn_config)
         config_button.pack(padx=10, pady=10)
 
+        reading_button = tk.Button(window, text="Reading", font=self.font, command=self.spawn_reading)
+        reading_button.pack(padx=10, pady=10)
+
     def spawn_triage(self) -> None:
         child = tk.Toplevel(self.window)
         child.transient(self.window)
@@ -166,6 +275,12 @@ class App:
         child.transient(self.window)
         child.title("Config")
         ConfigWindow(child)
+
+    def spawn_reading(self) -> None:
+        child = tk.Toplevel(self.window)
+        child.transient(self.window)
+        child.title("Reading")
+        ReadingWindow(child)
 
 
 def main():
