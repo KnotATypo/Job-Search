@@ -128,7 +128,7 @@ class ConfigWindow:
         self.window = window
         self.font = Font(family="Calibri", size=16)
 
-        with open("../../config/config.json", "r") as file:
+        with open("../config/config.json", "r") as file:
             config = json.load(file)
 
         button_frame = tk.Frame(master=self.window)
@@ -244,6 +244,56 @@ class ReadingWindow:
         self.next_job()
 
 
+class ApplyingWindow:
+    window: tk.Toplevel
+    font: Font
+    open_button: tk.Button
+    job: Tuple[Job, List[Listing]]
+
+    def __init__(self, window: tk.Toplevel):
+        self.window = window
+        self.font = Font(family="Calibri", size=20)
+        self.get_job()
+
+        self.open_button = tk.Button(master=self.window, text="Open", font=self.font, command=self.open)
+        self.open_button.pack(padx=10, pady=10)
+
+        tk.Label(master=self.window, text="Actions", font=self.font).pack(pady=10)
+        action_frame = tk.Frame(master=self.window)
+        tk.Button(master=action_frame, text="Applied", font=self.font, command=lambda: self.set_status("applied")).pack(
+            padx=10, pady=10, side="left"
+        )
+        tk.Button(
+            master=action_frame, text="Ignore", font=self.font, command=lambda: self.set_status("not_interested")
+        ).pack(padx=10, pady=10, side="left")
+        action_frame.pack(padx=10, pady=10)
+
+    def set_status(self, status: str):
+        self.job[0].status = status
+        self.job[0].save()
+        self.get_job()
+
+    def get_job(self):
+        query = Job.select(Job).where(Job.status == "liked").limit(1).execute()
+        if len(query) == 0:
+            self.window.destroy()
+            return
+        job = query[0]
+        listings = JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute()
+        self.job = (job, [l.listing_id for l in listings])
+        self.window.update()
+
+    def open(self):
+        for listing in self.job[1]:
+            match listing.site:
+                case "seek":
+                    webbrowser.open(Seek().build_job_link(listing.id))
+                case "jora":
+                    webbrowser.open(Jora().build_job_link(listing.id))
+                case "indeed":
+                    webbrowser.open(Indeed().build_job_link(listing.id))
+
+
 class App:
     window: tk.Tk
     font: Font
@@ -263,6 +313,11 @@ class App:
         reading_button = tk.Button(window, text="Reading", font=self.font, command=self.spawn_reading)
         reading_button.pack(padx=10, pady=10)
 
+        reading_button = tk.Button(window, text="Applying", font=self.font, command=self.spawn_applying)
+        reading_button.pack(padx=10, pady=10)
+
+        window.geometry("400x350")
+
     def spawn_triage(self) -> None:
         child = tk.Toplevel(self.window)
         child.transient(self.window)
@@ -280,6 +335,12 @@ class App:
         child.transient(self.window)
         child.title("Reading")
         ReadingWindow(child)
+
+    def spawn_applying(self) -> None:
+        child = tk.Toplevel(self.window)
+        child.transient(self.window)
+        child.title("Applying")
+        ApplyingWindow(child)
 
 
 def main():
