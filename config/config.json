@@ -4,6 +4,7 @@
     "jora"
   ],
   "types": [
+    "full",
     "part",
     "casual"
   ],
