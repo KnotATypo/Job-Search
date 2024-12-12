@@ -47,6 +47,9 @@ class TriageWindow:
                 summaries.append(summary)
             self.summaries.append(summaries)
 
+        if len(self.jobs) == 0:
+            self.window.destroy()
+            return
         job = self.jobs[0]
         summaries = self.summaries[0]
 
