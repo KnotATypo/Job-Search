@@ -24,7 +24,7 @@ class TriageWindow:
     summary_index: int
 
     def __init__(self, window: tk.Toplevel) -> None:
-        self.jobs = Job.select().where(Job.status == "new")
+        self.jobs = Job.select().where(Job.status == "new").execute()
 
         self.window = window
         self.font = Font(family="Calibri", size=20)
@@ -98,12 +98,12 @@ class TriageWindow:
         self.summary_label.configure(fg=colour)
         self.window.update()
         sleep(0.2)
-        # self.title_label.configure(fg="black")
-        # self.company_label.configure(fg="black")
-        # self.window.update()
 
     def next_job(self):
         self.index += 1
+        if self.index >= len(self.jobs):
+            self.window.destroy()
+            return
         self.title_label.configure(text=self.jobs[self.index].title, fg="black")
         self.company_label.configure(text=self.jobs[self.index].company, fg="black")
         self.summary_label.configure(text=self.summaries[self.index][0], fg="black")
@@ -200,6 +200,10 @@ class ReadingWindow:
 
     def next_job(self):
         self.index += 1
+        print(self.index, len(self.jobs))
+        if self.index >= len(self.jobs):
+            self.window.destroy()
+            return
         job = self.jobs[self.index]
         self.tc_label.configure(text=f"{job[0].title}")
 
