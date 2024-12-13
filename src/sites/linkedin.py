@@ -42,5 +42,8 @@ class LinkedIn(Site):
         link = links[0]["href"]
         listing_id = link[34 : link[34:].index("?") + 34]
         title = links[0].text.strip()
-        company = links[1].text.strip()
+        if len(links) == 1:
+            company = "None"
+        else:
+            company = links[1].text.strip()
         return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
