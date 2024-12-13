@@ -7,6 +7,7 @@ from tqdm import tqdm
 from model import Job
 from sites.indeed import Indeed
 from sites.jora import Jora
+from sites.linkedin import LinkedIn
 from sites.seek import Seek
 from sites.site import JobType, Site
 
@@ -45,6 +46,8 @@ def load_config() -> Tuple[List[str], List[str], List[Site], List[JobType]]:
                 sites.append(Jora())
             case "seek":
                 sites.append(Seek())
+            case "linkedin":
+                sites.append(LinkedIn())
 
     types = []
     for type in config["types"]:

@@ -8,6 +8,7 @@ from typing import List, Tuple
 from model import Job, JobToListing, Listing
 from sites.indeed import Indeed
 from sites.jora import Jora
+from sites.linkedin import LinkedIn
 from sites.seek import Seek
 from sites.site import Site
 
@@ -156,6 +157,7 @@ class ReadingWindow:
     seek_button: tk.Button
     jora_button: tk.Button
     indeed_button: tk.Button
+    linkedin_button: tk.Button
 
     def __init__(self, window: tk.Toplevel) -> None:
         self.jobs = []
@@ -186,6 +188,9 @@ class ReadingWindow:
         )
         self.indeed_button = tk.Button(
             master=listing_frame, text="Indeed", font=self.font, command=lambda: self.open_link(Indeed())
+        )
+        self.indeed_button = tk.Button(
+            master=listing_frame, text="LinkedIn", font=self.font, command=lambda: self.open_link(LinkedIn())
         )
         listing_frame.pack()
 
@@ -222,6 +227,9 @@ class ReadingWindow:
                 case "indeed":
                     self.indeed_button.pack(padx=10, pady=10, side="left")
                     sites.remove("indeed")
+                case "linkedin":
+                    self.linkedin_button.pack(padx=10, pady=10, side="left")
+                    sites.remove("linkedin")
 
         for site in sites:
             match site:
@@ -231,6 +239,8 @@ class ReadingWindow:
                     self.jora_button.pack_forget()
                 case "indeed":
                     self.indeed_button.pack_forget()
+                case "linkedin":
+                    self.linkedin_button.pack_forget()
 
         self.window.update()
 
@@ -299,6 +309,8 @@ class ApplyingWindow:
                     webbrowser.open(Jora().build_job_link(listing.id))
                 case "indeed":
                     webbrowser.open(Indeed().build_job_link(listing.id))
+                case "linkedin":
+                    webbrowser.open(LinkedIn().build_job_link(listing.id))
 
 
 class App:
