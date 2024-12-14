@@ -28,7 +28,7 @@ def main():
 
 def summarise_and_save(file: TextIO, listing: Listing):
     description = file.read()
-    if description == "":
+    if description == "" or description == b"":
         response = "N/A"
     else:
         response = summary(str(description))

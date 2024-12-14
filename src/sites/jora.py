@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 from bs4 import BeautifulSoup, Tag
 from pyppeteer import launch
-from selenium.webdriver.firefox.webdriver import WebDriver
 
 from model import Listing, Job
 from sites.site import Site, HTML_PARSER, JobType
