@@ -57,7 +57,9 @@ class TriageWindow:
         title_frame = tk.Frame(master=window)
         company_frame = tk.Frame(master=window)
         summary_frame = tk.Frame(master=window)
-        self.title_label = tk.Label(master=title_frame, text=job.title, font=self.font)
+        self.title_label = tk.Label(
+            master=title_frame, text=job.title if len(job.title) < 200 else job.title[:200].strip(), font=self.font
+        )
         self.company_label = tk.Label(master=company_frame, text=job.company, font=self.font)
         self.summary_label = tk.Label(
             master=summary_frame,
@@ -106,7 +108,8 @@ class TriageWindow:
         if self.index >= len(self.jobs):
             self.window.destroy()
             return
-        self.title_label.configure(text=self.jobs[self.index].title, fg="black")
+        title = self.jobs[self.index].title
+        self.title_label.configure(text=title if len(title) < 200 else title[:200].strip(), fg="black")
         self.company_label.configure(text=self.jobs[self.index].company, fg="black")
         self.summary_label.configure(text=self.summaries[self.index][0], fg="black")
         self.window.update()
@@ -160,7 +163,7 @@ class ReadingWindow:
         self.indeed_button = tk.Button(
             master=listing_frame, text="Indeed", font=self.font, command=lambda: self.open_link(Indeed())
         )
-        self.indeed_button = tk.Button(
+        self.linkedin_button = tk.Button(
             master=listing_frame, text="LinkedIn", font=self.font, command=lambda: self.open_link(LinkedIn())
         )
         listing_frame.pack()
@@ -179,14 +182,13 @@ class ReadingWindow:
 
     def next_job(self):
         self.index += 1
-        print(self.index, len(self.jobs))
         if self.index >= len(self.jobs):
             self.window.destroy()
             return
         job = self.jobs[self.index]
         self.tc_label.configure(text=f"{job[0].title}")
 
-        sites = ["seek", "jora", "indeed"]
+        sites = ["seek", "jora", "indeed", "linkedin"]
         for listing in job[1]:
             match listing.site:
                 case "seek":
