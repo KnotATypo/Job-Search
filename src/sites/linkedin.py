@@ -35,7 +35,10 @@ class LinkedIn(Site):
                 break
         browser.close()
 
-        return [self.extract_info(card) for card in cards]
+        jobs = [self.extract_info(card) for card in cards]
+        for j in jobs:
+            j.type = job_type.value
+        return jobs
 
     def extract_info(self, job) -> Tuple[Listing, Job]:
         links = job.find_all("a")
