@@ -37,7 +37,7 @@ class LinkedIn(Site):
 
         jobs = [self.extract_info(card) for card in cards]
         for j in jobs:
-            j.type = job_type.value
+            j[1].type = job_type.value
         return jobs
 
     def extract_info(self, job) -> Tuple[Listing, Job]:
