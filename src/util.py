@@ -5,7 +5,7 @@ from typing import TextIO
 
 from fabric import Connection
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 
 root_path = os.path.realpath(__file__)[: os.path.realpath(__file__).rindex("Job-Search") + 10]
 
@@ -25,7 +25,7 @@ def strip_string(s: str) -> str:
 def new_browser():
     options = Options()
     options.add_argument("--headless")
-    return webdriver.Firefox(options=options)
+    return webdriver.Chrome(options=options)
 
 
 def open_description_file(listing_id: str) -> TextIO:
