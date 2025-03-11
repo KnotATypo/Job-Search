@@ -88,3 +88,9 @@ class Site:
 
     def get_listing_description(self, listing_id) -> str:
         raise NotImplementedError
+
+    @classmethod
+    def get_url(cls, job_id) -> str:
+        """Return the URL for a job listing given its ID."""
+        instance = cls()
+        return instance.build_job_link(job_id)

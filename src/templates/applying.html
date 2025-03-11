@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Applying - Job Search{% endblock %}
+
+{% block header_title %}Applying Mode{% endblock %}
+
+{% block header_extra %}
+<div class="progress">Liked jobs</div>
+{% endblock %}
+
+{% block content %}
+{% if job %}
+<div class="job-info">
+    <h2 class="job-title">{{ job.title }}</h2>
+    <div class="job-company">{{ job.company }}</div>
+
+    {% for listing in listings %}
+    <div class="job-summary">
+        <h3 class="card-subtitle">Summary</h3>
+        <div class="card-text">{{ listing.listing_id.summary }}</div>
+        <div class="card-text">Source: {{ listing.listing_id.site|capitalize }}</div>
+    </div>
+    {% endfor %}
+
+    <div class="job-links">
+        <h3 class="card-subtitle">Open Job Listings</h3>
+        <div class="action-buttons">
+            {% for site_name, site_url in sites %}
+            <a href="{{ site_url }}" target="_blank" class="btn btn-primary">
+                {{ site_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <form action="{{ url_for('applying_action') }}" method="post">
+        <input type="hidden" name="job_id" value="{{ job.id }}">
+        <div class="status-selector">
+            <h3 class="card-subtitle">Update Status</h3>
+            <div class="action-buttons">
+                <button type="submit" name="status" value="applied" class="btn btn-success">
+                    Applied
+                </button>
+                <button type="submit" name="status" value="not_interested" class="btn btn-danger">
+                    Ignored
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% else %}
+<div class="card">
+    <h2 class="card-title">No Jobs to Apply For</h2>
+    <p class="card-text">There are no liked jobs to apply for at this time.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+</div>
+{% endif %}
+{% endblock %}
