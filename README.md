@@ -90,13 +90,25 @@ python src/download.py
 
 ### Managing Job Listings
 
-Launch the main application:
+#### Tkinter UI (Original)
+
+Launch the original Tkinter UI:
 
 ```
 python src/app.py
 ```
 
-The application has three main sections:
+#### Flask UI (Alternative)
+
+Alternatively, you can use the Flask-based web interface:
+
+```
+python src/flask_app.py
+```
+
+Then open your browser and navigate to http://127.0.0.1:5000/
+
+Both UIs provide the same functionality with three main sections:
 
 1. **Triage**: Review new job listings and mark them as "interested" or "not interested"
    - Press `y` to mark as interested
@@ -133,6 +145,7 @@ The application uses a MySQL database with the following tables:
 - `transformers` and `accelerate`: Machine learning for text processing
 - `fabric`: Remote execution and deployment
 - `pymysql`: MySQL database connector
+- `flask`: Web framework for the alternative UI
 
 ## License
 
