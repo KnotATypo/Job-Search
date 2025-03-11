@@ -1,4 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
+from waitress import serve
+
 from model import Job, JobToListing, Listing
 from sites.indeed import Indeed
 from sites.jora import Jora
@@ -169,4 +171,4 @@ def applying_action():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=True)
+    serve(app, host="0.0.0.0", port=80)
