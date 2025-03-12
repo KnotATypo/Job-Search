@@ -52,7 +52,10 @@ class Jora(Site):
         soup = BeautifulSoup(content, features=HTML_PARSER)
         if soup.text.find("We have looked through all the results for you") != -1:
             return []
-        last_page = int(re.findall(r"\d+", soup.find_all("div", "search-results-page-number")[0].text)[-1])
+        last_page_number_div = soup.find_all("div", "search-results-page-number")
+        if not last_page_number_div:
+            return []
+        last_page = int(re.findall(r"\d+", last_page_number_div[0].text)[-1])
         if page_number > last_page:
             return []
         matches = soup.find_all("a", attrs={"class": "job-link -no-underline -desktop-only show-job-description"})
