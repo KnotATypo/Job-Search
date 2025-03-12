@@ -24,6 +24,8 @@ class Jora(Site):
         soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
         body: Tag = soup.find("div", attrs={"id": "job-description-container"})
         browser.close()
+        if body is None:
+            return ""
         return body.text
 
     def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
