@@ -4,19 +4,23 @@
 }
 
 :root {
-    --primary-color: #2081C3;  /* Blue */
-    --secondary-color: #388659;  /* Green */
-    --accent-color: #FE4A49;  /* Red */
-    --light-bg: #f5f5f5;  /* Light gray */
-    --dark-text: #333333;
+    /* Dark mode colors (always on) */
+    --primary-color: #1e3a8a;  /* Darker blue for header/footer */
+    --secondary-color: #065f46;  /* Darker green for success buttons */
+    --accent-color: #991b1b;  /* Darker red for danger buttons */
+    --bg-color: #121212;  /* Dark background */
+    --card-bg-color: #1e1e1e;  /* Slightly lighter than background */
+    --text-color: #f0f0f0;  /* Light text */
     --light-text: #ffffff;
-    --medium-text: #555555;
+    --medium-text: #bbbbbb;  /* Lighter medium text for better contrast */
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --border-color: #444;
 }
 
 body {
     font-family: 'Calibri', 'Arial', sans-serif;
-    background-color: var(--light-bg);
-    color: var(--dark-text);
+    background-color: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
     padding: 0;
     line-height: 1.6;
@@ -97,7 +101,7 @@ main {
 }
 
 .btn-primary:hover {
-    background-color: #0B5394;  /* Darker blue */
+    background-color: #2563eb;  /* Lighter blue for hover */
 }
 
 .btn-success {
@@ -106,7 +110,7 @@ main {
 }
 
 .btn-success:hover {
-    background-color: #2D6A4F;  /* Darker green */
+    background-color: #10b981;  /* Lighter green for hover */
 }
 
 .btn-danger {
@@ -115,7 +119,7 @@ main {
 }
 
 .btn-danger:hover {
-    background-color: #D01C1F;  /* Darker red */
+    background-color: #dc2626;  /* Lighter red for hover */
 }
 
 .btn-block {
@@ -125,9 +129,9 @@ main {
 
 /* Cards */
 .card {
-    background-color: white;
+    background-color: var(--card-bg-color);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px var(--shadow-color);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-sizing: border-box;
@@ -195,10 +199,10 @@ footer {
 }
 
 .job-summary {
-    background-color: white;
+    background-color: var(--card-bg-color);
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px var(--shadow-color);
     margin-bottom: 1.5rem;
 }
 
@@ -228,7 +232,9 @@ footer {
     padding: 0.5rem;
     font-size: 1rem;
     border-radius: 4px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
 }
 
 /* Responsive adjustments */

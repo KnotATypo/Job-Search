@@ -16,6 +16,7 @@ Job Search is a desktop application that helps streamline your job hunting proce
   - **Applying**: Track jobs you're applying to
 - **Keyboard Shortcuts**: Efficient keyboard shortcuts for quick triage
 - **Automatic Filtering**: Automatically filter out jobs with blacklisted terms in the title
+- **Dark Mode**: Always-on dark mode to reduce eye strain and provide a modern interface
 
 ## Installation
 
@@ -146,4 +147,3 @@ The application uses a MySQL database with the following tables:
 - `fabric`: Remote execution and deployment
 - `pymysql`: MySQL database connector
 - `flask`: Web framework for the alternative UI
-
