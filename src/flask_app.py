@@ -53,14 +53,14 @@ def triage_action():
 
     job = Job.get_by_id(job_id)
 
-    if action == "yes":
+    if action == "interested":
         job.status = "interested"
         job.save()
-        flash(f"Marked '{job.title}' as interested")
-    elif action == "no":
+        flash(f"Marked '{job.title}' for further review")
+    elif action == "not_interested":
         job.status = "not_interested"
         job.save()
-        flash(f"Marked '{job.title}' as not interested")
+        flash(f"Skipped '{job.title}'")
     elif action == "undo":
         # Get the most recently updated job that's not new
         prev_job = Job.select().where(Job.status != "new").order_by(Job.id.desc()).first()
@@ -112,14 +112,14 @@ def reading_action():
 
     job = Job.get_by_id(job_id)
 
-    if action == "like":
+    if action == "liked":
         job.status = "liked"
         job.save()
-        flash(f"Liked '{job.title}'")
-    elif action == "dislike":
+        flash(f"Marked '{job.title}' for application")
+    elif action == "not_interested":
         job.status = "not_interested"
         job.save()
-        flash(f"Disliked '{job.title}'")
+        flash(f"Marked '{job.title}' as not a good fit")
 
     return redirect(url_for("reading"))
 
@@ -165,7 +165,12 @@ def applying_action():
     job = Job.get_by_id(job_id)
     job.status = status
     job.save()
-    flash(f"Updated status for '{job.title}' to {status}")
+    if status == "applied":
+        flash(f"Marked '{job.title}' as application submitted")
+    elif status == "not_interested":
+        flash(f"Marked '{job.title}' as not pursuing")
+    else:
+        flash(f"Updated status for '{job.title}' to {status}")
 
     return redirect(url_for("applying"))
 

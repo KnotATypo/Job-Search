@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Job Search{% endblock %}</title>
+    <title>{% block title %}Job Application Tracker{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1><a href="{{ url_for('index') }}" class="header-link">{% block header_title %}Job Search{% endblock %}</a></h1>
+            <h1><a href="{{ url_for('index') }}" class="header-link">{% block header_title %}Job Application Tracker{% endblock %}</a></h1>
             {% block header_extra %}{% endblock %}
         </div>
     </header>
@@ -30,7 +30,7 @@
     </main>
 
     <footer>
-        <p>Job Search Application</p>
+        <p>Job Application Tracker</p>
     </footer>
 
     {% block scripts %}{% endblock %}

@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Job Search{% endblock %}
+{% block title %}Job Application Tracker{% endblock %}
 
 {% block content %}
 <div class="card">
-    <h2 class="card-title">Workflow Stages</h2>
-    <p class="card-text">Select a workflow stage to begin</p>
-    
+    <h2 class="card-title">Application Process</h2>
+    <p class="card-text">Select a stage in the application process to begin</p>
+
     <div class="workflow-stages">
         <a href="{{ url_for('triage') }}" class="btn btn-success btn-block">
-            Triage <span class="stage-count">({{ triage_count }})</span>
+            Initial Screening <span class="stage-count">({{ triage_count }})</span>
         </a>
-        
+
         <a href="{{ url_for('reading') }}" class="btn btn-primary btn-block">
-            Reading <span class="stage-count">({{ reading_count }})</span>
+            Detailed Review <span class="stage-count">({{ reading_count }})</span>
         </a>
-        
+
         <a href="{{ url_for('applying') }}" class="btn btn-danger btn-block">
-            Applying <span class="stage-count">({{ applying_count }})</span>
+            Application Submission <span class="stage-count">({{ applying_count }})</span>
         </a>
     </div>
 </div>

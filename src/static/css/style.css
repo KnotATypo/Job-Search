@@ -6,8 +6,8 @@
 :root {
     /* Dark mode colors (always on) */
     --primary-color: #1e3a8a;  /* Darker blue for header/footer */
-    --secondary-color: #065f46;  /* Darker green for success buttons */
-    --accent-color: #991b1b;  /* Darker red for danger buttons */
+    --success-color: #065f46;  /* Darker green for success buttons */
+    --danger-color: #991b1b;  /* Darker red for danger buttons */
     --bg-color: #121212;  /* Dark background */
     --card-bg-color: #1e1e1e;  /* Slightly lighter than background */
     --text-color: #f0f0f0;  /* Light text */
@@ -105,7 +105,7 @@ main {
 }
 
 .btn-success {
-    background-color: var(--secondary-color);
+    background-color: var(--success-color);
     color: var(--light-text);
 }
 
@@ -114,7 +114,7 @@ main {
 }
 
 .btn-danger {
-    background-color: var(--accent-color);
+    background-color: var(--danger-color);
     color: var(--light-text);
 }
 

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Triage - Job Search{% endblock %}
+{% block title %}Initial Screening - Job Application Tracker{% endblock %}
 
-{% block header_title %}Triage Mode{% endblock %}
+{% block header_title %}Initial Screening{% endblock %}
 
 {% block header_extra %}
-<div class="progress">New jobs</div>
+<div class="progress">Screening new job listings</div>
 {% endblock %}
 
 {% block content %}
@@ -13,7 +13,7 @@
 <div class="job-info">
     <h2 class="job-title">{{ job.title }}</h2>
     <div class="job-company">{{ job.company }}</div>
-    
+
     {% for listing in listings %}
     <div class="job-summary">
         <h3 class="card-subtitle">Summary</h3>
@@ -21,15 +21,15 @@
         <div class="card-text">Source: {{ listing.listing_id.site|capitalize }}</div>
     </div>
     {% endfor %}
-    
+
     <form action="{{ url_for('triage_action') }}" method="post">
         <input type="hidden" name="job_id" value="{{ job.id }}">
         <div class="action-buttons">
-            <button type="submit" name="action" value="yes" class="btn btn-success">
-                Interested
+            <button type="submit" name="action" value="interested" class="btn btn-success">
+                Review Further
             </button>
-            <button type="submit" name="action" value="no" class="btn btn-danger">
-                Not Interested
+            <button type="submit" name="action" value="not_interested" class="btn btn-danger">
+                Skip Listing
             </button>
             <button type="submit" name="action" value="undo" class="btn btn-primary">
                 Undo Last Action

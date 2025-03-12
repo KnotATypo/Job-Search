@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Applying - Job Search{% endblock %}
+{% block title %}Application Submission - Job Application Tracker{% endblock %}
 
-{% block header_title %}Applying Mode{% endblock %}
+{% block header_title %}Application Submission{% endblock %}
 
 {% block header_extra %}
-<div class="progress">Liked jobs</div>
+<div class="progress">Submitting applications</div>
 {% endblock %}
 
 {% block content %}
@@ -39,10 +39,10 @@
             <h3 class="card-subtitle">Update Status</h3>
             <div class="action-buttons">
                 <button type="submit" name="status" value="applied" class="btn btn-success">
-                    Applied
+                    Application Submitted
                 </button>
                 <button type="submit" name="status" value="not_interested" class="btn btn-danger">
-                    Ignored
+                    Not Pursuing
                 </button>
             </div>
         </div>
