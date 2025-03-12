@@ -29,7 +29,7 @@ Job Search is a desktop application that helps streamline your job hunting proce
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/Job-Search.git
+   git clone https://github.com/knotatypo/Job-Search.git
    cd Job-Search
    ```
 
@@ -106,7 +106,7 @@ Alternatively, you can use the Flask-based web interface:
 python src/flask_app.py
 ```
 
-Then open your browser and navigate to http://127.0.0.1:5000/
+Then open your browser and navigate to http://127.0.0.1/
 
 Both UIs provide the same functionality with three main sections:
 
@@ -147,10 +147,3 @@ The application uses a MySQL database with the following tables:
 - `pymysql`: MySQL database connector
 - `flask`: Web framework for the alternative UI
 
-## License
-
-[MIT License](LICENSE)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
