@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Briefcase body -->
+  <rect x="12" y="24" width="40" height="30" rx="4" ry="4" fill="#4a6da7" />
+  
+  <!-- Briefcase handle -->
+  <path d="M24 24 V18 C24 14 28 14 32 14 C36 14 40 14 40 18 V24" stroke="#2c3e50" stroke-width="4" fill="none" />
+  
+  <!-- Magnifying glass -->
+  <circle cx="42" cy="22" r="10" fill="none" stroke="#2c3e50" stroke-width="4" />
+  <line x1="48" y1="28" x2="56" y2="36" stroke="#2c3e50" stroke-width="4" stroke-linecap="round" />
+  
+  <!-- Document lines inside briefcase -->
+  <line x1="20" y1="34" x2="44" y2="34" stroke="#ffffff" stroke-width="2" />
+  <line x1="20" y1="40" x2="44" y2="40" stroke="#ffffff" stroke-width="2" />
+  <line x1="20" y1="46" x2="44" y2="46" stroke="#ffffff" stroke-width="2" />
+</svg>
