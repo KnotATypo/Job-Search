@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
+from peewee import OperationalError
 from waitress import serve
 
 from model import Job, JobToListing, Listing
@@ -6,7 +7,6 @@ from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.linkedin import LinkedIn
 from sites.seek import Seek
-from sites.site import Site
 
 app = Flask(__name__)
 app.secret_key = "job_search_secret_key"  # For flash messages
@@ -16,9 +16,14 @@ app.secret_key = "job_search_secret_key"  # For flash messages
 def index():
     """Main page with workflow stages"""
     # Count jobs in each stage
-    triage_count = len(Job.select().where(Job.status == "new").execute())
-    reading_count = len(Job.select().where(Job.status == "interested").execute())
-    applying_count = len(Job.select().where(Job.status == "liked").execute())
+    triage_count = -1
+    while triage_count < 0:
+        try:
+            triage_count = len(Job.select().where(Job.status == "new").execute())
+            reading_count = len(Job.select().where(Job.status == "interested").execute())
+            applying_count = len(Job.select().where(Job.status == "liked").execute())
+        except OperationalError:
+            print("Database error")
 
     return render_template(
         "index.html", triage_count=triage_count, reading_count=reading_count, applying_count=applying_count
