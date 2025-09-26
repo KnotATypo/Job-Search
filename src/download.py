@@ -14,12 +14,12 @@ from sites.site import JobType, Site
 
 def main():
     # search_terms, blacklist_terms, sites, types = load_config()
-    search_terms = ["programmer"]
-    sites = [Indeed()]
 
-    for site in tqdm(sites, desc="Sites", unit="site"):
-        for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
-            site.download_new_listings(query)
+    Indeed().download_new_listings("programmer")
+
+    # for site in tqdm(sites, desc="Sites", unit="site"):
+    #     for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
+    #         site.download_new_listings(query)
 
     # easy_filter(blacklist_terms)
 

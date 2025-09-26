@@ -3,8 +3,9 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
+from create_summary import summary
 from model import PageCount, Job, Listing, JobToListing
-from util import strip_string, open_description_file
+from util import strip_string
 
 HTML_PARSER = "html.parser"
 
@@ -52,12 +53,12 @@ class Site:
     def save_listings(self, listings: List[Tuple[Listing, Job]]):
         new_listings = []
         for listing, job in listings:
-            listing, created = Listing.get_or_create(id=listing.id, site=listing.site)
+            listing, created = Listing.get_or_create(id=listing.id, site=listing.site, summary_path="")
             if created:
                 new_listings.append((listing, job))
                 description = self.get_listing_description(listing.id)
                 description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
-                with open_description_file(listing.id) as f:
+                with open(f"data/{listing.id}.txt", "w+") as f:
                     f.write(description_utf)
 
         jobs: List[Job] = Job.select()
@@ -71,10 +72,7 @@ class Site:
                 JobToListing.create(job_id=job.id, listing_id=listing.id)
 
     def build_page_link(self, page_number: int, query: str):
-        return (
-            self.PAGE_URL.replace("%%QUERY%%", query)
-            .replace("%%PAGE%%", str(page_number))
-        )
+        return self.PAGE_URL.replace("%%QUERY%%", query).replace("%%PAGE%%", str(page_number))
 
     def get_listings_from_page(self, page_number, query: str) -> List[Tuple[Listing, Job]]:
         raise NotImplementedError

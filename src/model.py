@@ -5,7 +5,8 @@ from peewee import (
     ForeignKeyField,
     IntegerField,
     CompositeKey,
-    TextField, PostgresqlDatabase,
+    TextField,
+    PostgresqlDatabase,
 )
 
 
@@ -26,7 +27,7 @@ class Job(Model):
 class Listing(Model):
     id = CharField(primary_key=True)
     site = CharField()
-    summary = TextField()
+    summary_path = TextField()
 
     class Meta:
         database = db
