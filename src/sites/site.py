@@ -25,19 +25,19 @@ class Site:
         self.LISTING_URL = listing_url
         self.SITE_STRING = site_string.lower()
 
-    def download_new_listings(self, query: str, job_type: JobType) -> None:
-        page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=query, type=job_type.value)[0]
+    def download_new_listings(self, query: str) -> None:
+        page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=query)[0]
         expected_pages = page_count.pages
 
         page = 0
         with tqdm(
             total=expected_pages,
-            desc=f"{self.SITE_STRING} - {query} - {job_type.value}",
+            desc=f"{self.SITE_STRING} - {query}",
             unit="page",
             leave=False,
         ) as pbar:
             while True:
-                listings = self.get_listings_from_page(page, query, job_type)
+                listings = self.get_listings_from_page(page, query)
                 if len(listings) == 0:
                     break
                 self.save_listings(listings)
@@ -70,14 +70,13 @@ class Site:
                 job.save()
                 JobToListing.create(job_id=job.id, listing_id=listing.id)
 
-    def build_page_link(self, page_number: int, query: str, job_type: str):
+    def build_page_link(self, page_number: int, query: str):
         return (
             self.PAGE_URL.replace("%%QUERY%%", query)
             .replace("%%PAGE%%", str(page_number))
-            .replace("%%TYPE%%", job_type)
         )
 
-    def get_listings_from_page(self, page_number, query: str, job_type: JobType) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, page_number, query: str) -> List[Tuple[Listing, Job]]:
         raise NotImplementedError
 
     def extract_info(self, job) -> Tuple[Listing, Job]:

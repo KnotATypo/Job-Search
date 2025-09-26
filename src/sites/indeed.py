@@ -4,15 +4,15 @@ from bs4 import BeautifulSoup, Tag
 from selenium.webdriver.firefox.webdriver import WebDriver
 
 from model import Listing, Job
-from sites.site import Site, HTML_PARSER, JobType
+from sites.site import Site, HTML_PARSER
 from util import new_browser
 
 
 class Indeed(Site):
     def __init__(self):
         super().__init__(
-            "https://au.indeed.com/jobs?q=%%QUERY%%&l=Brisbane+QLD&radius=10&start=%%PAGE%%",
-            "https://au.indeed.com/viewjob?jk=%%ID%%&sc=0kf%3Ajt(%%TYPE%%)%3B",
+            "https://au.indeed.com/jobs?q=%%QUERY%%&start=%%PAGE%%",
+            "https://au.indeed.com/viewjob?jk=%%ID%%&sc=0kf%3B",
             "Indeed",
         )
 
@@ -32,14 +32,8 @@ class Indeed(Site):
         browser.close()
         return body.text
 
-    def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
-        if job_type == JobType.FULL:
-            type_str = "fulltime"
-        elif job_type == JobType.PART:
-            type_str = "parttime"
-        elif job_type == JobType.CASUAL:
-            type_str = "casual"
-        link = self.build_page_link(page_number * 10, query.replace("-", "+"), type_str)
+    def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
+        link = self.build_page_link(page_number * 10, query.replace("-", "+"))
         retry_count = 0
         while True:
             browser = new_browser()
@@ -60,8 +54,7 @@ class Indeed(Site):
 
         matches = soup.find_all("td", {"class": "resultContent"})
         matches = [self.extract_info(x) for x in matches]
-        for m in matches:
-            m[1].type = job_type.value
+
         return matches
 
     def extract_info(self, job) -> Tuple[Listing, Job]:

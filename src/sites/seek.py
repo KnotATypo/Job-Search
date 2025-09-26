@@ -4,13 +4,13 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 from model import Listing, Job
-from sites.site import Site, HTML_PARSER, JobType
+from sites.site import Site, HTML_PARSER
 
 
 class Seek(Site):
     def __init__(self):
         super().__init__(
-            "https://www.seek.com.au/%%QUERY%%-jobs/in-Brisbane-CBD-&-Inner-Suburbs-Brisbane-QLD%%TYPE%%?page=%%PAGE%%",
+            "https://www.seek.com.au/%%QUERY%%-jobs/?page=%%PAGE%%",
             "https://www.seek.com.au/job/%%ID%%",
             "Seek",
         )
@@ -21,16 +21,8 @@ class Seek(Site):
         body: Tag = soup.find("div", attrs={"data-automation": "jobAdDetails"})
         return body.contents[0].text
 
-    def get_listings_from_page(self, page_number, query, job_type) -> List[Tuple[Listing, Job]]:
-        if job_type == JobType.FULL:
-            type_str = "/full-time"
-        elif job_type == JobType.PART:
-            type_str = "/part-time"
-        elif job_type == JobType.CASUAL:
-            type_str = "/casual-vacation"
-        else:
-            type_str = ""
-        link = self.build_page_link(page_number, query, type_str)
+    def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
+        link = self.build_page_link(page_number, query)
         response = requests.get(link)
         if response.status_code != 200:
             print("The response returned a non-200 status.")
@@ -38,8 +30,7 @@ class Seek(Site):
         soup = BeautifulSoup(response.text, features=HTML_PARSER)
         matches = soup.find_all("a", attrs={"data-automation": "jobTitle"})
         matches = [self.extract_info(x) for x in matches]
-        for m in matches:
-            m[1].type = job_type.value
+
         return matches
 
     def extract_info(self, job) -> Tuple[Listing, Job]:

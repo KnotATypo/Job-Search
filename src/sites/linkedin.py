@@ -10,7 +10,7 @@ from util import new_browser
 class LinkedIn(Site):
     def __init__(self):
         super().__init__(
-            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=%%QUERY%%&location=brisbane&start=%%PAGE%%&f_JT=%%TYPE%%",
+            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=%%QUERY%%&start=%%PAGE%%",
             "https://www.linkedin.com/jobs/view/%%ID%%/",
             "LinkedIn",
         )
@@ -19,13 +19,10 @@ class LinkedIn(Site):
         # TODO: Work out how to get around logging in
         return ""
 
-    def get_listings_from_page(self, page_number, query: str, job_type: JobType) -> List[Tuple[Listing, Job]]:
-        if job_type == job_type.CASUAL:
-            return []
-
+    def get_listings_from_page(self, page_number, query: str) -> List[Tuple[Listing, Job]]:
         browser = new_browser()
         while True:
-            link = self.build_page_link(page_number * 10, query.replace("-", "%20"), job_type.value[0].upper())
+            link = self.build_page_link(page_number * 10, query.replace("-", "%20"))
             browser.get(link)
             soup = BeautifulSoup(browser.page_source, HTML_PARSER)
             if browser.page_source == "<html><head></head><body></body></html>":
@@ -36,8 +33,7 @@ class LinkedIn(Site):
         browser.close()
 
         jobs = [self.extract_info(card) for card in cards]
-        for j in jobs:
-            j[1].type = job_type.value
+
         return jobs
 
     def extract_info(self, job) -> Tuple[Listing, Job]:

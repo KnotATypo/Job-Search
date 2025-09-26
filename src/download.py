@@ -17,8 +17,7 @@ def main():
 
     for site in tqdm(sites, desc="Sites", unit="site"):
         for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
-            for job_type in tqdm(types, desc="Job Types", unit="type", leave=False):
-                site.download_new_listings(query, job_type)
+            site.download_new_listings(query)
 
     easy_filter(blacklist_terms)
 
