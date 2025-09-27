@@ -41,6 +41,17 @@
         </div>
     </nav>
     <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1 0 auto;
+        }
         .header-content {
             display: flex;
             flex-direction: row;
@@ -173,10 +184,6 @@
 
         {% block content %}{% endblock %}
     </main>
-
-    <footer>
-        <p>Job Application Tracker</p>
-    </footer>
 
     {% block scripts %}{% endblock %}
 </body>
