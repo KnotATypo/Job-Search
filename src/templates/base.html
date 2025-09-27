@@ -12,74 +12,120 @@
 <body>
     <header>
         <div class="header-content">
-            <h1><a href="{{ url_for('index') }}" class="header-link">{% block header_title %}Job Application Tracker{% endblock %}</a></h1>
+            <h1 class="header-title"><a href="{{ url_for('index') }}" class="header-link">{% block header_title %}Job Application Tracker{% endblock %}</a></h1>
+            <button id="menu-toggle" aria-label="Open navigation menu">&#9776;</button>
             {% block header_extra %}{% endblock %}
         </div>
     </header>
 
-    <!-- Mobile Hamburger Menu -->
+    <!-- Responsive Navigation -->
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
+        <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link">Manage Blacklist Terms</a>
+        {% if session.username %}
+            <span class="nav-username">User: {{ session.username }}</span>
+            <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change">Change Username</a>
+        {% endif %}
+    </nav>
     <nav class="mobile-nav">
-        <button id="menu-toggle" aria-label="Open navigation menu">&#9776;</button>
         <div id="menu" class="menu-hidden">
-            <a href="{{ url_for('index') }}" class="nav-link">Home</a>
-            <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
-            <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link">Manage Blacklist Terms</a>
+            <a href="{{ url_for('index') }}" class="nav-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Home</a>
+            <a href="{{ url_for('manage_search_terms') }}" class="nav-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Search Terms</a>
+            <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Blacklist Terms</a>
             {% if session.username %}
                 <span class="nav-username">User: {{ session.username }}</span>
-                <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change">Change Username</a>
+                <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change" onclick="document.getElementById('menu').classList.add('menu-hidden')">Change Username</a>
             {% endif %}
         </div>
     </nav>
     <style>
-        .mobile-nav { position: relative; }
+        .header-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.5em 0.5em 0 0.5em;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .header-title {
+            margin: 0 auto;
+            font-size: 1.5em;
+            text-align: center;
+            flex: 1;
+        }
         #menu-toggle {
-            font-size: 2em;
-            background: none;
+            display: none;
+            font-size: 1.3em;
+            background: #4a6da7;
+            color: #fff;
             border: none;
+            border-radius: 50%;
+            width: 2.2em;
+            height: 2.2em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
             cursor: pointer;
-            position: absolute;
-            top: 0.5em;
-            left: 0.5em;
-            z-index: 1001;
+            transition: background 0.2s, box-shadow 0.2s;
+            margin-left: auto;
+        }
+        #menu-toggle:active, #menu-toggle:hover {
+            background: #35507a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+        }
+        @media (max-width: 700px) {
+            #menu-toggle { display: block; }
+            .navbar { display: none; }
+            .mobile-nav { display: block; }
+            .header-title { font-size: 1.2em; }
+            .header-content { justify-content: center; }
+        }
+        @media (min-width: 701px) {
+            #menu-toggle { display: none; }
+            .mobile-nav { display: none; }
+        }
+        .mobile-nav {
+            position: relative;
         }
         #menu {
             display: flex;
             flex-direction: column;
             position: absolute;
-            top: 2.5em;
-            left: 0.5em;
+            top: 0.5em;
+            right: 0.5em;
+            left: auto;
             background: #fff;
             border: 1px solid #ccc;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             z-index: 1000;
             min-width: 180px;
         }
-        .menu-hidden { display: none; }
-        .nav-link, .nav-username {
+        #menu.menu-hidden { display: none !important; }
+        .mobile-nav .nav-link, .mobile-nav .nav-username {
             padding: 0.75em 1em;
             text-decoration: none;
             color: #333;
             background: #fff;
             border-bottom: 1px solid #eee;
         }
-        .nav-link:last-child { border-bottom: none; }
-        @media (min-width: 700px) {
-            .mobile-nav { display: none; }
-        }
+        .mobile-nav .nav-link:last-child { border-bottom: none; }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var menu = document.getElementById('menu');
             var toggle = document.getElementById('menu-toggle');
-            toggle.addEventListener('click', function() {
-                menu.classList.toggle('menu-hidden');
-            });
-            // Optional: Hide menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!toggle.contains(e.target) && !menu.contains(e.target)) {
-                    menu.classList.add('menu-hidden');
-                }
-            });
+            if (toggle && menu) {
+                toggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    menu.classList.toggle('menu-hidden');
+                });
+                document.addEventListener('click', function(e) {
+                    if (!toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.add('menu-hidden');
+                    }
+                });
+            }
         });
     </script>
 
