@@ -60,4 +60,12 @@ class SearchTerm(Model):
         database = db
 
 
-db.create_tables([Job, Listing, JobToListing, PageCount, SearchTerm], safe=True)
+class User(Model):
+    id = AutoField(primary_key=True)
+    username = CharField(unique=True)
+
+    class Meta:
+        database = db
+
+
+db.create_tables([Job, Listing, JobToListing, PageCount, SearchTerm, User], safe=True)

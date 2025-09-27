@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, ses
 from peewee import OperationalError
 from waitress import serve
 
-from model import Job, JobToListing, Listing, SearchTerm
+from model import Job, JobToListing, Listing, SearchTerm, User
 from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.linkedin import LinkedIn
@@ -23,15 +23,16 @@ def get_current_username():
 # Route to select/set username
 @app.route("/set_username", methods=["GET", "POST"])
 def set_username():
+    usernames = [u.username for u in User.select().order_by(User.username)]
     if request.method == "POST":
         username = request.form.get("username")
-        if username:
+        if username and username in usernames:
             session["username"] = username
             flash(f"Username set to {username}")
             return redirect(url_for("index"))
         else:
-            flash("Please enter a username.")
-    return render_template("set_username.html")
+            flash("Please select a valid username.")
+    return render_template("set_username.html", usernames=usernames)
 
 
 # Decorator to require username selection
