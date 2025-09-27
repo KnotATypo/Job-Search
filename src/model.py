@@ -52,4 +52,12 @@ class PageCount(Model):
         primary_key = CompositeKey("site", "query")
 
 
-db.create_tables([Job, Listing, JobToListing, PageCount], safe=True)
+class SearchTerm(Model):
+    id = AutoField(primary_key=True)
+    term = CharField(unique=True)
+
+    class Meta:
+        database = db
+
+
+db.create_tables([Job, Listing, JobToListing, PageCount, SearchTerm], safe=True)

@@ -17,6 +17,15 @@
         </div>
     </header>
 
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
+        {% if session.username %}
+            <span class="nav-username">User: {{ session.username }}</span>
+            <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change">Change Username</a>
+        {% endif %}
+    </nav>
+
     <main>
         {% with messages = get_flashed_messages() %}
             {% if messages %}

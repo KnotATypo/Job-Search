@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
-from model import Job
+from model import Job, SearchTerm
 from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.linkedin import LinkedIn
@@ -13,14 +13,13 @@ from sites.site import JobType, Site
 
 
 def main():
-    # search_terms, blacklist_terms, sites, types = load_config()
+    # Fetch search terms from the database
+    search_terms = [st.term for st in SearchTerm.select()]
+    sites = [Indeed()]
 
-    indeed = Indeed()
-    indeed.download_new_listings("programmer")
-
-    # for site in tqdm(sites, desc="Sites", unit="site"):
-    #     for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
-    #         site.download_new_listings(query)
+    for site in tqdm(sites, desc="Sites", unit="site"):
+        for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
+            site.download_new_listings(query)
 
     # easy_filter(blacklist_terms)
 

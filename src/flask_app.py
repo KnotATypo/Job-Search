@@ -1,8 +1,8 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from peewee import OperationalError
 from waitress import serve
 
-from model import Job, JobToListing, Listing
+from model import Job, JobToListing, Listing, SearchTerm
 from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.linkedin import LinkedIn
@@ -241,6 +241,40 @@ def applying_action():
         flash(f"Updated status for '{job.title}' to {status}")
 
     return redirect(url_for("applying"))
+
+
+@app.route("/search_terms", methods=["GET"])
+@require_username
+def get_search_terms():
+    terms = [st.term for st in SearchTerm.select()]
+    return jsonify(terms)
+
+
+@app.route("/search_terms", methods=["POST"])
+@require_username
+def add_search_term():
+    term = request.form.get("term")
+    if not term:
+        return jsonify({"error": "No term provided"}), 400
+    try:
+        SearchTerm.create(term=term)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/search_terms/<term>", methods=["DELETE"])
+@require_username
+def delete_search_term(term):
+    q = SearchTerm.delete().where(SearchTerm.term == term)
+    deleted = q.execute()
+    return jsonify({"deleted": deleted})
+
+
+@app.route("/manage_search_terms")
+@require_username
+def manage_search_terms():
+    return render_template("manage_search_terms.html")
 
 
 if __name__ == "__main__":

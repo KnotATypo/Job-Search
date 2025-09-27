@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card search-terms-card">
+    <h2>Manage Search Terms</h2>
+    <form id="add-term-form" class="add-term-form">
+        <input type="text" id="new-term" class="term-input" placeholder="Add new search term" required>
+        <button type="submit" class="btn btn-success">Add</button>
+    </form>
+    <ul id="terms-list" class="terms-list"></ul>
+</div>
+<script>
+function fetchTerms() {
+    fetch('/search_terms')
+        .then(response => response.json())
+        .then(terms => {
+            const list = document.getElementById('terms-list');
+            list.innerHTML = '';
+            terms.forEach(term => {
+                const li = document.createElement('li');
+                li.textContent = term + ' ';
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.onclick = () => deleteTerm(term);
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+        });
+}
+function addTerm(e) {
+    e.preventDefault();
+    const term = document.getElementById('new-term').value;
+    fetch('/search_terms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'term=' + encodeURIComponent(term)
+    })
+    .then(() => {
+        document.getElementById('new-term').value = '';
+        fetchTerms();
+    });
+}
+function deleteTerm(term) {
+    fetch('/search_terms/' + encodeURIComponent(term), { method: 'DELETE' })
+        .then(() => fetchTerms());
+}
+document.getElementById('add-term-form').addEventListener('submit', addTerm);
+window.onload = fetchTerms;
+</script>
+{% endblock %}

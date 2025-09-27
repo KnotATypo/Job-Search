@@ -237,6 +237,184 @@ footer {
     color: var(--text-color);
 }
 
+/* Navigation Bar */
+.navbar {
+    background: var(--card-bg-color);
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 0.75rem 0;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.nav-link {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-link:hover, .nav-link:focus {
+    background: var(--primary-color);
+    color: var(--light-text);
+}
+
+/* Change Username link in navbar */
+.nav-link-username-change {
+    margin-left: 1rem;
+    background: var(--primary-color);
+    color: var(--light-text);
+    font-size: 0.98rem;
+    padding: 0.25rem 0.9rem;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-link-username-change:hover, .nav-link-username-change:focus {
+    background: #2563eb;
+    color: #fff;
+}
+
+/* Card for Manage Search Terms */
+.card.search-terms-card {
+    background: var(--card-bg-color);
+    max-width: 420px;
+    margin: 2rem auto;
+    padding: 2rem 2rem 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px var(--shadow-color);
+    border: 1px solid var(--border-color);
+}
+
+.card.search-terms-card h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--light-text);
+}
+
+.add-term-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.term-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1.1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: var(--light-text);
+}
+
+.btn-success:hover, .btn-success:focus {
+    background: #059669;
+}
+
+.terms-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.terms-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-color);
+}
+
+.terms-list button {
+    background: var(--danger-color);
+    color: var(--light-text);
+    border: none;
+    border-radius: 4px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: background 0.2s;
+}
+
+.terms-list button:hover, .terms-list button:focus {
+    background: #dc2626;
+}
+
+/* Username Card and Form */
+.card.set-username-card {
+    background: var(--card-bg-color);
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem 2rem 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px var(--shadow-color);
+    border: 1px solid var(--border-color);
+}
+
+.set-username-card h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--light-text);
+}
+
+.set-username-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.username-label {
+    font-size: 1.1rem;
+    color: var(--medium-text);
+    margin-bottom: 0.2rem;
+}
+
+/* Username in Navbar */
+.nav-username {
+    margin-left: auto;
+    color: var(--medium-text);
+    font-size: 1.05rem;
+    padding-left: 2rem;
+    align-self: center;
+    font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .card.set-username-card {
+        padding: 1rem;
+    }
+    .nav-username {
+        padding-left: 0.5rem;
+        font-size: 0.98rem;
+    }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .action-buttons {

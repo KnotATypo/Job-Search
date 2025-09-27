@@ -9,10 +9,6 @@
 {% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1em;">
-    <strong>User:</strong> {{ username }}
-    <a href="{{ url_for('set_username') }}" style="margin-left: 1em;">Change</a>
-</div>
 {% if job %}
 <div class="job-info">
     <h2 class="job-title">{{ job.title }}</h2>

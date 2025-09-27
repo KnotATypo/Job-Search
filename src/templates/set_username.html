@@ -5,12 +5,16 @@
     <title>Set Username</title>
 </head>
 <body>
-    <h2>Select your username</h2>
-    <form method="post">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <button type="submit">Set Username</button>
-    </form>
+    {% extends "base.html" %}
+    {% block content %}
+    <div class="card set-username-card">
+        <h2>Select your username</h2>
+        <form method="post" class="set-username-form">
+            <label for="username" class="username-label">Username:</label>
+            <input type="text" id="username" name="username" class="term-input" required>
+            <button type="submit" class="btn btn-success">Set Username</button>
+        </form>
+    </div>
+    {% endblock %}
 </body>
 </html>
-
