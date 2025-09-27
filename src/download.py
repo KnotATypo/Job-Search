@@ -13,13 +13,14 @@ from sites.site import JobType, Site
 
 
 def main():
-    # Fetch search terms from the database
-    search_terms = [st.term for st in SearchTerm.select()]
+    # Fetch search terms from the database as objects
+    search_terms = list(SearchTerm.select())
     sites = [Indeed()]
 
     for site in tqdm(sites, desc="Sites", unit="site"):
-        for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
-            site.download_new_listings(query)
+        for st in tqdm(search_terms, desc="Terms", unit="term", leave=False):
+            # Pass both the term and the username to the site download method
+            site.download_new_listings(st.term, st.user.username)
 
     # easy_filter(blacklist_terms)
 

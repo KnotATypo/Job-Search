@@ -26,7 +26,7 @@ class Site:
         self.LISTING_URL = listing_url
         self.SITE_STRING = site_string.lower()
 
-    def download_new_listings(self, query: str) -> None:
+    def download_new_listings(self, query: str, username: str) -> None:
         page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=query)[0]
         expected_pages = page_count.pages
 
@@ -41,7 +41,7 @@ class Site:
                 listings = self.get_listings_from_page(page, query)
                 if len(listings) == 0:
                     break
-                self.save_listings(listings)
+                self.save_listings(listings, username)
                 page += 1
                 if page > expected_pages:
                     pbar.total += 1
@@ -50,9 +50,10 @@ class Site:
         page_count.pages = page
         page_count.save()
 
-    def save_listings(self, listings: List[Tuple[Listing, Job]]):
+    def save_listings(self, listings: List[Tuple[Listing, Job]], username):
         new_listings = []
         for listing, job in listings:
+            job.username = username
             listing, created = Listing.get_or_create(id=listing.id, site=listing.site, summary="")
             if created:
                 new_listings.append((listing, job))
