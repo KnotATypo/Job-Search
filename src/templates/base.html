@@ -30,12 +30,13 @@
     </nav>
     <nav class="mobile-nav">
         <div id="menu" class="menu-hidden">
-            <a href="{{ url_for('index') }}" class="nav-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Home</a>
-            <a href="{{ url_for('manage_search_terms') }}" class="nav-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Search Terms</a>
-            <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Blacklist Terms</a>
+            <div class="menu-header">Menu</div>
+            <a href="{{ url_for('index') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Home</a>
+            <a href="{{ url_for('manage_search_terms') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Search Terms</a>
+            <a href="{{ url_for('manage_blacklist_terms') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Blacklist Terms</a>
+            <a href="{{ url_for('set_username') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Change Username</a>
             {% if session.username %}
-                <span class="nav-username">User: {{ session.username }}</span>
-                <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change" onclick="document.getElementById('menu').classList.add('menu-hidden')">Change Username</a>
+                <div class="menu-username">User: {{ session.username }}</div>
             {% endif %}
         </div>
     </nav>
@@ -96,20 +97,50 @@
             right: 0.5em;
             left: auto;
             background: #fff;
-            border: 1px solid #ccc;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 14px;
+            border: none;
+            box-shadow: 0 4px 24px rgba(74,109,167,0.18), 0 1.5px 6px rgba(0,0,0,0.08);
             z-index: 1000;
-            min-width: 180px;
+            min-width: 220px;
+            overflow: hidden;
+            padding: 0;
         }
         #menu.menu-hidden { display: none !important; }
-        .mobile-nav .nav-link, .mobile-nav .nav-username {
-            padding: 0.75em 1em;
-            text-decoration: none;
-            color: #333;
-            background: #fff;
-            border-bottom: 1px solid #eee;
+        .menu-header {
+            background: #4a6da7;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 1em 1.2em 0.7em 1.2em;
+            letter-spacing: 0.04em;
         }
-        .mobile-nav .nav-link:last-child { border-bottom: none; }
+        .menu-link {
+            display: block;
+            padding: 0.9em 1.2em;
+            text-decoration: none;
+            color: #222;
+            background: none;
+            border: none;
+            text-align: left;
+            font-size: 1em;
+            transition: background 0.15s, color 0.15s;
+        }
+        .menu-link:active, .menu-link:hover {
+            background: #e6eefb;
+            color: #20406b;
+        }
+        .menu-link:last-of-type {
+            border-bottom: none;
+        }
+        .menu-username {
+            padding: 0.8em 1.2em 0.9em 1.2em;
+            color: #6a7a99;
+            background: #f4f7fb;
+            font-size: 0.97em;
+            font-style: italic;
+            border-top: 1px solid #e0e6f0;
+            text-align: left;
+        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
