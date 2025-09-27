@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Blacklist Terms</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h2>Manage Blacklist Terms</h2>
+    <form id="add-term-form">
+        <input type="text" id="new-term" placeholder="Add new blacklist term" required>
+        <button type="submit">Add</button>
+    </form>
+    <ul id="terms-list"></ul>
+    <script>
+        function fetchTerms() {
+            fetch('/blacklist_terms')
+                .then(response => response.json())
+                .then(terms => {
+                    const list = document.getElementById('terms-list');
+                    list.innerHTML = '';
+                    terms.forEach(term => {
+                        const li = document.createElement('li');
+                        li.textContent = term;
+                        const btn = document.createElement('button');
+                        btn.textContent = 'Delete';
+                        btn.onclick = () => deleteTerm(term);
+                        li.appendChild(btn);
+                        list.appendChild(li);
+                    });
+                });
+        }
+        function addTerm(e) {
+            e.preventDefault();
+            const term = document.getElementById('new-term').value;
+            fetch('/blacklist_terms', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'term=' + encodeURIComponent(term)
+            }).then(() => {
+                document.getElementById('new-term').value = '';
+                fetchTerms();
+            });
+        }
+        function deleteTerm(term) {
+            fetch('/blacklist_terms/' + encodeURIComponent(term), {method: 'DELETE'})
+                .then(fetchTerms);
+        }
+        document.getElementById('add-term-form').onsubmit = addTerm;
+        fetchTerms();
+    </script>
+</body>
+</html>
+

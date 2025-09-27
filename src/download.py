@@ -1,6 +1,4 @@
-import json
-import os
-from typing import List, Tuple
+from typing import List
 
 from tqdm import tqdm
 
@@ -9,7 +7,6 @@ from sites.indeed import Indeed
 from sites.jora import Jora
 from sites.linkedin import LinkedIn
 from sites.seek import Seek
-from sites.site import JobType, Site
 
 
 def main():
@@ -32,36 +29,6 @@ def easy_filter(blacklist_terms: List[str]):
             if term.lower() in job.title.lower():
                 job.status = "easy_filter"
                 job.save()
-
-
-def load_config() -> Tuple[List[str], List[str], List[Site], List[JobType]]:
-    root_path = os.path.realpath(__file__)[: os.path.realpath(__file__).rindex("Job-Search") + 10]
-    with open(f"{root_path}/config/config.json", "r") as f:
-        config = json.load(f)
-
-    sites = []
-    for site in config["sites"]:
-        match site:
-            case "indeed":
-                sites.append(Indeed())
-            case "jora":
-                sites.append(Jora())
-            case "seek":
-                sites.append(Seek())
-            case "linkedin":
-                sites.append(LinkedIn())
-
-    types = []
-    for type in config["types"]:
-        match type:
-            case "full":
-                types.append(JobType.FULL)
-            case "part":
-                types.append(JobType.PART)
-            case "casual":
-                types.append(JobType.CASUAL)
-
-    return config["search-terms"], config["title-blacklist"], sites, types
 
 
 if __name__ == "__main__":

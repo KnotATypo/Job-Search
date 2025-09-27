@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
-from create_summary import summary
 from model import PageCount, Job, Listing, JobToListing
 from util import strip_string
 

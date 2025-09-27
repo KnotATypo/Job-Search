@@ -5,6 +5,5 @@ pyppeteer~=2.0.0
 selenium~=4.19.0
 peewee~=3.17.8
 transformers~=4.47.0
-fabric~=3.2.2
 flask~=3.0.0
 waitress~=3.0.2

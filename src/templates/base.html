@@ -17,14 +17,71 @@
         </div>
     </header>
 
-    <nav class="navbar">
-        <a href="{{ url_for('index') }}" class="nav-link">Home</a>
-        <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
-        {% if session.username %}
-            <span class="nav-username">User: {{ session.username }}</span>
-            <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change">Change Username</a>
-        {% endif %}
+    <!-- Mobile Hamburger Menu -->
+    <nav class="mobile-nav">
+        <button id="menu-toggle" aria-label="Open navigation menu">&#9776;</button>
+        <div id="menu" class="menu-hidden">
+            <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+            <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
+            <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link">Manage Blacklist Terms</a>
+            {% if session.username %}
+                <span class="nav-username">User: {{ session.username }}</span>
+                <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change">Change Username</a>
+            {% endif %}
+        </div>
     </nav>
+    <style>
+        .mobile-nav { position: relative; }
+        #menu-toggle {
+            font-size: 2em;
+            background: none;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            top: 0.5em;
+            left: 0.5em;
+            z-index: 1001;
+        }
+        #menu {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 2.5em;
+            left: 0.5em;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 180px;
+        }
+        .menu-hidden { display: none; }
+        .nav-link, .nav-username {
+            padding: 0.75em 1em;
+            text-decoration: none;
+            color: #333;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        .nav-link:last-child { border-bottom: none; }
+        @media (min-width: 700px) {
+            .mobile-nav { display: none; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var menu = document.getElementById('menu');
+            var toggle = document.getElementById('menu-toggle');
+            toggle.addEventListener('click', function() {
+                menu.classList.toggle('menu-hidden');
+            });
+            // Optional: Hide menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!toggle.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.add('menu-hidden');
+                }
+            });
+        });
+    </script>
 
     <main>
         {% with messages = get_flashed_messages() %}

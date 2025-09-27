@@ -69,4 +69,13 @@ class SearchTerm(Model):
         database = db
 
 
-db.create_tables([Job, Listing, JobToListing, PageCount, SearchTerm, User], safe=True)
+class BlacklistTerm(Model):
+    id = AutoField(primary_key=True)
+    term = CharField()
+    user = ForeignKeyField(User, backref="blacklist_terms")
+
+    class Meta:
+        database = db
+
+
+db.create_tables([Job, Listing, JobToListing, PageCount, SearchTerm, BlacklistTerm, User], safe=True)
