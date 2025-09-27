@@ -1,7 +1,7 @@
+from time import sleep
 from typing import List, Tuple
 
 from bs4 import BeautifulSoup, Tag
-from selenium.webdriver.firefox.webdriver import WebDriver
 
 from model import Listing, Job
 from sites.site import Site, HTML_PARSER
@@ -18,9 +18,10 @@ class Indeed(Site):
 
     def get_listing_description(self, listing_id) -> str:
         retry_count = 0
+        browser = new_browser()
         while True:
-            browser = new_browser()
             browser.get(self.build_job_link(listing_id))
+            sleep(1)
             soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
             if soup.find("title").string != "Just a moment...":
                 break
@@ -28,16 +29,17 @@ class Indeed(Site):
             if retry_count > 10:
                 browser.close()
                 return ""
-        body: Tag = soup.find("div", attrs={"class": "jobsearch-JobComponent-description"})
         browser.close()
+        body: Tag = soup.find("div", attrs={"class": "jobsearch-JobComponent-description"})
         return body.text
 
     def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(page_number * 10, query.replace("-", "+"))
         retry_count = 0
+        browser = new_browser()
         while True:
-            browser = new_browser()
             browser.get(link)
+            sleep(1)
             content = browser.page_source
             soup = BeautifulSoup(content, features=HTML_PARSER)
             if soup.find("title").string != "Just a moment...":
@@ -47,7 +49,6 @@ class Indeed(Site):
                 browser.close()
                 return []
         browser.close()
-
         result = soup.find("a", attrs={"data-testid": "pagination-page-current"})
         if result is None or int(result.text) <= page_number:
             return []

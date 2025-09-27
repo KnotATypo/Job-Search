@@ -15,7 +15,9 @@ from sites.site import JobType, Site
 def main():
     # search_terms, blacklist_terms, sites, types = load_config()
 
-    Indeed().download_new_listings("programmer")
+    indeed = Indeed()
+    indeed.download_new_listings("programmer")
+    indeed.clean_up()
 
     # for site in tqdm(sites, desc="Sites", unit="site"):
     #     for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):

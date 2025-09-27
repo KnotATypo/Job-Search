@@ -27,7 +27,7 @@ class Job(Model):
 class Listing(Model):
     id = CharField(primary_key=True)
     site = CharField()
-    summary_path = TextField()
+    summary = TextField()
 
     class Meta:
         database = db
