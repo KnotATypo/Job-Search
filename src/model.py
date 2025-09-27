@@ -19,6 +19,7 @@ class Job(Model):
     title = TextField()
     company = TextField()
     status = CharField(default="new")
+    username = CharField()  # New field for multi-user support
 
     class Meta:
         database = db

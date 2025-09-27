@@ -3,6 +3,10 @@
 {% block title %}Job Application Tracker{% endblock %}
 
 {% block content %}
+<div style="margin-bottom: 1em;">
+    <strong>User:</strong> {{ username }}
+    <a href="{{ url_for('set_username') }}" style="margin-left: 1em;">Change</a>
+</div>
 <div class="card">
     <h2 class="card-title">Application Process</h2>
     <p class="card-text">Select a stage in the application process to begin</p>

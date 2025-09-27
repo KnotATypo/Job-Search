@@ -64,4 +64,4 @@ class Indeed(Site):
         title = job.find("a").text
         company = job.find("span", {"data-testid": "company-name"}).text
 
-        return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
+        return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company, username="josh")

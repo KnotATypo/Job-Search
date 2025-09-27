@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, session
 from peewee import OperationalError
 from waitress import serve
 
@@ -12,29 +12,72 @@ app = Flask(__name__)
 app.secret_key = "job_search_secret_key"  # For flash messages
 
 
+# Helper to get current username from session
+def get_current_username():
+    username = session.get("username")
+    if not username:
+        return None
+    return username
+
+
+# Route to select/set username
+@app.route("/set_username", methods=["GET", "POST"])
+def set_username():
+    if request.method == "POST":
+        username = request.form.get("username")
+        if username:
+            session["username"] = username
+            flash(f"Username set to {username}")
+            return redirect(url_for("index"))
+        else:
+            flash("Please enter a username.")
+    return render_template("set_username.html")
+
+
+# Decorator to require username selection
+from functools import wraps
+
+
+def require_username(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not get_current_username():
+            return redirect(url_for("set_username"))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 @app.route("/")
+@require_username
 def index():
     """Main page with workflow stages"""
-    # Count jobs in each stage
+    username = get_current_username()
     triage_count = -1
     while triage_count < 0:
         try:
-            triage_count = len(Job.select().where(Job.status == "new").execute())
-            reading_count = len(Job.select().where(Job.status == "interested").execute())
-            applying_count = len(Job.select().where(Job.status == "liked").execute())
+            triage_count = Job.select().where((Job.status == "new") & (Job.username == username)).count()
+            reading_count = Job.select().where((Job.status == "interested") & (Job.username == username)).count()
+            applying_count = Job.select().where((Job.status == "liked") & (Job.username == username)).count()
         except OperationalError:
             print("Database error")
 
     return render_template(
-        "index.html", triage_count=triage_count, reading_count=reading_count, applying_count=applying_count
+        "index.html",
+        triage_count=triage_count,
+        reading_count=reading_count,
+        applying_count=applying_count,
+        username=username,
     )
 
 
 @app.route("/triage")
+@require_username
 def triage():
     """Triage page for new jobs"""
+    username = get_current_username()
     # Get the next job to triage
-    job = Job.select().where(Job.status == "new").first()
+    job = Job.select().where((Job.status == "new") & (Job.username == username)).first()
 
     if not job:
         flash("No more jobs to triage!")
@@ -43,12 +86,14 @@ def triage():
     # Get listings for this job
     listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
 
-    return render_template("triage.html", job=job, listings=listings)
+    return render_template("triage.html", job=job, listings=listings, username=username)
 
 
 @app.route("/triage/action", methods=["POST"])
+@require_username
 def triage_action():
     """Handle triage actions (yes/no/undo)"""
+    username = get_current_username()
     job_id = request.form.get("job_id")
     action = request.form.get("action")
 
@@ -56,7 +101,11 @@ def triage_action():
         flash("Invalid request")
         return redirect(url_for("triage"))
 
-    job = Job.get_by_id(job_id)
+    job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
+
+    if not job:
+        flash("Job not found or not yours.")
+        return redirect(url_for("triage"))
 
     if action == "interested":
         job.status = "interested"
@@ -68,7 +117,9 @@ def triage_action():
         flash(f"Skipped '{job.title}'")
     elif action == "undo":
         # Get the most recently updated job that's not new
-        prev_job = Job.select().where(Job.status != "new").order_by(Job.id.desc()).first()
+        prev_job = (
+            Job.select().where((Job.status != "new") & (Job.username == username)).order_by(Job.id.desc()).first()
+        )
         if prev_job:
             prev_job.status = "new"
             prev_job.save()
@@ -78,10 +129,12 @@ def triage_action():
 
 
 @app.route("/reading")
+@require_username
 def reading():
     """Reading page for interested jobs"""
+    username = get_current_username()
     # Get the next job to read
-    job = Job.select().where(Job.status == "interested").first()
+    job = Job.select().where((Job.status == "interested") & (Job.username == username)).first()
 
     if not job:
         flash("No more jobs to read!")
@@ -102,12 +155,14 @@ def reading():
         elif listing.listing_id.site == "linkedin":
             sites.append(("LinkedIn", LinkedIn.get_url(listing.listing_id.id)))
 
-    return render_template("reading.html", job=job, listings=listings, sites=sites)
+    return render_template("reading.html", job=job, listings=listings, sites=sites, username=username)
 
 
 @app.route("/reading/action", methods=["POST"])
+@require_username
 def reading_action():
     """Handle reading actions (like/dislike)"""
+    username = get_current_username()
     job_id = request.form.get("job_id")
     action = request.form.get("action")
 
@@ -115,7 +170,11 @@ def reading_action():
         flash("Invalid request")
         return redirect(url_for("reading"))
 
-    job = Job.get_by_id(job_id)
+    job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
+
+    if not job:
+        flash("Job not found or not yours.")
+        return redirect(url_for("reading"))
 
     if action == "liked":
         job.status = "liked"
@@ -130,10 +189,12 @@ def reading_action():
 
 
 @app.route("/applying")
+@require_username
 def applying():
     """Applying page for liked jobs"""
+    username = get_current_username()
     # Get the next job to apply for
-    job = Job.select().where(Job.status == "liked").first()
+    job = Job.select().where((Job.status == "liked") & (Job.username == username)).first()
 
     if not job:
         flash("No more jobs to apply for!")
@@ -154,12 +215,14 @@ def applying():
         elif listing.listing_id.site == "linkedin":
             sites.append(("LinkedIn", LinkedIn.get_url(listing.listing_id.id)))
 
-    return render_template("applying.html", job=job, listings=listings, sites=sites)
+    return render_template("applying.html", job=job, listings=listings, sites=sites, username=username)
 
 
 @app.route("/applying/action", methods=["POST"])
+@require_username
 def applying_action():
     """Handle applying actions (status update)"""
+    username = get_current_username()
     job_id = request.form.get("job_id")
     status = request.form.get("status")
 

@@ -9,6 +9,10 @@
 {% endblock %}
 
 {% block content %}
+<div style="margin-bottom: 1em;">
+    <strong>User:</strong> {{ username }}
+    <a href="{{ url_for('set_username') }}" style="margin-left: 1em;">Change</a>
+</div>
 {% if job %}
 <div class="job-info">
     <h2 class="job-title">{{ job.title }}</h2>
@@ -51,7 +55,7 @@
 {% else %}
 <div class="card">
     <h2 class="card-title">No Jobs to Apply For</h2>
-    <p class="card-text">There are no liked jobs to apply for at this time.</p>
+    <p class="card-text">There are no jobs to apply for at this time.</p>
     <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
 </div>
 {% endif %}

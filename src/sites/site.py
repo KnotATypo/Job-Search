@@ -53,7 +53,7 @@ class Site:
     def save_listings(self, listings: List[Tuple[Listing, Job]]):
         new_listings = []
         for listing, job in listings:
-            listing, created = Listing.get_or_create(id=listing.id, site=listing.site, summary_path="")
+            listing, created = Listing.get_or_create(id=listing.id, site=listing.site, summary="")
             if created:
                 new_listings.append((listing, job))
                 description = self.get_listing_description(listing.id)

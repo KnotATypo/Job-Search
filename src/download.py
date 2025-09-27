@@ -17,7 +17,6 @@ def main():
 
     indeed = Indeed()
     indeed.download_new_listings("programmer")
-    indeed.clean_up()
 
     # for site in tqdm(sites, desc="Sites", unit="site"):
     #     for query in tqdm(search_terms, desc="Terms", unit="term", leave=False):
