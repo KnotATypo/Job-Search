@@ -52,17 +52,18 @@ class PageCount(Model):
         primary_key = CompositeKey("site", "query")
 
 
-class SearchTerm(Model):
+class User(Model):
     id = AutoField(primary_key=True)
-    term = CharField(unique=True)
+    username = CharField(unique=True)
 
     class Meta:
         database = db
 
 
-class User(Model):
+class SearchTerm(Model):
     id = AutoField(primary_key=True)
-    username = CharField(unique=True)
+    term = CharField()  # Removed unique=True
+    user = ForeignKeyField(User, backref="search_terms")  # Attach to user
 
     class Meta:
         database = db

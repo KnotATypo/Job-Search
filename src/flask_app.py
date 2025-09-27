@@ -247,7 +247,9 @@ def applying_action():
 @app.route("/search_terms", methods=["GET"])
 @require_username
 def get_search_terms():
-    terms = [st.term for st in SearchTerm.select()]
+    username = get_current_username()
+    user = User.get(User.username == username)
+    terms = [st.term for st in SearchTerm.select().where(SearchTerm.user == user)]
     return jsonify(terms)
 
 
@@ -257,8 +259,10 @@ def add_search_term():
     term = request.form.get("term")
     if not term:
         return jsonify({"error": "No term provided"}), 400
+    username = get_current_username()
+    user = User.get(User.username == username)
     try:
-        SearchTerm.create(term=term)
+        SearchTerm.create(term=term, user=user)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -267,7 +271,9 @@ def add_search_term():
 @app.route("/search_terms/<term>", methods=["DELETE"])
 @require_username
 def delete_search_term(term):
-    q = SearchTerm.delete().where(SearchTerm.term == term)
+    username = get_current_username()
+    user = User.get(User.username == username)
+    q = SearchTerm.delete().where((SearchTerm.term == term) & (SearchTerm.user == user))
     deleted = q.execute()
     return jsonify({"deleted": deleted})
 
