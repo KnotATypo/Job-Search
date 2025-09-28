@@ -1,6 +1,8 @@
 import os
 import re
+from time import sleep
 
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
@@ -30,3 +32,13 @@ def new_browser():
     )
 
     return driver
+
+
+def get_page_soup(link: str) -> BeautifulSoup:
+    browser = new_browser()
+    browser.get(link)
+    sleep(1)
+    content = browser.page_source
+    soup = BeautifulSoup(content, features="html.parser")
+    browser.close()
+    return soup

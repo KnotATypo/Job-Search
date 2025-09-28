@@ -1,10 +1,10 @@
 from typing import List, Tuple
 
-import requests
-from bs4 import BeautifulSoup, Tag
+from bs4 import Tag
 
 from model import Listing, Job
-from sites.site import Site, HTML_PARSER
+from sites.site import Site
+from util import get_page_soup
 
 
 class Seek(Site):
@@ -16,18 +16,14 @@ class Seek(Site):
         )
 
     def get_listing_description(self, listing_id) -> str:
-        response = requests.get(self.build_job_link(listing_id))
-        soup = BeautifulSoup(response.text, features=HTML_PARSER)
+        link = self.build_job_link(listing_id)
+        soup = get_page_soup(link)
         body: Tag = soup.find("div", attrs={"data-automation": "jobAdDetails"})
         return body.contents[0].text
 
     def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(page_number, query)
-        response = requests.get(link)
-        if response.status_code != 200:
-            print("The response returned a non-200 status.")
-
-        soup = BeautifulSoup(response.text, features=HTML_PARSER)
+        soup = get_page_soup(link)
         matches = soup.find_all("a", attrs={"data-automation": "jobTitle"})
         matches = [self.extract_info(x) for x in matches]
 
