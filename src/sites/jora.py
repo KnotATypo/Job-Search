@@ -1,13 +1,11 @@
-import asyncio
 import re
 from typing import List, Tuple
 
-from bs4 import BeautifulSoup, Tag
-from pyppeteer import launch
+from bs4 import Tag
 
 from model import Listing, Job
-from sites.site import Site, HTML_PARSER
-from util import new_browser
+from sites.site import Site
+from util import get_page_soup
 
 
 class Jora(Site):
@@ -19,29 +17,16 @@ class Jora(Site):
         )
 
     def get_listing_description(self, listing_id) -> str:
-        browser = new_browser()
-        browser.get(self.build_job_link(listing_id))
-        soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
+        link = self.build_job_link(listing_id)
+        soup = get_page_soup(link)
         body: Tag = soup.find("div", attrs={"id": "job-description-container"})
-        browser.close()
         if body is None:
             return ""
         return body.text
 
     def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
-        async def get(link) -> str:
-            browser = await launch()
-            page = await browser.newPage()
-            await page.goto(link)
-            page_content = await page.content()
-            await browser.close()
-            return page_content
-
-        loop = asyncio.get_event_loop()
         link = self.build_page_link(page_number, query.replace("-", "+"))
-        content = loop.run_until_complete(get(link))
-
-        soup = BeautifulSoup(content, features=HTML_PARSER)
+        soup = get_page_soup(link)
         if soup.text.find("We have looked through all the results for you") != -1:
             return []
         last_page_number_div = soup.find_all("div", "search-results-page-number")
