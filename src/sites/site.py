@@ -46,7 +46,7 @@ class Site:
         new_listings = []
         for listing, job in listings:
             job.username = username
-            listing, created = Listing.get_or_create(id=listing.id, site=listing.site, summary="")
+            listing, created = Listing.get_or_create(id=listing.id, site=listing.site)
             if created:
                 new_listings.append((listing, job))
                 description = self.get_listing_description(listing.id)
