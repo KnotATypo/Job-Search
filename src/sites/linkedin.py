@@ -1,10 +1,8 @@
 from typing import Tuple, List
 
-from bs4 import BeautifulSoup
-
 from model import Listing, Job
-from sites.site import Site, HTML_PARSER, JobType
-from util import new_browser
+from sites.site import Site
+from util import get_page_soup
 
 
 class LinkedIn(Site):
@@ -20,17 +18,11 @@ class LinkedIn(Site):
         return ""
 
     def get_listings_from_page(self, page_number, query: str) -> List[Tuple[Listing, Job]]:
-        browser = new_browser()
-        while True:
-            link = self.build_page_link(page_number * 10, query.replace("-", "%20"))
-            browser.get(link)
-            soup = BeautifulSoup(browser.page_source, HTML_PARSER)
-            if browser.page_source == "<html><head></head><body></body></html>":
-                return []
-            cards = soup.find_all("li")
-            if len(cards) != 0:
-                break
-        browser.close()
+        link = self.build_page_link(page_number * 10, query.replace("-", "%20"))
+        soup = get_page_soup(link)
+        cards = soup.find_all("li")
+        if len(cards) == 0:
+            return []
 
         jobs = [self.extract_info(card) for card in cards]
 
@@ -39,7 +31,7 @@ class LinkedIn(Site):
     def extract_info(self, job) -> Tuple[Listing, Job]:
         links = job.find_all("a")
         link = links[0]["href"]
-        listing_id = link[34 : link[34:].index("?") + 34]
+        listing_id = link[35 : link[35:].index("?") + 35]
         title = links[0].text.strip()
         if len(links) == 1:
             company = "None"
