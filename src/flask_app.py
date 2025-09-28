@@ -321,7 +321,33 @@ def delete_blacklist_term(term):
 @app.route("/manage_blacklist_terms")
 @require_username
 def manage_blacklist_terms():
-    return render_template("manage_blacklist_terms.html")
+    username = get_current_username()
+    user = User.get(User.username == username)
+    return render_template("manage_blacklist_terms.html", user_id=user.id)
+
+
+@app.route("/run_easy_filter", methods=["POST"])
+@require_username
+def run_easy_filter():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    if not user_id:
+        return jsonify({"error": "No user_id provided"}), 400
+    user = User.get_or_none(User.id == user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    # Get blacklist terms for this user
+    blacklist_terms = [bl.term for bl in BlacklistTerm.select().where(BlacklistTerm.user == user)]
+    # Get new jobs for this user
+    new_jobs = Job.select().where((Job.status == "new") & (Job.username == user.username))
+    filtered_count = 0
+    for term in blacklist_terms:
+        for job in new_jobs:
+            if term.lower() in job.title.lower():
+                job.status = "easy_filter"
+                job.save()
+                filtered_count += 1
+    return jsonify({"message": f"Easy filter run for {user.username}. {filtered_count} jobs filtered."})
 
 
 if __name__ == "__main__":

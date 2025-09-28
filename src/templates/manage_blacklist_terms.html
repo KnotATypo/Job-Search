@@ -15,6 +15,7 @@
             <button type="submit" class="btn btn-success">Add</button>
         </form>
         <ul id="terms-list" class="terms-list"></ul>
+        <button id="run-easy-filter" class="btn btn-primary" style="margin-top: 16px;">Run Easy Filter</button>
     </div>
     <script>
     function fetchTerms() {
@@ -57,6 +58,20 @@
     }
     document.getElementById('add-term-form').addEventListener('submit', addTerm);
     window.onload = fetchTerms;
+
+    document.getElementById('run-easy-filter').onclick = function() {
+        fetch('/run_easy_filter', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user_id: {{ user_id }} })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || 'Easy filter run!');
+        });
+    };
     </script>
     {% endblock %}
 </body>
