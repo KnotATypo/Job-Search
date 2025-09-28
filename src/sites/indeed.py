@@ -1,7 +1,7 @@
 from time import sleep
 from typing import List, Tuple
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 from model import Listing, Job
 from sites.site import Site, HTML_PARSER
@@ -17,44 +17,34 @@ class Indeed(Site):
         )
 
     def get_listing_description(self, listing_id) -> str:
-        retry_count = 0
         browser = new_browser()
-        while True:
-            browser.get(self.build_job_link(listing_id))
-            sleep(1)
-            soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
-            if soup.find("title").string != "Just a moment...":
-                break
-            retry_count += 1
-            if retry_count > 10:
-                browser.close()
-                return ""
+        browser.get(self.build_job_link(listing_id))
+        sleep(1)
+        soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
         browser.close()
-        body: Tag = soup.find("div", attrs={"class": "jobsearch-JobComponent-description"})
-        return body.text
+        if soup.find("title").string == "Just a moment...":
+            body = ""
+        else:
+            body = soup.find("div", attrs={"class": "jobsearch-JobComponent-description"}).text
+        return body
 
     def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(page_number * 10, query.replace("-", "+"))
-        retry_count = 0
         browser = new_browser()
-        while True:
-            browser.get(link)
-            sleep(1)
-            content = browser.page_source
-            soup = BeautifulSoup(content, features=HTML_PARSER)
-            if soup.find("title").string != "Just a moment...":
-                break
-            retry_count += 1
-            if retry_count > 10:
-                browser.close()
-                return []
+        browser.get(link)
+        sleep(1)
+        content = browser.page_source
+        soup = BeautifulSoup(content, features=HTML_PARSER)
         browser.close()
-        result = soup.find("a", attrs={"data-testid": "pagination-page-current"})
-        if result is None or int(result.text) <= page_number:
-            return []
-
-        matches = soup.find_all("td", {"class": "resultContent"})
-        matches = [self.extract_info(x) for x in matches]
+        if soup.find("title").string == "Just a moment...":
+            matches = []
+        else:
+            result = soup.find("a", attrs={"data-testid": "pagination-page-current"})
+            if result is None or int(result.text) <= page_number:
+                matches = []
+            else:
+                matches = soup.find_all("td", {"class": "resultContent"})
+                matches = [self.extract_info(x) for x in matches]
 
         return matches
 
