@@ -5,12 +5,15 @@ from tqdm import tqdm
 from model import BlacklistTerm
 from model import Job, SearchTerm
 from sites.indeed import Indeed
+from sites.jora import Jora
+from sites.linkedin import LinkedIn
+from sites.seek import Seek
 
 
 def main():
     # Fetch search terms from the database as objects
     search_terms = list(SearchTerm.select())
-    sites = [Indeed()]
+    sites = [Indeed(), Jora(), Seek(), LinkedIn()]
 
     for site in tqdm(sites, desc="Sites", unit="site"):
         for st in tqdm(search_terms, desc="Terms", unit="term", leave=False):
