@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import List, Tuple
 
 from tqdm import tqdm
@@ -7,12 +6,6 @@ from model import PageCount, Job, Listing, JobToListing
 from util import strip_string
 
 HTML_PARSER = "html.parser"
-
-
-class JobType(Enum):
-    FULL = "full"
-    PART = "part"
-    CASUAL = "casual"
 
 
 class Site:
