@@ -1,11 +1,8 @@
-from time import sleep
 from typing import List, Tuple
 
-from bs4 import BeautifulSoup
-
 from model import Listing, Job
-from sites.site import Site, HTML_PARSER
-from util import new_browser
+from sites.site import Site
+from util import get_page_soup
 
 
 class Indeed(Site):
@@ -17,11 +14,8 @@ class Indeed(Site):
         )
 
     def get_listing_description(self, listing_id) -> str:
-        browser = new_browser()
-        browser.get(self.build_job_link(listing_id))
-        sleep(1)
-        soup = BeautifulSoup(browser.page_source, features=HTML_PARSER)
-        browser.close()
+        link = self.build_job_link(listing_id)
+        soup = get_page_soup(link)
         if soup.find("title").string == "Just a moment...":
             body = ""
         else:
@@ -30,12 +24,7 @@ class Indeed(Site):
 
     def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(page_number * 10, query.replace("-", "+"))
-        browser = new_browser()
-        browser.get(link)
-        sleep(1)
-        content = browser.page_source
-        soup = BeautifulSoup(content, features=HTML_PARSER)
-        browser.close()
+        soup = get_page_soup(link)
         if soup.find("title").string == "Just a moment...":
             matches = []
         else:
