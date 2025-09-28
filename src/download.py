@@ -1,12 +1,10 @@
-from typing import List
+from collections import defaultdict
 
 from tqdm import tqdm
 
+from model import BlacklistTerm
 from model import Job, SearchTerm
 from sites.indeed import Indeed
-from sites.jora import Jora
-from sites.linkedin import LinkedIn
-from sites.seek import Seek
 
 
 def main():
@@ -19,16 +17,22 @@ def main():
             # Pass both the term and the username to the site download method
             site.download_new_listings(st.term, st.user.username)
 
-    # easy_filter(blacklist_terms)
+    # Fetch all blacklist terms and group by user_id
+    user_blacklists = defaultdict(list)
+    for bl in BlacklistTerm.select():
+        user_blacklists[bl.user_id].append(bl.term)
+    easy_filter(user_blacklists)
 
 
-def easy_filter(blacklist_terms: List[str]):
+def easy_filter(user_blacklists: dict):
     new_jobs = Job.select().where(Job.status == "new")
-    for term in blacklist_terms:
-        for job in new_jobs:
+    for job in new_jobs:
+        terms = user_blacklists.get(job.user_id, [])
+        for term in terms:
             if term.lower() in job.title.lower():
                 job.status = "easy_filter"
                 job.save()
+                break  # No need to check more terms for this job
 
 
 if __name__ == "__main__":
