@@ -46,13 +46,16 @@ class Site:
         new_listings = []
         for listing, job in listings:
             job.username = username
-            listing, created = Listing.get_or_create(id=listing.id, site=listing.site)
-            if created:
+            if Listing.get_or_none(id=listing.id, site=listing.site) is None:
+                listing = Listing.create(id=listing.id, site=listing.site, summary="")
                 new_listings.append((listing, job))
                 description = self.get_listing_description(listing.id)
                 description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
-                with open(f"data/{listing.id}.txt", "w+") as f:
-                    f.write(description_utf)
+                try:
+                    with open(f"data/{listing.id}.txt", "w+") as f:
+                        f.write(description_utf)
+                except OSError as e:
+                    print(f"Error writing file for listing {listing.id}: {e}")
 
         jobs: List[Job] = Job.select()
         existing_map = {strip_string(j.title) + "-" + strip_string(j.company): j.id for j in jobs}

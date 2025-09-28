@@ -26,7 +26,7 @@ class Job(Model):
 
 
 class Listing(Model):
-    id = CharField(primary_key=True)
+    id = TextField(primary_key=True)
     site = CharField()
     summary = TextField()
 
