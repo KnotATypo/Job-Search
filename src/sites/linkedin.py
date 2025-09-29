@@ -8,7 +8,7 @@ from util import get_page_soup
 class LinkedIn(Site):
     def __init__(self):
         super().__init__(
-            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=%%QUERY%%&start=%%PAGE%%",
+            "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=%%QUERY%%&start=%%PAGE%%&geoId=101452733",
             "https://www.linkedin.com/jobs/view/%%ID%%/",
             "LinkedIn",
         )

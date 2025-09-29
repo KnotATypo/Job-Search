@@ -14,9 +14,10 @@ def strip_string(s: str) -> str:
     return re.sub(r"\W", "", s.lower())
 
 
-def new_browser():
+def new_browser(headless=True) -> webdriver.Chrome:
     options = Options()
-    options.add_argument("--headless")
+    if headless:
+        options.add_argument("--headless")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     driver = webdriver.Chrome(options=options)

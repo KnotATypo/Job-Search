@@ -12,10 +12,13 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 def main():
     listings = Listing.select(Listing, JobToListing).join(JobToListing).execute()
-    listings = [l for l in listings if l.jobtolisting.job_id.status == "new" and l.summary == ""]
+    listings = [l for l in listings if (l.jobtolisting.job_id.status in ["new", "interested"]) and l.summary == ""]
     for listing in tqdm(listings):
-        with open(f"data/{listing.id}.txt") as f:
-            summarise_and_save(f, listing)
+        try:
+            with open(f"data/{listing.id}.txt") as f:
+                summarise_and_save(f, listing)
+        except FileNotFoundError as e:
+            print(f"File for listing {listing.id} not found: {e}")
 
 
 def summarise_and_save(file: TextIO, listing: Listing):
