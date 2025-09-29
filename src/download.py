@@ -13,7 +13,7 @@ from sites.seek import Seek
 def main():
     # Fetch search terms from the database as objects
     search_terms = list(SearchTerm.select())
-    sites = [Indeed(), Jora(), Seek(), LinkedIn()]
+    sites = [Jora(), Seek(), LinkedIn()]
 
     for site in tqdm(sites, desc="Sites", unit="site"):
         for st in tqdm(search_terms, desc="Terms", unit="term", leave=False):
@@ -23,14 +23,14 @@ def main():
     # Fetch all blacklist terms and group by user_id
     user_blacklists = defaultdict(list)
     for bl in BlacklistTerm.select():
-        user_blacklists[bl.user_id].append(bl.term)
+        user_blacklists[bl.user.username].append(bl.term)
     easy_filter(user_blacklists)
 
 
 def easy_filter(user_blacklists: dict):
     new_jobs = Job.select().where(Job.status == "new")
     for job in new_jobs:
-        terms = user_blacklists.get(job.user_id, [])
+        terms = user_blacklists.get(job.username, [])
         for term in terms:
             if term.lower() in job.title.lower():
                 job.status = "easy_filter"
