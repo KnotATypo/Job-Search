@@ -14,8 +14,18 @@ class LinkedIn(Site):
         )
 
     def get_listing_description(self, listing_id) -> str:
-        # TODO: Work out how to get around logging in
-        return ""
+        link = self.build_job_link(listing_id)
+        body = None
+        error_count = 0
+        while body is None and error_count < 5:
+            soup = get_page_soup(link)
+            body = soup.find("div", attrs={"class": "show-more-less-html__markup"})
+            error_count += 1
+        if body is None:
+            body = ""
+        else:
+            body = body.text
+        return body
 
     def get_listings_from_page(self, page_number, query: str) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(page_number * 10, query.replace("-", "%20"))
