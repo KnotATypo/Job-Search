@@ -44,7 +44,7 @@ class Site:
 
     def save_listings(self, listings: List[Tuple[Listing, Job]], username):
         new_listings = []
-        for listing, job in listings:
+        for listing, job in tqdm(listings, desc="Writing Listings", unit="listing", leave=False):
             job.username = username
             if Listing.get_or_none(id=listing.id, site=listing.site) is None:
                 listing = Listing.create(id=listing.id, site=listing.site, summary="")

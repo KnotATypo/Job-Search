@@ -38,7 +38,7 @@ def new_browser(headless=True) -> webdriver.Chrome:
 def get_page_soup(link: str) -> BeautifulSoup:
     browser = new_browser()
     browser.get(link)
-    sleep(1)
+    # sleep(1)
     content = browser.page_source
     soup = BeautifulSoup(content, features="html.parser")
     browser.close()
