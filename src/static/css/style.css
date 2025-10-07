@@ -5,14 +5,14 @@
 
 :root {
     /* Dark mode colors (always on) */
-    --primary-color: #1e3a8a;  /* Darker blue for header/footer */
-    --success-color: #065f46;  /* Darker green for success buttons */
-    --danger-color: #991b1b;  /* Darker red for danger buttons */
-    --bg-color: #121212;  /* Dark background */
-    --card-bg-color: #1e1e1e;  /* Slightly lighter than background */
-    --text-color: #f0f0f0;  /* Light text */
+    --primary-color: #1e3a8a; /* Darker blue for header/footer */
+    --success-color: #065f46; /* Darker green for success buttons */
+    --danger-color: #991b1b; /* Darker red for danger buttons */
+    --bg-color: #121212; /* Dark background */
+    --card-bg-color: #1e1e1e; /* Slightly lighter than background */
+    --text-color: #f0f0f0; /* Light text */
     --light-text: #ffffff;
-    --medium-text: #bbbbbb;  /* Lighter medium text for better contrast */
+    --medium-text: #bbbbbb; /* Lighter medium text for better contrast */
     --shadow-color: rgba(0, 0, 0, 0.3);
     --border-color: #444;
 }
@@ -101,7 +101,7 @@ main {
 }
 
 .btn-primary:hover {
-    background-color: #2563eb;  /* Lighter blue for hover */
+    background-color: #2563eb; /* Lighter blue for hover */
 }
 
 .btn-success {
@@ -110,7 +110,7 @@ main {
 }
 
 .btn-success:hover {
-    background-color: #10b981;  /* Lighter green for hover */
+    background-color: #10b981; /* Lighter green for hover */
 }
 
 .btn-danger {
@@ -119,7 +119,17 @@ main {
 }
 
 .btn-danger:hover {
-    background-color: #dc2626;  /* Lighter red for hover */
+    background-color: #dc2626; /* Lighter red for hover */
+}
+
+.btn-next {
+    background-color: #6c3483;
+    color: #fff;
+    border: none;
+}
+
+.btn-next:hover {
+    background-color: #8e44ad;
 }
 
 .btn-block {
@@ -409,6 +419,7 @@ footer {
     .card.set-username-card {
         padding: 1rem;
     }
+
     .nav-username {
         padding-left: 0.5rem;
         font-size: 0.98rem;

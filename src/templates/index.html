@@ -19,6 +19,10 @@
         <a href="{{ url_for('applying') }}" class="btn btn-danger btn-block">
             Application Submission <span class="stage-count">({{ applying_count }})</span>
         </a>
+
+        <a href="{{ url_for('applied') }}" class="btn btn-block btn-next">
+            Applied Jobs <span class="stage-count">({{ applied_count }})</span>
+        </a>
     </div>
 </div>
 {% endblock %}

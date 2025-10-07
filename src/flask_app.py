@@ -60,6 +60,7 @@ def index():
             triage_count = Job.select().where((Job.status == "new") & (Job.username == username)).count()
             reading_count = Job.select().where((Job.status == "interested") & (Job.username == username)).count()
             applying_count = Job.select().where((Job.status == "liked") & (Job.username == username)).count()
+            applied_count = Job.select().where((Job.status == "applied") & (Job.username == username)).count()
         except OperationalError:
             print("Database error")
 
@@ -68,6 +69,7 @@ def index():
         triage_count=triage_count,
         reading_count=reading_count,
         applying_count=applying_count,
+        applied_count=applied_count,
         username=username,
     )
 
@@ -348,6 +350,17 @@ def run_easy_filter():
                 job.save()
                 filtered_count += 1
     return jsonify({"message": f"Easy filter run for {user.username}. {filtered_count} jobs filtered."})
+
+
+@app.route("/applied")
+@require_username
+def applied():
+    """Applied jobs page"""
+    username = get_current_username()
+    # Get jobs with applied status
+    jobs = Job.select().where((Job.status == "applied") & (Job.username == username))
+
+    return render_template("applied.html", jobs=jobs, username=username)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Applied Jobs{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">Applied Jobs</h2>
+    {% if jobs %}
+        <ul>
+        {% for job in jobs %}
+            <li>{{ job['title'] }} at {{ job['company'] }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No jobs with 'applied' status found.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
