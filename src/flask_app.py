@@ -357,10 +357,48 @@ def run_easy_filter():
 def applied():
     """Applied jobs page"""
     username = get_current_username()
-    # Get jobs with applied status
     jobs = Job.select().where((Job.status == "applied") & (Job.username == username))
+    jobs_with_listings = []
+    for job in jobs:
+        listings = JobToListing.select().where(JobToListing.job_id == job.id).join(Listing)
+        listing_objs = []
+        for listing in listings:
+            site = listing.listing_id.site
+            if site == "seek":
+                url = Seek.get_url(listing.listing_id.id)
+                site_name = "Seek"
+            elif site == "indeed":
+                url = Indeed.get_url(listing.listing_id.id)
+                site_name = "Indeed"
+            elif site == "jora":
+                url = Jora.get_url(listing.listing_id.id)
+                site_name = "Jora"
+            elif site == "linkedin":
+                url = LinkedIn.get_url(listing.listing_id.id)
+                site_name = "LinkedIn"
+            else:
+                url = None
+                site_name = site
+            if url:
+                listing_objs.append({"url": url, "site": site_name})
+        job_dict = {"id": job.id, "title": job.title, "company": job.company, "listings": listing_objs}
+        jobs_with_listings.append(job_dict)
+    return render_template("applied.html", jobs=jobs_with_listings, username=username)
 
-    return render_template("applied.html", jobs=jobs, username=username)
+
+@app.route("/complete_job", methods=["POST"])
+@require_username
+def complete_job():
+    username = get_current_username()
+    job_id = request.form.get("job_id")
+    job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
+    if job:
+        job.status = "complete"
+        job.save()
+        flash(f"Job '{job.title}' marked as complete and hidden.")
+    else:
+        flash("Job not found or not yours.")
+    return redirect(url_for("applied"))
 
 
 if __name__ == "__main__":
