@@ -1,5 +1,3 @@
-from typing import TextIO
-
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -16,13 +14,13 @@ def main():
     for listing in tqdm(listings):
         try:
             with open(f"data/{listing.id}.txt") as f:
-                summarise_and_save(f, listing)
+                summarise_and_save(f.read(), listing)
         except FileNotFoundError as e:
             print(f"File for listing {listing.id} not found: {e}")
+            summarise_and_save("", listing)
 
 
-def summarise_and_save(file: TextIO, listing: Listing):
-    description = file.read()
+def summarise_and_save(description: str, listing: Listing):
     if description == "" or description == b"":
         response = "N/A"
     else:

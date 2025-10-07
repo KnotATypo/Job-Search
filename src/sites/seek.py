@@ -19,6 +19,8 @@ class Seek(Site):
         link = self.build_job_link(listing_id)
         soup = get_page_soup(link)
         body: Tag = soup.find("div", attrs={"data-automation": "jobAdDetails"})
+        if body is None:
+            return ""
         return body.contents[0].text
 
     def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
