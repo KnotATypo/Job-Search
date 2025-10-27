@@ -10,14 +10,17 @@ from sites.seek import Seek
 
 def main():
     listings = Listing.select().where(Listing.summary == "")
-    for listing in tqdm(listings):
+    clean_listings = []
+    for listing in listings:
         if os.path.exists(f"/home/josh/Projects/Job-Search/data/{listing.id}.txt"):
             with open(f"/home/josh/Projects/Job-Search/data/{listing.id}.txt", "r") as f:
                 content = f.read()
-                if len(content) > 10:
-                    continue  # Skip if file exists and has sufficient content
-                else:
-                    print(f"File {listing.id}.txt is too short, re-fetching description.")
+                if len(content) < 10:
+                    clean_listings.append(listing)
+        else:
+            clean_listings.append(listing)
+    listings = clean_listings
+    for listing in tqdm(listings):
         if listing.site == "linkedin":
             site = LinkedIn()
         elif listing.site == "jora":
