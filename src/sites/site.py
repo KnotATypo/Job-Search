@@ -1,3 +1,4 @@
+import os
 from typing import List, Tuple
 
 from tqdm import tqdm
@@ -49,6 +50,7 @@ class Site:
             if Listing.get_or_none(id=listing.id, site=listing.site) is None:
                 listing = Listing.create(id=listing.id, site=listing.site, summary="")
                 new_listings.append((listing, job))
+            if not os.path.exists(f"data/{listing.id}.txt"):  # Sometimes even if the listing exists, the file might not
                 description = self.get_listing_description(listing.id)
                 description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
                 try:
