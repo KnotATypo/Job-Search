@@ -107,3 +107,8 @@ The application uses a PostgreSQL database with the following tables:
 - `flask`
 - `waitress`
 - `psycopg2-binary`
+
+## Disclaimer
+
+Much of the front-end code, particularly the CSS and HTML is written by a combination of LLMs including JetBrains Junie
+and GitHub Copilot.
