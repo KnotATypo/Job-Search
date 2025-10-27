@@ -98,6 +98,7 @@ The application uses a PostgreSQL database with the following tables:
 
 ## Dependencies
 
+- `selenium-stealth`
 - `beautifulsoup4`
 - `tqdm`
 - `selenium`
@@ -105,4 +106,4 @@ The application uses a PostgreSQL database with the following tables:
 - `transformers`
 - `flask`
 - `waitress`
-- `pytorch`
+- `psycopg2-binary`
