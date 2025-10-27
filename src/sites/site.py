@@ -1,10 +1,11 @@
 import os
+import re
 from typing import List, Tuple
 
 from tqdm import tqdm
 
+import util
 from model import PageCount, Job, Listing, JobToListing
-from util import strip_string
 
 HTML_PARSER = "html.parser"
 
@@ -44,6 +45,9 @@ class Site:
         page_count.save()
 
     def save_listings(self, listings: List[Tuple[Listing, Job]], username):
+        def strip_string(s: str) -> str:
+            return re.sub(r"\W", "", s.lower())
+
         new_listings = []
         for listing, job in tqdm(listings, desc="Writing Listings", unit="listing", leave=False):
             job.username = username
@@ -51,13 +55,7 @@ class Site:
                 listing = Listing.create(id=listing.id, site=listing.site, summary="")
                 new_listings.append((listing, job))
             if not os.path.exists(f"data/{listing.id}.txt"):  # Sometimes even if the listing exists, the file might not
-                description = self.get_listing_description(listing.id)
-                description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
-                try:
-                    with open(f"data/{listing.id}.txt", "w+") as f:
-                        f.write(description_utf)
-                except OSError as e:
-                    print(f"Error writing file for listing {listing.id}: {e}")
+                util.write_description(listing, self)
 
         jobs: List[Job] = Job.select()
         existing_map = {strip_string(j.title) + "-" + strip_string(j.company): j.id for j in jobs}
