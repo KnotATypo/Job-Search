@@ -10,6 +10,9 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 def main():
     listings = Listing.select(Listing, JobToListing).join(JobToListing).execute()
+    for l in [l for l in listings if (l.jobtolisting.job_id.status == "easy_filter") and l.summary == ""]:
+        l.summary = "blacklist"
+        l.save()
     listings = [l for l in listings if (l.jobtolisting.job_id.status in ["new", "interested"]) and l.summary == ""]
     for listing in tqdm(listings):
         try:
