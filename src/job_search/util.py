@@ -1,7 +1,12 @@
+import os
+
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
+
+load_dotenv()
 
 
 def new_browser(headless=True) -> webdriver.Chrome:
@@ -54,7 +59,7 @@ def write_description(listing, site) -> None:
     description = site.get_listing_description(listing.id)
     description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
     try:
-        with open(f"data/{listing.id}.txt", "w+") as f:
+        with open(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt", "w+") as f:
             f.write(description_utf)
     except OSError as e:
         print(f"Error writing file for listing {listing.id}: {e}")

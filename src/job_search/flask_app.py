@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from peewee import OperationalError
 from waitress import serve
@@ -8,8 +11,10 @@ from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = "job_search_secret_key"  # For flash messages
+app.secret_key = os.getenv("APP_SECRET_KEY")  # For flash messages
 
 
 # Helper to get current username from session
@@ -118,15 +123,6 @@ def triage_action():
         job.status = "not_interested"
         job.save()
         flash(f"Skipped '{job.title}'")
-    elif action == "undo":
-        # Get the most recently updated job that's not new
-        prev_job = (
-            Job.select().where((Job.status != "new") & (Job.username == username)).order_by(Job.id.desc()).first()
-        )
-        if prev_job:
-            prev_job.status = "new"
-            prev_job.save()
-            flash(f"Undid action for '{prev_job.title}'")
 
     return redirect(url_for("triage"))
 
@@ -225,7 +221,6 @@ def applying():
 @require_username
 def applying_action():
     """Handle applying actions (status update)"""
-    username = get_current_username()
     job_id = request.form.get("job_id")
     status = request.form.get("status")
 
@@ -407,4 +402,4 @@ def start():
 
 
 if __name__ == "__main__":
-    serve(app, host="0.0.0.0", port=80)
+    start()

@@ -1,5 +1,6 @@
 import os.path
 
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
@@ -8,13 +9,15 @@ from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
 
+load_dotenv()
+
 
 def main():
     listings = Listing.select().where(Listing.summary == "")
     clean_listings = []
     for listing in listings:
-        if os.path.exists(f"/home/josh/Projects/Job-Search/data/{listing.id}.txt"):
-            with open(f"/home/josh/Projects/Job-Search/data/{listing.id}.txt", "r") as f:
+        if os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
+            with open(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt", "r") as f:
                 content = f.read()
                 if len(content) < 10:
                     clean_listings.append(listing)
