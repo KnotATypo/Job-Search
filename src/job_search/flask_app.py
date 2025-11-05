@@ -37,7 +37,7 @@ def set_username():
             return redirect(url_for("index"))
         else:
             flash("Please select a valid username.")
-    return render_template("templates/set_username.html", usernames=usernames)
+    return render_template("set_username.html", usernames=usernames)
 
 
 # Decorator to require username selection
@@ -70,7 +70,7 @@ def index():
             print("Database error")
 
     return render_template(
-        "templates/index.html",
+        "index.html",
         triage_count=triage_count,
         reading_count=reading_count,
         applying_count=applying_count,
@@ -94,7 +94,7 @@ def triage():
     # Get listings for this job
     listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
 
-    return render_template("templates/triage.html", job=job, listings=listings, username=username)
+    return render_template("triage.html", job=job, listings=listings, username=username)
 
 
 @app.route("/triage/action", methods=["POST"])
@@ -154,7 +154,7 @@ def reading():
         elif listing.listing_id.site == "linkedin":
             sites.append(("LinkedIn", LinkedIn.get_url(listing.listing_id.id)))
 
-    return render_template("templates/reading.html", job=job, listings=listings, sites=sites, username=username)
+    return render_template("reading.html", job=job, listings=listings, sites=sites, username=username)
 
 
 @app.route("/reading/action", methods=["POST"])
@@ -214,7 +214,7 @@ def applying():
         elif listing.listing_id.site == "linkedin":
             sites.append(("LinkedIn", LinkedIn.get_url(listing.listing_id.id)))
 
-    return render_template("templates/applying.html", job=job, listings=listings, sites=sites, username=username)
+    return render_template("applying.html", job=job, listings=listings, sites=sites, username=username)
 
 
 @app.route("/applying/action", methods=["POST"])
@@ -278,7 +278,7 @@ def delete_search_term(term):
 @app.route("/manage_search_terms")
 @require_username
 def manage_search_terms():
-    return render_template("templates/manage_search_terms.html")
+    return render_template("manage_search_terms.html")
 
 
 @app.route("/blacklist_terms", methods=["GET"])
@@ -320,7 +320,7 @@ def delete_blacklist_term(term):
 def manage_blacklist_terms():
     username = get_current_username()
     user = User.get(User.username == username)
-    return render_template("templates/manage_blacklist_terms.html", user_id=user.id)
+    return render_template("manage_blacklist_terms.html", user_id=user.id)
 
 
 @app.route("/run_easy_filter", methods=["POST"])
@@ -378,7 +378,7 @@ def applied():
                 listing_objs.append({"url": url, "site": site_name})
         job_dict = {"id": job.id, "title": job.title, "company": job.company, "listings": listing_objs}
         jobs_with_listings.append(job_dict)
-    return render_template("templates/applied.html", jobs=jobs_with_listings, username=username)
+    return render_template("applied.html", jobs=jobs_with_listings, username=username)
 
 
 @app.route("/complete_job", methods=["POST"])
