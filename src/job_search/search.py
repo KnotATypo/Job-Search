@@ -2,12 +2,12 @@ from collections import defaultdict
 
 from tqdm import tqdm
 
-from model import BlacklistTerm
-from model import Job, SearchTerm
-from sites.indeed import Indeed
-from sites.jora import Jora
-from sites.linkedin import LinkedIn
-from sites.seek import Seek
+from job_search.model import BlacklistTerm
+from job_search.model import Job, SearchTerm
+from job_search.sites.indeed import Indeed
+from job_search.sites.jora import Jora
+from job_search.sites.linkedin import LinkedIn
+from job_search.sites.seek import Seek
 
 
 def main():

@@ -4,8 +4,8 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
-import util
-from model import PageCount, Job, Listing, JobToListing
+from job_search import util
+from job_search.model import PageCount, Job, Listing, JobToListing
 
 HTML_PARSER = "html.parser"
 

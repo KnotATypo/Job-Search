@@ -1,0 +1,25 @@
+[project]
+name = "job-search"
+version = "0.1.0"
+description = "A project for searching and aggregating job listings."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "selenium-stealth>=1.0.6",
+    "beautifulsoup4>=4.12.3",
+    "tqdm>=4.66.3",
+    "selenium>=4.19.0",
+    "peewee>=3.17.8",
+    "transformers>=4.47.0",
+    "flask>=3.0.0",
+    "waitress>=3.0.2",
+    "psycopg2-binary>=2.9.10",
+    "black>=25.9.0"
+]
+
+[project.scripts]
+search = "job_search.search:main"
+
+[build-system]
+requires = ["uv_build>=0.9.6,<0.10.0"]
+build-backend = "uv_build"

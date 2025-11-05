@@ -3,9 +3,9 @@ from typing import List, Tuple
 
 from bs4 import Tag
 
-from model import Listing, Job
-from sites.site import Site
-from util import get_page_soup
+from job_search.model import Listing, Job
+from job_search.sites.site import Site
+from job_search.util import get_page_soup
 
 
 class Jora(Site):

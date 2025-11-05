@@ -2,11 +2,11 @@ import os.path
 
 from tqdm import tqdm
 
-import util
-from model import Listing
-from sites.jora import Jora
-from sites.linkedin import LinkedIn
-from sites.seek import Seek
+import job_search.util
+from job_search.model import Listing
+from job_search.sites.jora import Jora
+from job_search.sites.linkedin import LinkedIn
+from job_search.sites.seek import Seek
 
 
 def main():

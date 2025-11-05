@@ -1,7 +1,7 @@
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from model import Listing, JobToListing
+from job_search.model import Listing, JobToListing
 
 model_name = "Qwen/Qwen2.5-1.5B-Instruct"
 model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", device_map="auto")
