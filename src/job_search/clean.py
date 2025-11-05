@@ -2,7 +2,7 @@ import os.path
 
 from tqdm import tqdm
 
-import job_search.util
+from job_search import util
 from job_search.model import Listing
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn

@@ -19,6 +19,9 @@ dependencies = [
 
 [project.scripts]
 search = "job_search.search:main"
+host = "job_search.flask_app:start"
+summary = "job_search.create_summary:main"
+clean = "job_search.clean:main"
 
 [build-system]
 requires = ["uv_build>=0.9.6,<0.10.0"]

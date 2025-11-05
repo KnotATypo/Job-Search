@@ -401,5 +401,10 @@ def complete_job():
     return redirect(url_for("applied"))
 
 
+def start():
+    print("Starting Flask app...")
+    serve(app, host="0.0.0.0", port=80)
+
+
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=80)
