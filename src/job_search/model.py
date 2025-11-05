@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from peewee import (
     Model,
     AutoField,
@@ -9,8 +12,14 @@ from peewee import (
     PostgresqlDatabase,
 )
 
+load_dotenv()
 
-db = PostgresqlDatabase("job_search", user="josh", password="password", host="monitoring.lan")
+db = PostgresqlDatabase(
+    os.getenv("DATABASE_NAME"),
+    user=os.getenv("DATABASE_USER"),
+    password=os.getenv("DATABASE_PASSWORD"),
+    host=os.getenv("DATABASE_HOST"),
+)
 db.connect()
 
 
@@ -19,7 +28,7 @@ class Job(Model):
     title = TextField()
     company = TextField()
     status = CharField(default="new")
-    username = CharField()  # New field for multi-user support
+    username = CharField()
 
     class Meta:
         database = db
@@ -62,8 +71,8 @@ class User(Model):
 
 class SearchTerm(Model):
     id = AutoField(primary_key=True)
-    term = CharField()  # Removed unique=True
-    user = ForeignKeyField(User, backref="search_terms")  # Attach to user
+    term = CharField()
+    user = ForeignKeyField(User, backref="search_terms")
 
     class Meta:
         database = db
