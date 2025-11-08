@@ -94,7 +94,7 @@ class Site:
             else:
                 job = Job.get_by_id(existing_jobs[job_fuzzy])
 
-            if JobToListing.get_or_none(listing=listing.id, job=job.id) is None:
+            if JobToListing.get_or_none(listing_id=listing.id, job_id=job.id) is None:
                 JobToListing.create(job_id=job.id, listing_id=listing.id)
 
             if not os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
