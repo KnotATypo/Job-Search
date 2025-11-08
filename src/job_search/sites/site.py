@@ -2,12 +2,15 @@ import os
 import re
 from typing import List, Tuple
 
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
 from job_search.model import PageCount, Job, Listing, JobToListing
 
 HTML_PARSER = "html.parser"
+
+load_dotenv()
 
 
 class Site:
@@ -72,24 +75,31 @@ class Site:
         def strip_string(s: str) -> str:
             return re.sub(r"\W", "", s.lower())
 
-        new_listings = []
-        for listing, job in tqdm(listings, desc="Writing Listings", unit="listing", leave=False):
-            job.username = username
-            if Listing.get_or_none(id=listing.id, site=listing.site) is None:
-                listing = Listing.create(id=listing.id, site=listing.site, summary="")
-                new_listings.append((listing, job))
-            if not os.path.exists(f"data/{listing.id}.txt"):  # Sometimes even if the listing exists, the file might not
-                util.write_description(listing, self)
+        def get_fuzzy_job(job: Job) -> str:
+            return strip_string(job.title) + "-" + strip_string(job.company)
 
-        jobs: List[Job] = Job.select()
-        existing_map = {strip_string(j.title) + "-" + strip_string(j.company): j.id for j in jobs}
-        for listing, job in new_listings:
-            new_key = strip_string(job.title) + "-" + strip_string(job.company)
-            if new_key in existing_map:
-                JobToListing.create(job_id=existing_map[new_key], listing_id=listing.id)
+        existing_jobs = Job.select().where(Job.username == username)
+        # Sometimes job titles/companies have different casing/punctuation
+        existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
+        for listing, job in listings:
+            job.username = username
+            job_fuzzy = get_fuzzy_job(job)
+
+            if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site)) is None:
+                listing = Listing.create(id=listing.id, site=listing.site, summary="")
             else:
+                listing = existing_listing
+            if job_fuzzy not in existing_jobs.keys():
                 job.save()
+            else:
+                job = Job.get_by_id(existing_jobs[job_fuzzy])
+
+            if JobToListing.get_or_none(listing=listing.id, job=job.id) is None:
                 JobToListing.create(job_id=job.id, listing_id=listing.id)
+
+            if not os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
+                # Sometimes even if the listing exists, the file might not
+                util.write_description(listing, self)
 
     def build_page_link(self, page_number: int, query: str):
         return self.QUERY_URL.replace("%%QUERY%%", query).replace("%%PAGE%%", str(page_number))
