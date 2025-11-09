@@ -1,10 +1,11 @@
 import os.path
+from collections import defaultdict
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import Listing
+from job_search.model import Listing, BlacklistTerm, Job
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
@@ -13,6 +14,7 @@ load_dotenv()
 
 
 def main():
+    # Download missing descriptions
     listings = Listing.select().where(Listing.summary == "")
     clean_listings = []
     for listing in listings:
@@ -35,6 +37,28 @@ def main():
             util.write_description(listing, site)
         except Exception as e:
             print(f"Error fetching description for listing {listing.id}: {e}")
+
+    # Re-apply blacklists
+    user_blacklists = defaultdict(list)
+    for bl in BlacklistTerm.select():
+        user_blacklists[bl.user.username].append(bl.term)
+    # Only check new jobs in case one has slipped through and the user has progressed it
+    new_jobs = Job.select().where(Job.status == "new")
+    for job in new_jobs:
+        terms = user_blacklists.get(job.username, [])
+        for term in terms:
+            if term.lower() in job.title.lower():
+                job.status = "easy_filter"
+                job.save()
+                break
+
+    # Remove jobs from easy_filter if the blacklist term has been removed
+    for job in Job.select().where(Job.status == "easy_filter"):
+        for term in user_blacklists[job.username]:
+            if term.lower() in job.title.lower():
+                job.status = "new"
+                job.save()
+                break
 
 
 if __name__ == "__main__":

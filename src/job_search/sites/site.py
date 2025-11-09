@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import PageCount, Job, Listing, JobToListing
+from job_search.model import PageCount, Job, Listing, JobToListing, BlacklistTerm, User
 
 HTML_PARSER = "html.parser"
 
@@ -71,6 +71,15 @@ class Site:
         listings -- List of tuples pairing Listings to their Job.
         username -- The username of the user to save the jobs for.
         """
+
+        blacklist = (
+            BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.username == username)
+        )
+        for listing, job in listings:
+            for term in blacklist:
+                if term.term.lower() in job.title.lower():
+                    job.status = "easy_filter"
+                    break
 
         def strip_string(s: str) -> str:
             return re.sub(r"\W", "", s.lower())

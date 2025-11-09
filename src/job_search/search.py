@@ -20,23 +20,6 @@ def main():
             # Pass both the term and the username to the site download method
             site.download_new_listings(st.term, st.user.username)
 
-    # Fetch all blacklist terms and group by user_id
-    user_blacklists = defaultdict(list)
-    for bl in BlacklistTerm.select():
-        user_blacklists[bl.user.username].append(bl.term)
-    easy_filter(user_blacklists)
-
-
-def easy_filter(user_blacklists: dict):
-    new_jobs = Job.select().where(Job.status == "new")
-    for job in new_jobs:
-        terms = user_blacklists.get(job.username, [])
-        for term in terms:
-            if term.lower() in job.title.lower():
-                job.status = "easy_filter"
-                job.save()
-                break  # No need to check more terms for this job
-
 
 if __name__ == "__main__":
     main()
