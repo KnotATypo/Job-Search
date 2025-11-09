@@ -17,7 +17,7 @@ def main():
     # Download missing descriptions
     listings = Listing.select().where(Listing.summary == "")
     clean_listings = []
-    for listing in listings:
+    for listing in tqdm(listings, desc="Collecting Listings", unit="listing"):
         if os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
             with open(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt", "r") as f:
                 content = f.read()
@@ -26,7 +26,7 @@ def main():
         else:
             clean_listings.append(listing)
     listings = clean_listings
-    for listing in tqdm(listings):
+    for listing in tqdm(listings, desc="Fetching Descriptions", unit="listing"):
         if listing.site == "linkedin":
             site = LinkedIn()
         elif listing.site == "jora":
@@ -44,7 +44,7 @@ def main():
         user_blacklists[bl.user.username].append(bl.term)
     # Only check new jobs in case one has slipped through and the user has progressed it
     new_jobs = Job.select().where(Job.status == "new")
-    for job in new_jobs:
+    for job in tqdm(new_jobs, desc="Applying Blacklists", unit="job"):
         terms = user_blacklists.get(job.username, [])
         for term in terms:
             if term.lower() in job.title.lower():
@@ -53,12 +53,16 @@ def main():
                 break
 
     # Remove jobs from easy_filter if the blacklist term has been removed
-    for job in Job.select().where(Job.status == "easy_filter"):
+    filtered_jobs = Job.select().where(Job.status == "easy_filter")
+    for job in tqdm(filtered_jobs, desc="Removing Old Blacklists", unit="job"):
+        remove_filter = True
         for term in user_blacklists[job.username]:
             if term.lower() in job.title.lower():
-                job.status = "new"
-                job.save()
+                remove_filter = False
                 break
+        if remove_filter:
+            job.status = "new"
+            job.save()
 
 
 if __name__ == "__main__":
