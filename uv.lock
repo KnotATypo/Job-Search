@@ -283,7 +283,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "selenium", specifier = ">=4.19.0" },
     { name = "selenium-stealth", specifier = ">=1.0.6" },
-    { name = "torch", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cpu" },
+    { name = "torch", specifier = ">=2.9.0" },
     { name = "tqdm", specifier = ">=4.66.3" },
     { name = "transformers", specifier = ">=4.47.0" },
     { name = "waitress", specifier = ">=3.0.2" },
