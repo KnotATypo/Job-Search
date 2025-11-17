@@ -56,13 +56,14 @@ class Site:
 
         query -- The Query object containing the search term, username, and remote filter.
         """
-        page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=query)[0]
+        friendly_query = f"{query.term}, Remote: {query.remote}"
+        page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=friendly_query)[0]
         expected_pages = page_count.pages
 
         page_num = 0
         with tqdm(
             total=expected_pages,
-            desc=f"{self.SITE_STRING} - {query}",
+            desc=f"{self.SITE_STRING} - {friendly_query}",
             unit="page",
             leave=False,
         ) as pbar:
