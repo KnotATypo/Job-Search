@@ -3,6 +3,7 @@
 <div class="card search-terms-card">
     <h2>Manage Search Terms</h2>
     <form id="add-term-form" class="add-term-form">
+        <label for="new-term" class="visually-hidden">New search term</label>
         <input type="text" id="new-term" class="term-input" placeholder="Add new search term" required>
         <button type="submit" class="btn btn-success">Add</button>
     </form>
@@ -19,15 +20,28 @@ function fetchTerms() {
                 const li = document.createElement('li');
                 li.className = 'term-row';
 
+                // Left container: checkbox + label (inline)
+                const left = document.createElement('div');
+                left.className = 'term-left';
+
+                // Inline label to wrap checkbox and text for better click target
+                const termLabel = document.createElement('label');
+                termLabel.className = 'term-label';
+
                 // Checkbox for remote
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = !!obj.remote;
                 checkbox.dataset.termId = obj.id;
                 checkbox.title = 'Toggle remote filter for this term';
+                checkbox.className = 'term-checkbox';
 
-                const label = document.createElement('span');
-                label.textContent = ' ' + obj.term + ' ';
+                const labelText = document.createElement('span');
+                labelText.textContent = obj.term;
+
+                termLabel.appendChild(checkbox);
+                termLabel.appendChild(labelText);
+                left.appendChild(termLabel);
 
                 // Delete button (keeps existing delete-by-term behavior)
                 const delBtn = document.createElement('button');
@@ -61,8 +75,7 @@ function fetchTerms() {
                     .finally(() => { e.target.disabled = false; });
                 });
 
-                li.appendChild(checkbox);
-                li.appendChild(label);
+                li.appendChild(left);
                 li.appendChild(delBtn);
                 list.appendChild(li);
             });

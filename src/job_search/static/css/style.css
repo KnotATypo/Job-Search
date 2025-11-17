@@ -375,6 +375,44 @@ footer {
     background: #dc2626;
 }
 
+/* Term row left container: smaller inline checkbox and label */
+.term-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1; /* allow left to take remaining space */
+}
+
+/* Small, tidy checkbox */
+.term-left input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    accent-color: var(--primary-color); /* modern browsers show brand color */
+    cursor: pointer;
+}
+
+/* Term label text styling */
+.term-left span {
+    color: var(--text-color);
+    font-size: 0.98rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Make delete button smaller and aligned to the right */
+.terms-list button.btn-danger {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.9rem;
+    margin-left: 0.75rem;
+}
+
+/* Ensure list items layout respects the left flex area and right button */
+.terms-list li .term-left {
+    min-width: 0; /* allow ellipsis to work inside flex */
+}
+
 /* Username Card and Form */
 .card.set-username-card {
     background: var(--card-bg-color);
@@ -502,3 +540,28 @@ footer {
         padding: 0.5rem 1rem;
     }
 }
+
+/* Accessibility helper to visually hide labels but keep them for screen readers */
+.visually-hidden {
+    position: absolute !important;
+    height: 1px; width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+}
+
+/* Make the inline label contain checkbox+text with good click target */
+.term-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Slightly reduce the visual weight of the term text within the label */
+.term-label span {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
