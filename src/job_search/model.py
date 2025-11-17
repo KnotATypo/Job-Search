@@ -10,6 +10,7 @@ from peewee import (
     CompositeKey,
     TextField,
     PostgresqlDatabase,
+    BooleanField,
 )
 
 load_dotenv()
@@ -72,6 +73,7 @@ class User(Model):
 class SearchTerm(Model):
     id = AutoField(primary_key=True)
     term = CharField()
+    remote = BooleanField(default=False)
     user = ForeignKeyField(User, backref="search_terms")
 
     class Meta:

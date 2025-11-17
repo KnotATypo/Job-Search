@@ -15,12 +15,54 @@ function fetchTerms() {
         .then(terms => {
             const list = document.getElementById('terms-list');
             list.innerHTML = '';
-            terms.forEach(term => {
+            terms.forEach(obj => {
                 const li = document.createElement('li');
-                li.textContent = term + ' ';
+                li.className = 'term-row';
+
+                // Checkbox for remote
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = !!obj.remote;
+                checkbox.dataset.termId = obj.id;
+                checkbox.title = 'Toggle remote filter for this term';
+
+                const label = document.createElement('span');
+                label.textContent = ' ' + obj.term + ' ';
+
+                // Delete button (keeps existing delete-by-term behavior)
                 const delBtn = document.createElement('button');
                 delBtn.textContent = 'Delete';
-                delBtn.onclick = () => deleteTerm(term);
+                delBtn.className = 'btn btn-danger btn-sm';
+                delBtn.onclick = () => deleteTerm(obj.term);
+
+                // On change, PATCH remote flag
+                checkbox.addEventListener('change', (e) => {
+                    const checked = e.target.checked;
+                    const id = e.target.dataset.termId;
+                    // disable while updating
+                    e.target.disabled = true;
+                    fetch('/search_terms/' + encodeURIComponent(id) + '/remote', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ remote: checked })
+                    })
+                    .then(res => res.json())
+                    .then(json => {
+                        if (!json || json.error) {
+                            alert('Failed to update remote: ' + (json && json.error ? json.error : 'unknown'));
+                            // revert
+                            e.target.checked = !checked;
+                        }
+                    })
+                    .catch(() => {
+                        alert('Network error while updating remote');
+                        e.target.checked = !checked;
+                    })
+                    .finally(() => { e.target.disabled = false; });
+                });
+
+                li.appendChild(checkbox);
+                li.appendChild(label);
                 li.appendChild(delBtn);
                 list.appendChild(li);
             });

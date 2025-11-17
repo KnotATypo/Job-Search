@@ -15,7 +15,7 @@ def main():
     for site in tqdm(sites, desc="Sites", unit="site"):
         for st in tqdm(search_terms, desc="Terms", unit="term", leave=False):
             try:
-                site.download_new_listings(Query(st.term, st.user.username, False))
+                site.download_new_listings(Query(st.term, st.user.username, st.remote))
             except NotSupportedError:
                 # Some sites do not support certain filters; skip these
                 pass

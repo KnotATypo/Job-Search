@@ -246,7 +246,11 @@ def applying_action():
 def get_search_terms():
     username = get_current_username()
     user = User.get(User.username == username)
-    terms = [st.term for st in SearchTerm.select().where(SearchTerm.user == user)]
+    # Return search terms as objects so the frontend can show metadata like the `remote` flag
+    terms = [
+        {"id": st.id, "term": st.term, "remote": bool(st.remote)}
+        for st in SearchTerm.select().where(SearchTerm.user == user)
+    ]
     return jsonify(terms)
 
 
@@ -259,8 +263,8 @@ def add_search_term():
     username = get_current_username()
     user = User.get(User.username == username)
     try:
-        SearchTerm.create(term=term, user=user)
-        return jsonify({"success": True})
+        st = SearchTerm.create(term=term, user=user)
+        return jsonify({"success": True, "id": st.id, "term": st.term, "remote": bool(st.remote)})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -273,6 +277,31 @@ def delete_search_term(term):
     q = SearchTerm.delete().where((SearchTerm.term == term) & (SearchTerm.user == user))
     deleted = q.execute()
     return jsonify({"deleted": deleted})
+
+
+@app.route("/search_terms/<int:term_id>/remote", methods=["PATCH"])
+@require_username
+def toggle_search_term_remote(term_id):
+    username = get_current_username()
+    user = User.get(User.username == username)
+    data = request.get_json(silent=True)
+    if not data or "remote" not in data:
+        return jsonify({"error": "Invalid payload"}), 400
+    remote_val = data.get("remote")
+    if not isinstance(remote_val, bool):
+        # Accept strings like 'true'/'false' as well
+        if isinstance(remote_val, str):
+            remote_val = remote_val.lower() == "true"
+        else:
+            return jsonify({"error": "Invalid remote value"}), 400
+
+    st = SearchTerm.get_or_none((SearchTerm.id == term_id) & (SearchTerm.user == user))
+    if not st:
+        return jsonify({"error": "Search term not found or not yours"}), 404
+
+    st.remote = remote_val
+    st.save()
+    return jsonify({"success": True, "id": st.id, "term": st.term, "remote": bool(st.remote)})
 
 
 @app.route("/manage_search_terms")
