@@ -397,7 +397,7 @@ footer {
     background: #dc2626;
 }
 
-/* Term row left container: smaller inline checkbox and label */
+/* Term row left container */
 .term-left {
     display: inline-flex;
     align-items: center;
@@ -405,34 +405,40 @@ footer {
     flex: 1; /* allow left to take remaining space */
 }
 
-/* Small, tidy checkbox */
+/* Make the checkbox larger and clearly visible, use accent color where supported */
+.term-checkbox,
 .term-left input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
+    appearance: auto;
+    -webkit-appearance: auto;
+    width: 1.4rem;
+    height: 1.4rem;
     margin: 0;
-    accent-color: var(--primary-color); /* modern browsers show brand color */
+    padding: 0;
+    flex: 0 0 auto;
     cursor: pointer;
+    accent-color: var(--primary-color);
+    vertical-align: middle;
 }
 
-/* Term label text styling */
-.term-left span {
-    color: var(--text-color);
-    font-size: 0.98rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* Remove any custom ::after knob if present */
+.term-checkbox::after {
+    display: none;
 }
 
-/* Make delete button smaller and aligned to the right */
-.terms-list button.btn-danger {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.9rem;
-    margin-left: 0.75rem;
+/* Slight adjustments for term-text spacing */
+.term-text {
+    margin-left: 0.2rem;
 }
 
-/* Ensure list items layout respects the left flex area and right button */
-.terms-list li .term-left {
-    min-width: 0; /* allow ellipsis to work inside flex */
+/* Focus styles for native checkbox */
+.term-checkbox:focus {
+    outline: 3px solid rgba(30, 58, 138, 0.18);
+    outline-offset: 2px;
+}
+
+/* Ensure the badge and text stay nicely spaced */
+.term-label .remote-badge {
+    margin-left: 0.6rem;
 }
 
 /* Username Card and Form */
@@ -583,64 +589,38 @@ footer {
 
 /* hide default checkbox appearance but keep it accessible */
 .term-checkbox {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 2.1rem;
-    height: 1.2rem;
-    border-radius: 999px;
-    background: #2a2a2a;
-    border: 1px solid var(--border-color);
-    position: relative;
-    outline: none;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    appearance: auto;
+    -webkit-appearance: auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
     flex: 0 0 auto;
+    cursor: pointer;
 }
 
-.term-checkbox:checked {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-/* The circle knob */
 .term-checkbox::after {
-    content: "";
-    display: block;
-    width: 0.9rem;
-    height: 0.9rem;
-    background: white;
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    left: 0.18rem;
-    transform: translateY(-50%);
-    transition: left 0.12s ease;
+    display: none;
 }
 
-.term-checkbox:checked::after {
-    left: calc(100% - 0.18rem - 0.9rem);
+/* Improve spacing between checkbox and label */
+.term-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.switch-slider {
-    display: none; /* kept for progressive enhancement if needed */
-}
-
+/* Slight adjustments for term-text spacing */
 .term-text {
-    font-size: 0.98rem;
-    color: var(--text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-left: 0.2rem;
+    margin-left: 0.1rem;
 }
 
 /* Ensure the badge and text stay nicely spaced */
 .term-label .remote-badge {
-    margin-left: 0.6rem;
+    margin-left: 0.5rem;
 }
 
-/* Focus styles for the custom checkbox (keyboard accessible) */
+/* Focus styles for native checkbox */
 .term-checkbox:focus {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-    outline: none;
+    outline: 2px solid rgba(59,130,246,0.25);
+    outline-offset: 2px;
 }
