@@ -2,6 +2,7 @@
 {% block content %}
 <div class="card search-terms-card">
     <h2>Manage Search Terms</h2>
+    <p id="toggle-help" class="toggle-help">Toggle the remote switch to only include remote jobs for that search term. When enabled, onsite or hybrid jobs will be excluded for that term (example: "remote python developer" will only surface fully-remote roles). Changes are saved immediately.</p>
     <form id="add-term-form" class="add-term-form">
         <label for="new-term" class="visually-hidden">New search term</label>
         <input type="text" id="new-term" class="term-input" placeholder="Add new search term" required>
@@ -28,19 +29,38 @@ function fetchTerms() {
                 const termLabel = document.createElement('label');
                 termLabel.className = 'term-label';
 
-                // Checkbox for remote
+                // Checkbox for remote (hidden native control, styled with .switch-slider)
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = !!obj.remote;
                 checkbox.dataset.termId = obj.id;
-                checkbox.title = 'Toggle remote filter for this term';
+                checkbox.title = `Only include remote jobs for "${obj.term}" (currently ${obj.remote ? 'ON' : 'OFF'})`;
+                checkbox.setAttribute('aria-label', `Only include remote jobs for ${obj.term}`);
+                // point to explanatory help text for screen readers
+                checkbox.setAttribute('aria-describedby', 'toggle-help');
                 checkbox.className = 'term-checkbox';
 
+                // Visual switch slider element (CSS will style this based on checkbox state)
+                const switchSlider = document.createElement('span');
+                switchSlider.className = 'switch-slider';
+
                 const labelText = document.createElement('span');
+                labelText.className = 'term-text';
                 labelText.textContent = obj.term;
 
                 termLabel.appendChild(checkbox);
+                termLabel.appendChild(switchSlider);
                 termLabel.appendChild(labelText);
+
+                // Small badge shown when remote flag is on
+                const badge = document.createElement('span');
+                badge.className = 'remote-badge';
+                badge.textContent = 'REMOTE ONLY';
+                badge.title = 'This term will only return fully-remote roles (onsite/hybrid excluded)';
+                if (obj.remote) {
+                    termLabel.appendChild(badge);
+                }
+
                 left.appendChild(termLabel);
 
                 // Delete button (keeps existing delete-by-term behavior)
@@ -66,6 +86,24 @@ function fetchTerms() {
                             alert('Failed to update remote: ' + (json && json.error ? json.error : 'unknown'));
                             // revert
                             e.target.checked = !checked;
+                        } else {
+                            // Update badge state according to server response
+                            const parentLabel = e.target.closest('.term-label');
+                            if (json.remote) {
+                                // append badge if missing
+                                if (!parentLabel.querySelector('.remote-badge')) {
+                                    const b = document.createElement('span');
+                                    b.className = 'remote-badge';
+                                    b.textContent = 'REMOTE ONLY';
+                                    b.title = 'This term will only return fully-remote roles (onsite/hybrid excluded)';
+                                    parentLabel.appendChild(b);
+                                }
+                                e.target.title = `Only include remote jobs for "${json.term}" (currently ON)`;
+                            } else {
+                                const existing = parentLabel.querySelector('.remote-badge');
+                                if (existing) existing.remove();
+                                e.target.title = `Only include remote jobs for "${json.term}" (currently OFF)`;
+                            }
                         }
                     })
                     .catch(() => {
