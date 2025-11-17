@@ -109,16 +109,21 @@ class Site:
             job.username = username
             job_fuzzy = get_fuzzy_job(job)
 
+            new_job, new_listing = False, False
+
             if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site)) is None:
+                new_listing = True
                 listing = Listing.create(id=listing.id, site=listing.site, summary="")
             else:
                 listing = existing_listing
+
             if job_fuzzy not in existing_jobs.keys():
+                new_job = True
                 job.save()
             else:
                 job = Job.get_by_id(existing_jobs[job_fuzzy])
 
-            if JobToListing.get_or_none(listing_id=listing.id, job_id=job.id) is None:
+            if new_job or new_listing:
                 JobToListing.create(job_id=job.id, listing_id=listing.id)
 
             if not os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
