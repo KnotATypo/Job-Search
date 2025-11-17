@@ -10,7 +10,7 @@ from job_search.util import get_page_soup
 class Seek(Site):
     def __init__(self):
         super().__init__(
-            "https://www.seek.com.au/%%QUERY%%-jobs/?page=%%PAGE%%",
+            "https://www.seek.com.au/%%QUERY%%-jobs?page=%%PAGE%%",
             "https://www.seek.com.au/job/%%ID%%",
             "Seek",
         )
@@ -23,8 +23,8 @@ class Seek(Site):
             return ""
         return body.contents[0].text
 
-    def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
-        link = self.build_page_link(page_number, query)
+    def get_listings_from_page(self, query, page_number) -> List[Tuple[Listing, Job]]:
+        link = self.build_page_link(query.term, query.remote, page_number)
         soup = get_page_soup(link)
         matches = soup.find_all("a", attrs={"data-automation": "jobTitle"})
         matches = [self.extract_info(x) for x in matches]
@@ -41,3 +41,7 @@ class Seek(Site):
         else:
             company = "None"
         return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
+
+    def add_remote_filter(self, query_string: str) -> str:
+        index = query_string.index("?")
+        return query_string[:index] + "/remote" + query_string[index:]

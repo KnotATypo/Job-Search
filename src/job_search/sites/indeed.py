@@ -1,11 +1,15 @@
 from typing import List, Tuple
 
 from job_search.model import Listing, Job
-from job_search.sites.site import Site
+from job_search.sites.site import Site, Query
 from job_search.util import get_page_soup
 
 
 class Indeed(Site):
+    """
+    Currently deprecated due to anti-bot measures.
+    """
+
     def __init__(self):
         super().__init__(
             "https://au.indeed.com/jobs?q=%%QUERY%%&start=%%PAGE%%",
@@ -22,8 +26,8 @@ class Indeed(Site):
             body = soup.find("div", attrs={"class": "jobsearch-JobComponent-description"}).text
         return body
 
-    def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
-        link = self.build_page_link(page_number * 10, query.replace("-", "+"))
+    def get_listings_from_page(self, query: Query, page_number) -> List[Tuple[Listing, Job]]:
+        link = self.build_page_link(query.term.replace("-", "+"), query.remote, page_number * 10)
         soup = get_page_soup(link)
         if soup.find("title").string == "Just a moment...":
             matches = []

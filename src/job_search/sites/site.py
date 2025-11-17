@@ -1,5 +1,6 @@
 import os
 import re
+from dataclasses import dataclass
 from typing import List, Tuple
 
 from dotenv import load_dotenv
@@ -11,6 +12,21 @@ from job_search.model import PageCount, Job, Listing, JobToListing, BlacklistTer
 HTML_PARSER = "html.parser"
 
 load_dotenv()
+
+
+@dataclass
+class Query:
+    """
+    Represents a job search query.
+    """
+
+    term: str
+    username: str
+    remote: bool
+
+
+class NotSupportedError(Exception):
+    pass
 
 
 class Site:
@@ -34,17 +50,16 @@ class Site:
         self.LISTING_URL = listing_url
         self.SITE_STRING = site_string.lower()
 
-    def download_new_listings(self, query: str, username: str) -> None:
+    def download_new_listings(self, query: Query) -> None:
         """
         Download new listings by iterating through pages using the QUERY_URL, incrementing the page.
 
-        query -- The search query.
-        username -- The username of the user to retrieve listings for.
+        query -- The Query object containing the search term, username, and remote filter.
         """
         page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=query)[0]
         expected_pages = page_count.pages
 
-        page = 0
+        page_num = 0
         with tqdm(
             total=expected_pages,
             desc=f"{self.SITE_STRING} - {query}",
@@ -52,16 +67,16 @@ class Site:
             leave=False,
         ) as pbar:
             while True:
-                listings = self.get_listings_from_page(page, query)
+                listings = self.get_listings_from_page(query, page_num)
                 if len(listings) == 0:
                     break
-                self.save_listings(listings, username)
-                page += 1
-                if page > expected_pages:
+                self.save_listings(listings, query.username)
+                page_num += 1
+                if page_num > expected_pages:
                     pbar.total += 1
                 pbar.update()
 
-        page_count.pages = page
+        page_count.pages = page_num
         page_count.save()
 
     def save_listings(self, listings: List[Tuple[Listing, Job]], username):
@@ -110,14 +125,24 @@ class Site:
                 # Sometimes even if the listing exists, the file might not
                 util.write_description(listing, self)
 
-    def build_page_link(self, page_number: int, query: str):
-        return self.QUERY_URL.replace("%%QUERY%%", query).replace("%%PAGE%%", str(page_number))
+    def build_page_link(self, term: str, remote: bool, page_number: int):
+        """
+        Builds a link to a search page using templated QUERY_URL.
 
-    def get_listings_from_page(self, page_number, query: str) -> List[Tuple[Listing, Job]]:
+        term -- The search term.
+        remote -- Whether to filter for remote jobs.
+        page_number -- The page number of the search. Specific incrementing rules (e.g. increments of 10) should be handled before calling this function.
+        """
+        query_string = self.QUERY_URL.replace("%%QUERY%%", term).replace("%%PAGE%%", str(page_number))
+        if remote:
+            query_string = self.add_remote_filter(query_string)
+        return query_string
+
+    def get_listings_from_page(self, query: Query, page_number) -> List[Tuple[Listing, Job]]:
         """
         Retrieves (Listing, Job) tuples from a given page number.
 
-        page_number -- The page number of the search. For sites which require increments larger and +1 are handled inside this function.
+        page_number -- The page number of the search. For sites which require increments larger than +1 are handled inside this function.
         query -- The search query.
         """
         raise NotImplementedError
@@ -141,6 +166,14 @@ class Site:
     def get_listing_description(self, listing_id) -> str:
         """
         Retrieves the description of the listing. Returns plain text.
+        """
+        raise NotImplementedError
+
+    def add_remote_filter(self, query_string: str) -> str:
+        """
+        Adds a remote work filter to the query string.
+
+        query_string -- The original query string.
         """
         raise NotImplementedError
 

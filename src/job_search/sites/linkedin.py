@@ -1,7 +1,7 @@
 from typing import Tuple, List
 
 from job_search.model import Listing, Job
-from job_search.sites.site import Site
+from job_search.sites.site import Site, Query
 from job_search.util import get_page_soup
 
 
@@ -27,8 +27,8 @@ class LinkedIn(Site):
             body = body.text
         return body
 
-    def get_listings_from_page(self, page_number, query: str) -> List[Tuple[Listing, Job]]:
-        link = self.build_page_link(page_number * 10, query.replace("-", "%20"))
+    def get_listings_from_page(self, query: Query, page_number) -> List[Tuple[Listing, Job]]:
+        link = self.build_page_link(query.term.replace("-", "%20"), query.remote, page_number * 10)
         soup = get_page_soup(link)
         cards = soup.find_all("li")
         if len(cards) == 0:
@@ -51,3 +51,6 @@ class LinkedIn(Site):
         else:
             company = links[1].text.strip()
         return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
+
+    def add_remote_filter(self, query_string: str) -> str:
+        return query_string + "&f_WT=2"

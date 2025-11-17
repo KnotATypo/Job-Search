@@ -4,7 +4,7 @@ from typing import List, Tuple
 from bs4 import Tag
 
 from job_search.model import Listing, Job
-from job_search.sites.site import Site
+from job_search.sites.site import Site, NotSupportedError, Query
 from job_search.util import get_page_soup
 
 
@@ -24,8 +24,8 @@ class Jora(Site):
             return ""
         return body.text
 
-    def get_listings_from_page(self, page_number, query) -> List[Tuple[Listing, Job]]:
-        link = self.build_page_link(page_number, query.replace("-", "+"))
+    def get_listings_from_page(self, query: Query, page_number) -> List[Tuple[Listing, Job]]:
+        link = self.build_page_link(query.term.replace("-", "+"), query.remote, page_number)
         soup = get_page_soup(link)
         if soup.text.find("We have looked through all the results for you") != -1:
             return []
@@ -46,3 +46,6 @@ class Jora(Site):
         title = job.text
         company = job.parent.parent.parent.parent.find("span", attrs={"class", "job-company"}).text
         return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
+
+    def add_remote_filter(self, query_string: str) -> str:
+        raise NotSupportedError
