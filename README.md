@@ -1,114 +1,103 @@
 # Job Search
 
-A comprehensive job search tool that automates the process of finding, filtering, and managing job listings from
-multiple job sites.
+A comprehensive multi-user tool to streamline your job search process by automating job listing retrieval and
+summarisation. Currently, it supports LinkedIn, Seek, and Jora for Australian job listings. Indeed support has been
+deprecated due to increased anti-scraping measures.
 
-## Description
-
-Job Search is a web application that helps streamline your job hunting process. It scrapes job listings from multiple
-job sites (LinkedIn, Seek, Jora, ~~Indeed~~), filters them based on your preferences, and provides a user-friendly
-interface to triage, review, and track your job applications.
-
-## Features
-
-- **Multi-site Scraping**: Automatically scrapes job listings from LinkedIn, Seek, Jora, and Indeed
-- **Customizable Search**: Configure search terms and blacklist terms
-- **Workflow Management**: Three-stage workflow for job hunting:
-    - **Triage**: Quickly filter through new job listings
-    - **Reading**: Review jobs you're interested in
-    - **Applying**: Track jobs you're applying to
-- **Automatic Filtering**: Automatically filter out jobs with blacklisted terms in the title
-- **Dark Mode**: Always-on dark mode to reduce eye strain and provide a modern interface
-
-## Installation
+## Setup
 
 ### Prerequisites
 
-- Python 3.10 or higher
 - PostgreSQL database
+- Python 3.13
 - Chrome or Chromium browser (for web scraping)
 
-### Steps
+Setting up these prerequisites is currently outside the scope of this guide.
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/knotatypo/Job-Search.git
-   cd Job-Search
-   ```
+### Database Setup
 
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+Create a PostgreSQL database and user for the application:
 
-3. Install the dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```
+CREATE DATABASE job_search;
+CREATE USER 'user'@'host' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON job_search.* TO 'user'@'host';
+FLUSH PRIVILEGES;
+EXIT;
+```
 
-4. Set up the database:
-   ```
-   CREATE DATABASE job_search;
-   CREATE USER 'dev'@'localhost' IDENTIFIED BY 'password';
-   GRANT ALL PRIVILEGES ON job_search.* TO 'dev'@'localhost';
-   FLUSH PRIVILEGES;
-   EXIT;
-   ```
+#### Database structure
+
+The database is initialised and managed using [peewee](https://docs.peewee-orm.com/en/latest/). The database schema is
+defined in `model.py`.
+
+The database consists of the following tables:
+
+- `blacklistterm`: Terms used to filter out unwanted job listings.
+- `job`: Stores job details.
+- `jobtolisting`: One-to-many relationship between jobs and listings.
+- `listing`: Individual job listings fetched from job sites.
+- `pagecount`: Tracks pagination for job site scraping.
+- `searchterm`: Terms used to search for job listings.
+- `user`: Stores user information.
+
+### .env Configuration
+
+Create a `.env` file in the project root with the following template:
+
+````dotenv
+DATA_DIRECTORY=
+SUMMARY_MODEL_NAME=Qwen/Qwen2.5-1.5B-Instruct
+APP_SECRET_KEY=
+
+DATABASE_NAME=job_search
+DATABASE_USER=
+DATABASE_PASSWORD=
+DATABASE_HOST=
+````
+
+The existing variables are suggested defaults; modify them as needed.
+
+- `DATA_DIRECTORY`: Directory to store job listing text.
+- `SUMMARY_MODEL_NAME`: The model used for summarizing job descriptions.
+- `APP_SECRET_KEY`: A secret key for the application.
+- `DATABASE_*`: Database connection details.
 
 ## Usage
 
-### Downloading Job Listings
+### Running the App
 
-Run the download script to fetch new job listings:
+This package is run with [uv](https://docs.astral.sh/uv/). If you don't have it installed, you can follow the
+appropriate instructions for your platform from
+the [official documentation](https://docs.astral.sh/uv/getting-started/installation/).
 
-```
-python src/download.py
-```
+The application has 4 main commands:
 
-### Managing Job Listings
+- `uv run search`: Fetch new job listings from configured job sites.
+- `uv run host`: Start the web interface for managing job listings.
+- `uv run clean`: Download missing job description texts and reapplies blacklist.
+- `uv run summary`: Generate summaries for job descriptions using the specified model.
 
-#### Flask UI
+The recommended workflow is to host the web interface with a systemd service running `uv run host` and run
+`uv run search` and `uv run summary` as a cronjob daily or at the desired frequency.
 
-```
-python src/flask_app.py
-```
+### Web Interface
 
-Then open your browser and navigate to http://127.0.0.1/
+The application provides an interface optimised for both desktop and mobile use. The interface is divided into four main
+sections:
 
-The UI provide functionality with three main sections:
+1. **Initial Screening**: Review new job listings and mark them as "interested" or "not interested".
+2. **Detailed Review**: Review jobs marked as "interested" and open them on the original job site.
+3. **Application Submission**: Finalise applications and mark jobs as "applied".
+4. **Applied Jobs**: View jobs you've applied to.
 
-1. **Triage**: Review new job listings and mark them as "interested" or "not interested"
+The interface also allows management of search terms and blacklist terms used for filtering job titles.
 
-2. **Reading**: Review jobs marked as "interested" and open them on the original job site
+## Disclaimers
 
-3. **Applying**: Track jobs you're applying to
-
-## Database Structure
-
-The application uses a PostgreSQL database with the following tables:
-
-- **blacklistterm**: Stores blacklist terms for filtering job titles
-- **job**: Stores job information (title, company, type, status)
-- **jobtolisting**: Maps jobs to listings (one-to-many relationship)
-- **listing**: Stores listing information from different job sites
-- **pagecount**: Tracks the number of pages scraped for each site and query
-- **searchterm**: Stores search terms for each user
-- **user**: Stores user IDs
-
-## Dependencies
-
-- `selenium-stealth`
-- `beautifulsoup4`
-- `tqdm`
-- `selenium`
-- `peewee`
-- `transformers`
-- `flask`
-- `waitress`
-- `psycopg2-binary`
-
-## Disclaimer
+There is no password authentication for users; this is intended for personal use or within a trusted group. Likewise,
+there is no security against access on the open internet, so it is recommended to only run this application within a
+secure local network with external access disabled or protected by Tailscale or CloudFlare Tunnel (or similar).
 
 Much of the front-end code, particularly the CSS and HTML is written by a combination of LLMs including JetBrains Junie
-and GitHub Copilot.
+and GitHub Copilot (GPT-5 mini).
