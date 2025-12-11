@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Manage Blacklist Terms</title>
-    <link rel="stylesheet" href="/job_search/static/style.css">
 </head>
 <body>
     {% extends "base.html" %}
     {% block content %}
     <!-- Type toggle moved above the box -->
     <div class="btn-group toggle-type" style="margin-bottom:12px; display:flex; gap:8px;" role="tablist">
-        <button id="type-title" class="btn btn-secondary active" type="button" aria-pressed="true" data-type="title">Title</button>
-        <button id="type-company" class="btn btn-secondary" type="button" aria-pressed="false" data-type="company">Company</button>
+        <button id="type-title" class="btn btn-secondary active" type="button" aria-pressed="true" data-type="title">Title (fuzzy)</button>
+        <button id="type-company" class="btn btn-secondary" type="button" aria-pressed="false" data-type="company">Company (exact)</button>
     </div>
     <!-- Visible status for debugging button presses -->
     <div id="blacklist-status" style="margin-bottom:8px; color:#555; font-size:0.95rem;"></div>
 
+    <button id="run-easy-filter" class="btn btn-primary" style="margin-top: 16px;">Run Easy Filter</button>
     <div class="card search-terms-card">
         <h2>Manage Blacklist Terms</h2>
         <form id="add-term-form" class="add-term-form">
@@ -23,7 +23,6 @@
             <button type="submit" class="btn btn-success">Add</button>
         </form>
         <ul id="terms-list" class="terms-list"></ul>
-        <button id="run-easy-filter" class="btn btn-primary" style="margin-top: 16px;">Run Easy Filter</button>
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', function() {

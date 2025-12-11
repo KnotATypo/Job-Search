@@ -11,6 +11,9 @@ from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
 
+INVALID_REQUEST = "Invalid request"
+JOB_NOT_FOUND = "Job not found or not yours."
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -106,13 +109,13 @@ def triage_action():
     action = request.form.get("action")
 
     if not job_id or not action:
-        flash("Invalid request")
+        flash(INVALID_REQUEST)
         return redirect(url_for("triage"))
 
     job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
 
     if not job:
-        flash("Job not found or not yours.")
+        flash(JOB_NOT_FOUND)
         return redirect(url_for("triage"))
 
     if action == "interested":
@@ -166,13 +169,13 @@ def reading_action():
     action = request.form.get("action")
 
     if not job_id or not action:
-        flash("Invalid request")
+        flash(INVALID_REQUEST)
         return redirect(url_for("reading"))
 
     job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
 
     if not job:
-        flash("Job not found or not yours.")
+        flash(JOB_NOT_FOUND)
         return redirect(url_for("reading"))
 
     if action == "liked":
@@ -225,7 +228,7 @@ def applying_action():
     status = request.form.get("status")
 
     if not job_id or not status:
-        flash("Invalid request")
+        flash(INVALID_REQUEST)
         return redirect(url_for("applying"))
 
     job = Job.get_by_id(job_id)
@@ -433,7 +436,7 @@ def complete_job():
         job.save()
         flash(f"Job '{job.title}' marked as complete and hidden.")
     else:
-        flash("Job not found or not yours.")
+        flash(JOB_NOT_FOUND)
     return redirect(url_for("applied"))
 
 

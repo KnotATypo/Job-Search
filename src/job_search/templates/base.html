@@ -19,7 +19,7 @@
     </header>
 
     <!-- Responsive Navigation -->
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Main Navigation">
         <a href="{{ url_for('index') }}" class="nav-link">Home</a>
         <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
         <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link">Manage Blacklist Terms</a>
@@ -28,7 +28,7 @@
             <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change">Change Username</a>
         {% endif %}
     </nav>
-    <nav class="mobile-nav">
+    <nav class="mobile-nav" aria-label="Mobile Navigation">
         <div id="menu" class="menu-hidden">
             <div class="menu-header">Menu</div>
             <a href="{{ url_for('index') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Home</a>
@@ -145,7 +145,7 @@
         }
         .menu-username {
             padding: 0.8em 1.2em 0.9em 1.2em;
-            color: #6a7a99;
+            color: #4f5b74;
             background: #f4f7fb;
             font-size: 0.97em;
             font-style: italic;
