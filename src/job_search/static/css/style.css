@@ -273,21 +273,41 @@ footer {
 .navbar {
     background: var(--card-bg-color);
     display: flex;
+    align-items: center;
     justify-content: center;
     gap: 2rem;
     padding: 0.75rem 0;
+    min-height: 52px; /* ensure consistent nav height */
     box-shadow: 0 2px 8px var(--shadow-color);
     border-bottom: 1px solid var(--border-color);
 }
 
 .nav-link {
+    display: inline-flex;
+    align-items: center;
     color: var(--text-color);
     text-decoration: none;
-    font-weight: 500;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
+    /* slightly larger vertical padding so button height matches across browsers */
+    padding: 0.35rem 0.75rem;
+    line-height: 1.2;
+    border: none;
     transition: background 0.2s, color 0.2s;
+    height: 100%;
+    background: none;
+    border-radius: 4px;
+    margin: 0;
 }
+
+/* helper so the dropdown wrapper lines up with other nav items */
+.nav-dropdown {
+    display: inline-flex;
+    align-items: center;
+    background: none;
+    border: none;
+    margin: 0;
+    line-height: 1.2;
+}
+
 
 .nav-link:hover, .nav-link:focus {
     background: var(--primary-color);
@@ -308,6 +328,45 @@ footer {
 .nav-link-username-change:hover, .nav-link-username-change:focus {
     background: #2563eb;
     color: #fff;
+}
+
+/* Dropdown menu in navbar */
+.nav-dropdown-menu {
+    display: none; /* toggled by JS */
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 0;
+    min-width: 160px;
+    z-index: 1000;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+.nav-dropdown-item {
+    display: block;
+    padding: 8px 12px;
+    color: var(--text-color);
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.nav-dropdown-item:hover, .nav-dropdown-item:focus {
+    background: var(--primary-color);
+    color: var(--light-text);
+}
+
+/* make sure buttons inside dropdown don't inherit border/outline */
+.nav-dropdown-item[role="button"] {
+    background: transparent;
+    border: none;
 }
 
 /* Card for Manage Search Terms */
@@ -560,9 +619,11 @@ footer {
     .applied-job-title {
         font-size: 1.1rem;
     }
+
     .applied-job-company {
         font-size: 1rem;
     }
+
     .applied-job-actions .btn {
         font-size: 0.92rem;
         padding: 0.5rem 1rem;
@@ -572,7 +633,8 @@ footer {
 /* Accessibility helper to visually hide labels but keep them for screen readers */
 .visually-hidden {
     position: absolute !important;
-    height: 1px; width: 1px;
+    height: 1px;
+    width: 1px;
     overflow: hidden;
     clip: rect(1px, 1px, 1px, 1px);
     white-space: nowrap;
@@ -621,6 +683,6 @@ footer {
 
 /* Focus styles for native checkbox */
 .term-checkbox:focus {
-    outline: 2px solid rgba(59,130,246,0.25);
+    outline: 2px solid rgba(59, 130, 246, 0.25);
     outline-offset: 2px;
 }
