@@ -22,14 +22,7 @@
     <nav class="navbar">
         <a href="{{ url_for('index') }}" class="nav-link">Home</a>
         <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
-        <div class="nav-dropdown" style="position:relative; display:inline-block;">
-            <!-- Button uses same spacing and alignment as .nav-link anchors -->
-            <button id="nav-blacklist-btn" class="nav-link" type="button">Manage Blacklist Terms ▾</button>
-            <div id="nav-blacklist-menu" class="nav-dropdown-menu" style="display:none; position:absolute; top:100%; left:0; background:#1e1e1e; border:1px solid #444; border-radius:8px; padding:6px 0; min-width:160px; z-index:1000;">
-                <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-dropdown-item" style="display:block; padding:8px 12px; text-decoration:none;">Title</a>
-                <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-dropdown-item" style="display:block; padding:8px 12px; text-decoration:none;">Company</a>
-            </div>
-        </div>
+        <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link">Manage Blacklist Terms</a>
         {% if session.username %}
             <span class="nav-username">User: {{ session.username }}</span>
             <a href="{{ url_for('set_username') }}" class="nav-link nav-link-username-change">Change Username</a>
