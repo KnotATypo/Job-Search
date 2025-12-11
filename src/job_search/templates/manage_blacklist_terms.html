@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Manage Blacklist Terms</title>
-</head>
-<body>
-    {% extends "base.html" %}
-    {% block content %}
+{% extends "base.html" %}
+{% block content %}
     <!-- Type toggle moved above the box -->
     <div class="btn-group toggle-type" style="margin-bottom:12px; display:flex; gap:8px;" role="tablist">
-        <button id="type-title" class="btn btn-secondary active" type="button" aria-pressed="true" data-type="title">Title (fuzzy)</button>
-        <button id="type-company" class="btn btn-secondary" type="button" aria-pressed="false" data-type="company">Company (exact)</button>
+        <button id="type-title" class="btn btn-secondary active" type="button" aria-pressed="true" data-type="title">
+            Title (fuzzy)
+        </button>
+        <button id="type-company" class="btn btn-secondary" type="button" aria-pressed="false" data-type="company">
+            Company (exact)
+        </button>
     </div>
     <!-- Visible status for debugging button presses -->
     <div id="blacklist-status" style="margin-bottom:8px; color:#555; font-size:0.95rem;"></div>
@@ -25,159 +22,163 @@
         <ul id="terms-list" class="terms-list"></ul>
     </div>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        try {
-            // server-provided user id (may be null) - render safely
-            const USER_ID = {{ user_id|tojson }};
-             // current selected blacklist type: 'title' or 'company'
-             // initialize from DOM so UI and state are consistent
-             const initTitleBtn = document.getElementById('type-title');
-             const initCompanyBtn = document.getElementById('type-company');
-             let currentType = 'title';
-             if (initTitleBtn && initCompanyBtn) {
-                 currentType = initTitleBtn.getAttribute('aria-pressed') === 'true' ? 'title' : 'company';
-             }
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                // server-provided user id (may be null) - render safely
+                const USER_ID = {{ user_id|tojson }};
+                // current selected blacklist type: 'title' or 'company'
+                // initialize from DOM so UI and state are consistent
+                const initTitleBtn = document.getElementById('type-title');
+                const initCompanyBtn = document.getElementById('type-company');
+                let currentType = 'title';
+                if (initTitleBtn && initCompanyBtn) {
+                    currentType = initTitleBtn.getAttribute('aria-pressed') === 'true' ? 'title' : 'company';
+                }
 
-            function setType(t) {
-                 currentType = t;
-                 const titleBtn = document.getElementById('type-title');
-                 const companyBtn = document.getElementById('type-company');
-                 if (titleBtn && companyBtn) {
-                     titleBtn.classList.toggle('active', t === 'title');
-                     companyBtn.classList.toggle('active', t === 'company');
-                     titleBtn.setAttribute('aria-pressed', String(t === 'title'));
-                     companyBtn.setAttribute('aria-pressed', String(t === 'company'));
-                 }
-                 // log clicks (visible in console)
-                 console.log('setType called, new type=', t);
-                 const status = document.getElementById('blacklist-status');
-                 if (status) status.textContent = 'Selected: ' + t + ' (fetching...)';
-                  fetchTerms();
-              }
-            // expose for debug and inline usage
-            window.setBlacklistType = setType;
-            console.log('blacklist UI initialized, currentType=', currentType);
-
-            // safely attach handlers after DOM is ready
-            const _titleBtn = document.getElementById('type-title');
-            const _companyBtn = document.getElementById('type-company');
-            if (_titleBtn) _titleBtn.addEventListener('click', () => setType('title'));
-            if (_companyBtn) _companyBtn.addEventListener('click', () => setType('company'));
-
-            // Event delegation as a fallback: listen on the container so clicks are always captured
-            const toggleContainer = document.querySelector('.toggle-type');
-            if (toggleContainer) {
-                toggleContainer.addEventListener('click', function(e) {
-                    const btn = e.target.closest('button');
-                    if (!btn) return;
-                    if (btn.id === 'type-title') {
-                        console.log('toggle container caught title click');
-                        setType('title');
-                    } else if (btn.id === 'type-company') {
-                        console.log('toggle container caught company click');
-                        setType('company');
+                function setType(t) {
+                    currentType = t;
+                    const titleBtn = document.getElementById('type-title');
+                    const companyBtn = document.getElementById('type-company');
+                    if (titleBtn && companyBtn) {
+                        titleBtn.classList.toggle('active', t === 'title');
+                        companyBtn.classList.toggle('active', t === 'company');
+                        titleBtn.setAttribute('aria-pressed', String(t === 'title'));
+                        companyBtn.setAttribute('aria-pressed', String(t === 'company'));
                     }
-                    // visual feedback: flash the card border
-                    const card = document.querySelector('.search-terms-card');
-                    if (card) {
-                        card.style.transition = 'box-shadow 0.15s ease-in-out';
-                        card.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.25)';
-                        setTimeout(() => { card.style.boxShadow = ''; }, 200);
+                    // log clicks (visible in console)
+                    console.log('setType called, new type=', t);
+                    const status = document.getElementById('blacklist-status');
+                    if (status) status.textContent = 'Selected: ' + t + ' (fetching...)';
+                    fetchTerms();
+                }
+
+                // expose for debug and inline usage
+                window.setBlacklistType = setType;
+                console.log('blacklist UI initialized, currentType=', currentType);
+
+                // safely attach handlers after DOM is ready
+                const _titleBtn = document.getElementById('type-title');
+                const _companyBtn = document.getElementById('type-company');
+                if (_titleBtn) _titleBtn.addEventListener('click', () => setType('title'));
+                if (_companyBtn) _companyBtn.addEventListener('click', () => setType('company'));
+
+                // Event delegation as a fallback: listen on the container so clicks are always captured
+                const toggleContainer = document.querySelector('.toggle-type');
+                if (toggleContainer) {
+                    toggleContainer.addEventListener('click', function (e) {
+                        const btn = e.target.closest('button');
+                        if (!btn) return;
+                        if (btn.id === 'type-title') {
+                            console.log('toggle container caught title click');
+                            setType('title');
+                        } else if (btn.id === 'type-company') {
+                            console.log('toggle container caught company click');
+                            setType('company');
+                        }
+                        // visual feedback: flash the card border
+                        const card = document.querySelector('.search-terms-card');
+                        if (card) {
+                            card.style.transition = 'box-shadow 0.15s ease-in-out';
+                            card.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.25)';
+                            setTimeout(() => {
+                                card.style.boxShadow = '';
+                            }, 200);
+                        }
+                    });
+                }
+
+                function fetchTerms() {
+                    const list = document.getElementById('terms-list');
+                    if (list) list.innerHTML = '<li class="loading">Loading...</li>';
+                    const url = '/blacklist_terms?type=' + encodeURIComponent(currentType);
+                    console.log('fetchTerms calling', url);
+                    fetch(url)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok: ' + response.status);
+                            return response.json();
+                        })
+                        .then(terms => {
+                            console.log('fetchTerms got', terms);
+                            const status = document.getElementById('blacklist-status');
+                            if (status) status.textContent = 'Showing ' + terms.length + ' terms for ' + currentType;
+                            if (!Array.isArray(terms)) {
+                                console.error('Expected array from /blacklist_terms, got:', terms);
+                                list.innerHTML = '<li class="error">Unexpected response</li>';
+                                return;
+                            }
+                            list.innerHTML = '';
+                            if (terms.length === 0) {
+                                list.innerHTML = '<li class="empty">(no terms)</li>';
+                                return;
+                            }
+                            terms.forEach(term => {
+                                const li = document.createElement('li');
+                                li.className = 'term-list-item';
+                                const span = document.createElement('span');
+                                span.textContent = term;
+                                li.appendChild(span);
+                                const delBtn = document.createElement('button');
+                                delBtn.textContent = 'Delete';
+                                delBtn.className = 'btn btn-danger btn-delete';
+                                delBtn.onclick = () => deleteTerm(term);
+                                li.appendChild(delBtn);
+                                list.appendChild(li);
+                            });
+                        })
+                        .catch(err => {
+                            console.error('Failed to fetch blacklist terms:', err);
+                            if (list) list.innerHTML = '<li class="error">Failed to load terms</li>';
+                            const status = document.getElementById('blacklist-status');
+                            if (status) status.textContent = 'Failed to load terms';
+                        });
+                }
+
+                function addTerm(e) {
+                    e.preventDefault();
+                    const term = document.getElementById('new-term').value.trim();
+                    if (!term) return;
+                    fetch('/blacklist_terms?type=' + encodeURIComponent(currentType), {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'term=' + encodeURIComponent(term)
+                    })
+                        .then(() => {
+                            document.getElementById('new-term').value = '';
+                            fetchTerms();
+                        }).catch(err => console.error('Failed to add term:', err));
+                }
+
+                function deleteTerm(term) {
+                    fetch('/blacklist_terms/' + encodeURIComponent(term) + '?type=' + encodeURIComponent(currentType), {method: 'DELETE'})
+                        .then(() => fetchTerms())
+                        .catch(err => console.error('Failed to delete term:', err));
+                }
+
+                document.getElementById('add-term-form').addEventListener('submit', addTerm);
+
+                document.getElementById('run-easy-filter').addEventListener('click', function () {
+                    try {
+                        fetch('/run_easy_filter', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({user_id: USER_ID, type: currentType})
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                alert(data.message || 'Easy filter run!');
+                            })
+                            .catch(err => console.error('Easy filter failed:', err));
+                    } catch (err) {
+                        console.error('Easy filter exception:', err);
                     }
                 });
+
+                // initial load
+                fetchTerms();
+            } catch (err) {
+                console.error('Error initializing blacklist UI:', err);
             }
-
-            function fetchTerms() {
-                const list = document.getElementById('terms-list');
-                if (list) list.innerHTML = '<li class="loading">Loading...</li>';
-                const url = '/blacklist_terms?type=' + encodeURIComponent(currentType);
-                console.log('fetchTerms calling', url);
-                fetch(url)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok: ' + response.status);
-                        return response.json();
-                    })
-                    .then(terms => {
-                        console.log('fetchTerms got', terms);
-                        const status = document.getElementById('blacklist-status');
-                        if (status) status.textContent = 'Showing ' + terms.length + ' terms for ' + currentType;
-                        if (!Array.isArray(terms)) {
-                            console.error('Expected array from /blacklist_terms, got:', terms);
-                            list.innerHTML = '<li class="error">Unexpected response</li>';
-                            return;
-                        }
-                        list.innerHTML = '';
-                        if (terms.length === 0) {
-                            list.innerHTML = '<li class="empty">(no terms)</li>';
-                            return;
-                        }
-                        terms.forEach(term => {
-                            const li = document.createElement('li');
-                            li.className = 'term-list-item';
-                            const span = document.createElement('span');
-                            span.textContent = term;
-                            li.appendChild(span);
-                            const delBtn = document.createElement('button');
-                            delBtn.textContent = 'Delete';
-                            delBtn.className = 'btn btn-danger btn-delete';
-                            delBtn.onclick = () => deleteTerm(term);
-                            li.appendChild(delBtn);
-                            list.appendChild(li);
-                        });
-                    })
-                    .catch(err => {
-                        console.error('Failed to fetch blacklist terms:', err);
-                        if (list) list.innerHTML = '<li class="error">Failed to load terms</li>';
-                        const status = document.getElementById('blacklist-status');
-                        if (status) status.textContent = 'Failed to load terms';
-                    });
-            }
-
-            function addTerm(e) {
-                e.preventDefault();
-                const term = document.getElementById('new-term').value.trim();
-                if (!term) return;
-                fetch('/blacklist_terms?type=' + encodeURIComponent(currentType), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'term=' + encodeURIComponent(term)
-                })
-                .then(() => {
-                    document.getElementById('new-term').value = '';
-                    fetchTerms();
-                }).catch(err => console.error('Failed to add term:', err));
-            }
-
-            function deleteTerm(term) {
-                fetch('/blacklist_terms/' + encodeURIComponent(term) + '?type=' + encodeURIComponent(currentType), { method: 'DELETE' })
-                    .then(() => fetchTerms())
-                    .catch(err => console.error('Failed to delete term:', err));
-            }
-
-            document.getElementById('add-term-form').addEventListener('submit', addTerm);
-
-            document.getElementById('run-easy-filter').addEventListener('click', function() {
-                try {
-                    fetch('/run_easy_filter', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: USER_ID, type: currentType })
-                    })
-                    .then(response => response.json())
-                    .then(data => { alert(data.message || 'Easy filter run!'); })
-                    .catch(err => console.error('Easy filter failed:', err));
-                } catch (err) {
-                    console.error('Easy filter exception:', err);
-                }
-            });
-
-            // initial load
-            fetchTerms();
-        } catch (err) {
-            console.error('Error initializing blacklist UI:', err);
-        }
-    });
+        });
     </script>
-    {% endblock %}
-</body>
-</html>
+{% endblock %}
+
