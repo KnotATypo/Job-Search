@@ -88,28 +88,10 @@ class Site:
         username -- The username of the user to save the jobs for.
         """
 
-        blacklist = (
-            BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.username == username)
-        )
-        for listing, job in listings:
-            for term in blacklist:
-                if term.term.lower() in job.title.lower():
-                    job.status = "easy_filter"
-                    break
-
-        def strip_string(s: str) -> str:
-            return re.sub(r"\W", "", s.lower())
-
         def get_fuzzy_job(job: Job) -> str:
-            return strip_string(job.title) + "-" + strip_string(job.company)
+            return re.sub(r"\W", "", job.title.lower()) + "-" + re.sub(r"\W", "", job.company.lower())
 
-        existing_jobs = Job.select().where(Job.username == username)
-        # Sometimes job titles/companies have different casing/punctuation
-        existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
-        for listing, job in listings:
-            job.username = username
-            job_fuzzy = get_fuzzy_job(job)
-
+        def write_listing(job: Job, listing: Listing) -> None:
             new_job, new_listing = False, False
 
             if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site)) is None:
@@ -118,7 +100,7 @@ class Site:
             else:
                 listing = existing_listing
 
-            if job_fuzzy not in existing_jobs.keys():
+            if (job_fuzzy := get_fuzzy_job(job)) not in existing_jobs.keys():
                 new_job = True
                 job.save()
             else:
@@ -130,6 +112,22 @@ class Site:
             if not os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
                 # Sometimes even if the listing exists, the file might not
                 util.write_description(listing, self)
+
+        blacklist = (
+            BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.username == username)
+        )
+        for listing, job in listings:
+            for term in blacklist:
+                if term.term.lower() in job.title.lower():
+                    job.status = "easy_filter"
+                    break
+
+        existing_jobs = Job.select().where(Job.username == username)
+        # Sometimes job titles/companies have different casing/punctuation
+        existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
+        for listing, job in listings:
+            job.username = username
+            write_listing(job, listing)
 
     def build_page_link(self, term: str, remote: bool, page_number: int):
         """

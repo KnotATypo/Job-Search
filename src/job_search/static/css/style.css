@@ -82,17 +82,17 @@ main {
 /* Buttons */
 .btn {
     display: inline-block;
-    padding: 0.8rem 1.5rem;
     margin: 0.5rem 0;
-    border: none;
-    border-radius: 4px;
-    font-size: 1.2rem;
-    font-weight: bold;
     text-align: center;
     text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
     box-sizing: border-box;
+    padding: 0.5rem 1.1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
 }
 
 .btn-primary {
@@ -344,21 +344,6 @@ footer {
     font-size: 1rem;
 }
 
-.btn {
-    padding: 0.5rem 1.1rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background 0.2s, color 0.2s;
-}
-
-.btn-success {
-    background: var(--success-color);
-    color: var(--light-text);
-}
-
 .btn-success:hover, .btn-success:focus {
     background: #059669;
 }
@@ -420,25 +405,20 @@ footer {
     vertical-align: middle;
 }
 
-/* Remove any custom ::after knob if present */
-.term-checkbox::after {
-    display: none;
-}
-
 /* Slight adjustments for term-text spacing */
 .term-text {
-    margin-left: 0.2rem;
+    margin-left: 0.1rem;
 }
 
 /* Focus styles for native checkbox */
 .term-checkbox:focus {
-    outline: 3px solid rgba(30, 58, 138, 0.18);
+    outline: 2px solid rgba(59, 130, 246, 0.25);
     outline-offset: 2px;
 }
 
 /* Ensure the badge and text stay nicely spaced */
 .term-label .remote-badge {
-    margin-left: 0.6rem;
+    margin-left: 0.5rem;
 }
 
 /* Username Card and Form */
@@ -585,7 +565,7 @@ footer {
 .term-label {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     cursor: pointer;
     user-select: none;
 }
@@ -603,27 +583,4 @@ footer {
 
 .term-checkbox::after {
     display: none;
-}
-
-/* Improve spacing between checkbox and label */
-.term-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Slight adjustments for term-text spacing */
-.term-text {
-    margin-left: 0.1rem;
-}
-
-/* Ensure the badge and text stay nicely spaced */
-.term-label .remote-badge {
-    margin-left: 0.5rem;
-}
-
-/* Focus styles for native checkbox */
-.term-checkbox:focus {
-    outline: 2px solid rgba(59, 130, 246, 0.25);
-    outline-offset: 2px;
 }

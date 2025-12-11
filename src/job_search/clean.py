@@ -14,31 +14,11 @@ load_dotenv()
 
 
 def main():
-    # Download missing descriptions
-    listings = Listing.select().where(Listing.summary == "")
-    clean_listings = []
-    for listing in tqdm(listings, desc="Collecting Listings", unit="listing"):
-        if os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
-            with open(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt", "r") as f:
-                content = f.read()
-                if len(content) < 10:
-                    clean_listings.append(listing)
-        else:
-            clean_listings.append(listing)
-    listings = clean_listings
-    for listing in tqdm(listings, desc="Fetching Descriptions", unit="listing"):
-        if listing.site == "linkedin":
-            site = LinkedIn()
-        elif listing.site == "jora":
-            site = Jora()
-        elif listing.site == "seek":
-            site = Seek()
-        try:
-            util.write_description(listing, site)
-        except Exception as e:
-            print(f"Error fetching description for listing {listing.id}: {e}")
+    missing_descriptions()
+    reapply_blacklist()
 
-    # Re-apply blacklists
+
+def reapply_blacklist():
     user_blacklists = defaultdict(list)
     for bl in BlacklistTerm.select():
         user_blacklists[bl.user.username].append(bl.term)
@@ -63,6 +43,34 @@ def main():
         if remove_filter:
             job.status = "new"
             job.save()
+
+
+def missing_descriptions():
+    """
+    Download missing descriptions.
+    """
+    listings = Listing.select().where(Listing.summary == "")
+    clean_listings = []
+    for listing in tqdm(listings, desc="Collecting Listings", unit="listing"):
+        if os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
+            with open(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt", "r") as f:
+                content = f.read()
+                if len(content) < 10:
+                    clean_listings.append(listing)
+        else:
+            clean_listings.append(listing)
+    listings = clean_listings
+    for listing in tqdm(listings, desc="Fetching Descriptions", unit="listing"):
+        if listing.site == "linkedin":
+            site = LinkedIn()
+        elif listing.site == "jora":
+            site = Jora()
+        elif listing.site == "seek":
+            site = Seek()
+        try:
+            util.write_description(listing, site)
+        except Exception as e:
+            print(f"Error fetching description for listing {listing.id}: {e}")
 
 
 if __name__ == "__main__":
