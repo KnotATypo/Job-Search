@@ -315,7 +315,11 @@ def manage_search_terms():
 def get_blacklist_terms():
     username = get_current_username()
     user = User.get(User.username == username)
-    terms = [bt.term for bt in BlacklistTerm.select().where(BlacklistTerm.user == user)]
+    requested_type = request.args.get("type")
+    terms = [
+        bt.term
+        for bt in BlacklistTerm.select().where((BlacklistTerm.user == user) & (BlacklistTerm.type == requested_type))
+    ]
     return jsonify(terms)
 
 
@@ -328,7 +332,8 @@ def add_blacklist_term():
     username = get_current_username()
     user = User.get(User.username == username)
     try:
-        BlacklistTerm.create(term=term, user=user)
+        term_type = request.args.get("type")
+        BlacklistTerm.create(term=term, type=term_type, user=user)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -339,7 +344,10 @@ def add_blacklist_term():
 def delete_blacklist_term(term):
     username = get_current_username()
     user = User.get(User.username == username)
-    q = BlacklistTerm.delete().where((BlacklistTerm.term == term) & (BlacklistTerm.user == user))
+    requested_type = request.args.get("type")
+    q = BlacklistTerm.delete().where(
+        (BlacklistTerm.term == term) & (BlacklistTerm.user == user) & (BlacklistTerm.type == requested_type)
+    )
     deleted = q.execute()
     return jsonify({"deleted": deleted})
 
@@ -357,13 +365,17 @@ def manage_blacklist_terms():
 def run_easy_filter():
     data = request.get_json()
     user_id = data.get("user_id")
-    if not user_id:
-        return jsonify({"error": "No user_id provided"}), 400
+    filter_type = data.get("type")
+
     user = User.get_or_none(User.id == user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
-    # Get blacklist terms for this user
-    blacklist_terms = [bl.term for bl in BlacklistTerm.select().where(BlacklistTerm.user == user)]
+
+    blacklist_terms = [
+        bl.term
+        for bl in BlacklistTerm.select().where((BlacklistTerm.user == user) & (BlacklistTerm.type == filter_type))
+    ]
+
     # Get new jobs for this user
     new_jobs = Job.select().where((Job.status == "new") & (Job.username == user.username))
     filtered_count = 0

@@ -83,6 +83,7 @@ class SearchTerm(Model):
 class BlacklistTerm(Model):
     id = AutoField(primary_key=True)
     term = CharField()
+    type = CharField()
     user = ForeignKeyField(User, backref="blacklist_terms")
 
     class Meta:
