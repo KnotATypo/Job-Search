@@ -1,11 +1,10 @@
 import os.path
-from collections import defaultdict
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import Listing, BlacklistTerm, Job
+from job_search.model import Listing, Job
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
@@ -19,8 +18,8 @@ def main():
 
 
 def reapply_blacklist():
-    # Set all "easy_filter" jobs back to "new" before reapplying blacklists
-    Job.update(status="new").where(Job.status == "easy_filter").execute()
+    # Set all "blacklist" jobs back to "new" before reapplying blacklists
+    Job.update(status="new").where(Job.status == "blacklist").execute()
 
     new_jobs = Job.select().where(Job.status == "new")
     for job in tqdm(new_jobs, desc="Applying Blacklists", unit="job"):

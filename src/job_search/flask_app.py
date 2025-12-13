@@ -364,9 +364,9 @@ def manage_blacklist_terms():
     return render_template("manage_blacklist_terms.html", user_id=user.id)
 
 
-@app.route("/run_easy_filter", methods=["POST"])
+@app.route("/run_blacklist", methods=["POST"])
 @require_username
-def run_easy_filter():
+def run_blacklist():
     data = request.get_json()
     user_id = data.get("user_id")
 
@@ -380,7 +380,7 @@ def run_easy_filter():
         if util.apply_blacklist(job):
             filtered_count += 1
 
-    return jsonify({"message": f"Easy filter run for {user.username}. {filtered_count} jobs filtered."})
+    return jsonify({"message": f"Blacklist run for {user.username}. {filtered_count} jobs filtered."})
 
 
 @app.route("/applied")

@@ -82,7 +82,7 @@ def apply_blacklist(job: Job) -> bool:
         if (term.type == "title" and term.term.lower() in job.title.lower()) or (
             term.type == "company" and term.term == job.company
         ):
-            job.status = "easy_filter"
+            job.status = "blacklist"
             job.save()
             return True
     return False
