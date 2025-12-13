@@ -5,6 +5,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, ses
 from peewee import OperationalError
 from waitress import serve
 
+from job_search import util
 from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm
 from job_search.sites.indeed import Indeed
 from job_search.sites.jora import Jora
@@ -368,26 +369,17 @@ def manage_blacklist_terms():
 def run_easy_filter():
     data = request.get_json()
     user_id = data.get("user_id")
-    filter_type = data.get("type")
 
     user = User.get_or_none(User.id == user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    blacklist_terms = [
-        bl.term
-        for bl in BlacklistTerm.select().where((BlacklistTerm.user == user) & (BlacklistTerm.type == filter_type))
-    ]
-
-    # Get new jobs for this user
     new_jobs = Job.select().where((Job.status == "new") & (Job.username == user.username))
     filtered_count = 0
-    for term in blacklist_terms:
-        for job in new_jobs:
-            if term.lower() in job.title.lower():
-                job.status = "easy_filter"
-                job.save()
-                filtered_count += 1
+    for job in new_jobs:
+        if util.apply_blacklist(job):
+            filtered_count += 1
+
     return jsonify({"message": f"Easy filter run for {user.username}. {filtered_count} jobs filtered."})
 
 

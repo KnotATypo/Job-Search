@@ -113,14 +113,8 @@ class Site:
                 # Sometimes even if the listing exists, the file might not
                 util.write_description(listing, self)
 
-        blacklist = (
-            BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.username == username)
-        )
-        for listing, job in listings:
-            for term in blacklist:
-                if term.term.lower() in job.title.lower():
-                    job.status = "easy_filter"
-                    break
+        for _, job in listings:
+            util.apply_blacklist(job)
 
         existing_jobs = Job.select().where(Job.username == username)
         # Sometimes job titles/companies have different casing/punctuation

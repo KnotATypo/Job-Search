@@ -19,30 +19,12 @@ def main():
 
 
 def reapply_blacklist():
-    user_blacklists = defaultdict(list)
-    for bl in BlacklistTerm.select():
-        user_blacklists[bl.user.username].append(bl.term)
-    # Only check new jobs in case one has slipped through and the user has progressed it
+    # Set all "easy_filter" jobs back to "new" before reapplying blacklists
+    Job.update(status="new").where(Job.status == "easy_filter").execute()
+
     new_jobs = Job.select().where(Job.status == "new")
     for job in tqdm(new_jobs, desc="Applying Blacklists", unit="job"):
-        terms = user_blacklists.get(job.username, [])
-        for term in terms:
-            if term.lower() in job.title.lower():
-                job.status = "easy_filter"
-                job.save()
-                break
-
-    # Remove jobs from easy_filter if the blacklist term has been removed
-    filtered_jobs = Job.select().where(Job.status == "easy_filter")
-    for job in tqdm(filtered_jobs, desc="Removing Old Blacklists", unit="job"):
-        remove_filter = True
-        for term in user_blacklists[job.username]:
-            if term.lower() in job.title.lower():
-                remove_filter = False
-                break
-        if remove_filter:
-            job.status = "new"
-            job.save()
+        util.apply_blacklist(job)
 
 
 def missing_descriptions():

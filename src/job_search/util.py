@@ -6,6 +6,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
 
+from job_search.model import Job, BlacklistTerm, User
+
 load_dotenv()
 
 
@@ -63,3 +65,24 @@ def write_description(listing, site) -> None:
             f.write(description_utf)
     except OSError as e:
         print(f"Error writing file for listing {listing.id}: {e}")
+
+
+def apply_blacklist(job: Job) -> bool:
+    """
+    Applies the blacklist terms for the user to the given job
+
+    job -- The job to apply the blacklist to
+    """
+
+    blacklist = (
+        BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.username == job.username)
+    )
+    for term in blacklist:
+        # Title terms are case-insensitive and fuzzy, company terms are case-sensitive and exact
+        if (term.type == "title" and term.term.lower() in job.title.lower()) or (
+            term.type == "company" and term.term == job.company
+        ):
+            job.status = "easy_filter"
+            job.save()
+            return True
+    return False
