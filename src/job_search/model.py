@@ -24,29 +24,10 @@ db = PostgresqlDatabase(
 db.connect()
 
 
-class Job(Model):
-    id = AutoField(primary_key=True)
-    title = TextField()
-    company = TextField()
-    status = CharField(default="new")
-    username = CharField()
-
-    class Meta:
-        database = db
-
-
 class Listing(Model):
     id = TextField(primary_key=True)
     site = CharField()
     summary = TextField()
-
-    class Meta:
-        database = db
-
-
-class JobToListing(Model):
-    job_id = ForeignKeyField(Job)
-    listing_id = ForeignKeyField(Listing)
 
     class Meta:
         database = db
@@ -65,6 +46,25 @@ class PageCount(Model):
 class User(Model):
     id = AutoField(primary_key=True)
     username = CharField(unique=True)
+
+    class Meta:
+        database = db
+
+
+class Job(Model):
+    id = AutoField(primary_key=True)
+    title = TextField()
+    company = TextField()
+    status = CharField(default="new")
+    user = ForeignKeyField(User, backref="search_terms")
+
+    class Meta:
+        database = db
+
+
+class JobToListing(Model):
+    job_id = ForeignKeyField(Job)
+    listing_id = ForeignKeyField(Listing)
 
     class Meta:
         database = db

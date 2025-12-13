@@ -75,7 +75,7 @@ def apply_blacklist(job: Job) -> bool:
     """
 
     blacklist = (
-        BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.username == job.username)
+        BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.id == job.user)
     )
     for term in blacklist:
         # Title terms are case-insensitive and fuzzy, company terms are case-sensitive and exact

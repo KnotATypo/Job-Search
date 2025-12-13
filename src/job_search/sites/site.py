@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import PageCount, Job, Listing, JobToListing, BlacklistTerm, User
+from job_search.model import PageCount, Job, Listing, JobToListing
 
 HTML_PARSER = "html.parser"
 
@@ -21,7 +21,7 @@ class Query:
     """
 
     term: str
-    username: str
+    user_id: int
     remote: bool
 
 
@@ -71,7 +71,7 @@ class Site:
                 listings = self.get_listings_from_page(query, page_num)
                 if len(listings) == 0:
                     break
-                self.save_listings(listings, query.username)
+                self.save_listings(listings, query.user_id)
                 page_num += 1
                 if page_num > expected_pages:
                     pbar.total += 1
@@ -80,12 +80,12 @@ class Site:
         page_count.pages = page_num
         page_count.save()
 
-    def save_listings(self, listings: List[Tuple[Listing, Job]], username):
+    def save_listings(self, listings: List[Tuple[Listing, Job]], user_id: int) -> None:
         """
         Saves the provided listings and jobs into the database and writes the body of the listing to the filesystem.
 
         listings -- List of tuples pairing Listings to their Job.
-        username -- The username of the user to save the jobs for.
+        user_id -- The id of the user to save the jobs for.
         """
 
         def get_fuzzy_job(job: Job) -> str:
@@ -116,11 +116,11 @@ class Site:
         for _, job in listings:
             util.apply_blacklist(job)
 
-        existing_jobs = Job.select().where(Job.username == username)
+        existing_jobs = Job.select().where(Job.user == user_id)
         # Sometimes job titles/companies have different casing/punctuation
         existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
         for listing, job in listings:
-            job.username = username
+            job.user = user_id
             write_listing(job, listing)
 
     def build_page_link(self, term: str, remote: bool, page_number: int):

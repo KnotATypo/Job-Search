@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from peewee import OperationalError
 from waitress import serve
+from functools import wraps
 
 from job_search import util
 from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm
@@ -21,12 +22,11 @@ app = Flask(__name__)
 app.secret_key = os.getenv("APP_SECRET_KEY")  # For flash messages
 
 
-# Helper to get current username from session
-def get_current_username():
+def get_current_user():
     username = session.get("username")
     if not username:
         return None
-    return username
+    return username, session.get("user_id")
 
 
 # Route to select/set username
@@ -37,21 +37,17 @@ def set_username():
         username = request.form.get("username")
         if username and username in usernames:
             session["username"] = username
+            session["user_id"] = User.get(User.username == username).id
             flash(f"Username set to {username}")
             return redirect(url_for("index"))
         else:
             flash("Please select a valid username.")
     return render_template("set_username.html", usernames=usernames)
 
-
-# Decorator to require username selection
-from functools import wraps
-
-
-def require_username(f):
+def require_user(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not get_current_username():
+        if not get_current_user():
             return redirect(url_for("set_username"))
         return f(*args, **kwargs)
 
@@ -59,17 +55,17 @@ def require_username(f):
 
 
 @app.route("/")
-@require_username
+@require_user
 def index():
     """Main page with workflow stages"""
-    username = get_current_username()
+    username, user_id = get_current_user()
     triage_count = -1
     while triage_count < 0:
         try:
-            triage_count = Job.select().where((Job.status == "new") & (Job.username == username)).count()
-            reading_count = Job.select().where((Job.status == "interested") & (Job.username == username)).count()
-            applying_count = Job.select().where((Job.status == "liked") & (Job.username == username)).count()
-            applied_count = Job.select().where((Job.status == "applied") & (Job.username == username)).count()
+            triage_count = Job.select().where((Job.status == "new") & (Job.user == user_id)).count()
+            reading_count = Job.select().where((Job.status == "interested") & (Job.user == user_id)).count()
+            applying_count = Job.select().where((Job.status == "liked") & (Job.user == user_id)).count()
+            applied_count = Job.select().where((Job.status == "applied") & (Job.user == user_id)).count()
         except OperationalError:
             print("Database error")
 
@@ -84,12 +80,12 @@ def index():
 
 
 @app.route("/triage")
-@require_username
+@require_user
 def triage():
     """Triage page for new jobs"""
-    username = get_current_username()
+    username, user_id = get_current_user()
     # Get the next job to triage
-    job = Job.select().where((Job.status == "new") & (Job.username == username)).first()
+    job = Job.select().where((Job.status == "new") & (Job.user == user_id)).first()
 
     if not job:
         flash("No more jobs to triage!")
@@ -102,10 +98,8 @@ def triage():
 
 
 @app.route("/triage/action", methods=["POST"])
-@require_username
 def triage_action():
-    """Handle triage actions (yes/no/undo)"""
-    username = get_current_username()
+    """Handle triage actions (yes/no)"""
     job_id = request.form.get("job_id")
     action = request.form.get("action")
 
@@ -113,7 +107,7 @@ def triage_action():
         flash(INVALID_REQUEST)
         return redirect(url_for("triage"))
 
-    job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
+    job = Job.get_or_none((Job.id == job_id))
 
     if not job:
         flash(JOB_NOT_FOUND)
@@ -132,12 +126,12 @@ def triage_action():
 
 
 @app.route("/reading")
-@require_username
+@require_user
 def reading():
     """Reading page for interested jobs"""
-    username = get_current_username()
+    username, user_id = get_current_user()
     # Get the next job to read
-    job = Job.select().where((Job.status == "interested") & (Job.username == username)).first()
+    job = Job.select().where((Job.status == "interested") & (Job.user == user_id)).first()
 
     if not job:
         flash("No more jobs to read!")
@@ -162,10 +156,8 @@ def reading():
 
 
 @app.route("/reading/action", methods=["POST"])
-@require_username
 def reading_action():
     """Handle reading actions (like/dislike)"""
-    username = get_current_username()
     job_id = request.form.get("job_id")
     action = request.form.get("action")
 
@@ -173,7 +165,7 @@ def reading_action():
         flash(INVALID_REQUEST)
         return redirect(url_for("reading"))
 
-    job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
+    job = Job.get_or_none((Job.id == job_id))
 
     if not job:
         flash(JOB_NOT_FOUND)
@@ -192,12 +184,12 @@ def reading_action():
 
 
 @app.route("/applying")
-@require_username
+@require_user
 def applying():
     """Applying page for liked jobs"""
-    username = get_current_username()
+    username, user_id = get_current_user()
     # Get the next job to apply for
-    job = Job.select().where((Job.status == "liked") & (Job.username == username)).first()
+    job = Job.select().where((Job.status == "liked") & (Job.user == user_id)).first()
 
     if not job:
         flash("No more jobs to apply for!")
@@ -222,7 +214,7 @@ def applying():
 
 
 @app.route("/applying/action", methods=["POST"])
-@require_username
+@require_user
 def applying_action():
     """Handle applying actions (status update)"""
     job_id = request.form.get("job_id")
@@ -246,48 +238,44 @@ def applying_action():
 
 
 @app.route("/search_terms", methods=["GET"])
-@require_username
+@require_user
 def get_search_terms():
-    username = get_current_username()
-    user = User.get(User.username == username)
+    _, user_id = get_current_user()
     # Return search terms as objects so the frontend can show metadata like the `remote` flag
     terms = [
         {"id": st.id, "term": st.term, "remote": bool(st.remote)}
-        for st in SearchTerm.select().where(SearchTerm.user == user)
+        for st in SearchTerm.select().where(SearchTerm.user == user_id)
     ]
     return jsonify(terms)
 
 
 @app.route("/search_terms", methods=["POST"])
-@require_username
+@require_user
 def add_search_term():
     term = request.form.get("term")
     if not term:
         return jsonify({"error": "No term provided"}), 400
-    username = get_current_username()
-    user = User.get(User.username == username)
+
+    _, user_id = get_current_user()
     try:
-        st = SearchTerm.create(term=term, user=user)
+        st = SearchTerm.create(term=term, user=user_id)
         return jsonify({"success": True, "id": st.id, "term": st.term, "remote": bool(st.remote)})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 
 @app.route("/search_terms/<term>", methods=["DELETE"])
-@require_username
+@require_user
 def delete_search_term(term):
-    username = get_current_username()
-    user = User.get(User.username == username)
-    q = SearchTerm.delete().where((SearchTerm.term == term) & (SearchTerm.user == user))
+    _, user_id = get_current_user()
+    q = SearchTerm.delete().where((SearchTerm.term == term) & (SearchTerm.user == user_id))
     deleted = q.execute()
     return jsonify({"deleted": deleted})
 
 
 @app.route("/search_terms/<int:term_id>/remote", methods=["PATCH"])
-@require_username
+@require_user
 def toggle_search_term_remote(term_id):
-    username = get_current_username()
-    user = User.get(User.username == username)
     data = request.get_json(silent=True)
     if not data or "remote" not in data:
         return jsonify({"error": "Invalid payload"}), 400
@@ -299,7 +287,8 @@ def toggle_search_term_remote(term_id):
         else:
             return jsonify({"error": "Invalid remote value"}), 400
 
-    st = SearchTerm.get_or_none((SearchTerm.id == term_id) & (SearchTerm.user == user))
+    _, user_id = get_current_user()
+    st = SearchTerm.get_or_none((SearchTerm.id == term_id) & (SearchTerm.user == user_id))
     if not st:
         return jsonify({"error": "Search term not found or not yours"}), 404
 
@@ -309,86 +298,76 @@ def toggle_search_term_remote(term_id):
 
 
 @app.route("/manage_search_terms")
-@require_username
 def manage_search_terms():
     return render_template("manage_search_terms.html")
 
 
 @app.route("/blacklist_terms", methods=["GET"])
-@require_username
+@require_user
 def get_blacklist_terms():
-    username = get_current_username()
-    user = User.get(User.username == username)
+    _, user_id = get_current_user()
     requested_type = request.args.get("type")
     terms = [
         bt.term
-        for bt in BlacklistTerm.select().where((BlacklistTerm.user == user) & (BlacklistTerm.type == requested_type))
+        for bt in BlacklistTerm.select().where((BlacklistTerm.user == user_id) & (BlacklistTerm.type == requested_type))
     ]
     return jsonify(terms)
 
 
 @app.route("/blacklist_terms", methods=["POST"])
-@require_username
+@require_user
 def add_blacklist_term():
     term = request.form.get("term")
     if not term:
         return jsonify({"error": "No term provided"}), 400
-    username = get_current_username()
-    user = User.get(User.username == username)
+    _, user_id = get_current_user()
     try:
         term_type = request.args.get("type")
-        BlacklistTerm.create(term=term, type=term_type, user=user)
+        BlacklistTerm.create(term=term, type=term_type, user=user_id)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 
 @app.route("/blacklist_terms/<term>", methods=["DELETE"])
-@require_username
+@require_user
 def delete_blacklist_term(term):
-    username = get_current_username()
-    user = User.get(User.username == username)
+    username, user_id = get_current_user()
     requested_type = request.args.get("type")
     q = BlacklistTerm.delete().where(
-        (BlacklistTerm.term == term) & (BlacklistTerm.user == user) & (BlacklistTerm.type == requested_type)
+        (BlacklistTerm.term == term) & (BlacklistTerm.user == user_id) & (BlacklistTerm.type == requested_type)
     )
     deleted = q.execute()
     return jsonify({"deleted": deleted})
 
 
 @app.route("/manage_blacklist_terms")
-@require_username
+@require_user
 def manage_blacklist_terms():
-    username = get_current_username()
-    user = User.get(User.username == username)
-    return render_template("manage_blacklist_terms.html", user_id=user.id)
+    _, user_id = get_current_user()
+    return render_template("manage_blacklist_terms.html", user_id=user_id)
 
 
 @app.route("/run_blacklist", methods=["POST"])
-@require_username
+@require_user
 def run_blacklist():
-    data = request.get_json()
-    user_id = data.get("user_id")
+    username, user_id = get_current_user()
 
-    user = User.get_or_none(User.id == user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    new_jobs = Job.select().where((Job.status == "new") & (Job.username == user.username))
+    new_jobs = Job.select().where((Job.status == "new") & (Job.user == user_id))
     filtered_count = 0
     for job in new_jobs:
         if util.apply_blacklist(job):
             filtered_count += 1
 
-    return jsonify({"message": f"Blacklist run for {user.username}. {filtered_count} jobs filtered."})
+    return jsonify({"message": f"Blacklist run for {username}. {filtered_count} jobs filtered."})
 
 
 @app.route("/applied")
-@require_username
+@require_user
 def applied():
     """Applied jobs page"""
-    username = get_current_username()
-    jobs = Job.select().where((Job.status == "applied") & (Job.username == username))
+    username, user_id = get_current_user()
+    jobs = Job.select().where((Job.status == "applied") & (Job.user == user_id))
     jobs_with_listings = []
     for job in jobs:
         listings = JobToListing.select().where(JobToListing.job_id == job.id).join(Listing)
@@ -418,11 +397,9 @@ def applied():
 
 
 @app.route("/complete_job", methods=["POST"])
-@require_username
 def complete_job():
-    username = get_current_username()
     job_id = request.form.get("job_id")
-    job = Job.get_or_none((Job.id == job_id) & (Job.username == username))
+    job = Job.get_or_none((Job.id == job_id))
     if job:
         job.status = "complete"
         job.save()
