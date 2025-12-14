@@ -104,7 +104,8 @@ def description_downloaded(listing) -> bool:
 
     listing -- The listing to check
     """
-    with tarfile.open(DATA_ARCHIVE, "r") as tar:
-        if listing.id in tar.getnames():
-            return True
+    if os.path.exists(DATA_ARCHIVE):
+        with tarfile.open(DATA_ARCHIVE, "r") as tar:
+            if listing.id + ".txt" in tar.getnames():
+                return True
     return os.path.exists(description_path(listing))

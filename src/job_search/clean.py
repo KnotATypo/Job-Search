@@ -6,7 +6,7 @@ import tarfile
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from job_search import util
+from job_search import util, create_summary
 from job_search.model import Listing, Job, JobToListing
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
@@ -17,9 +17,17 @@ load_dotenv()
 
 
 def main():
-    archive_old_descriptions()
-    missing_descriptions()
+    """
+    - Update blacklisting
+    - Download missing descriptions
+    - Create summaries
+    - Archive old descriptions
+    """
+
     reapply_blacklist()
+    missing_descriptions()
+    create_summary.main()
+    archive_old_descriptions()
 
 
 def archive_old_descriptions():
@@ -47,8 +55,11 @@ def archive_old_descriptions():
 
 
 def reapply_blacklist():
-    # Set all "blacklist" jobs back to "new" before reapplying blacklists
-    Job.update(status="new").where(Job.status == "blacklist").execute()
+    blacklist_jobs = Job.select().where(Job.status == "blacklist")
+    for job in tqdm(blacklist_jobs, desc="Rechecking Backlists", unit="job"):
+        if not util.apply_blacklist(job):
+            job.status = "new"
+            job.save()
 
     new_jobs = Job.select().where(Job.status == "new")
     for job in tqdm(new_jobs, desc="Applying Blacklists", unit="job"):
@@ -60,19 +71,11 @@ def missing_descriptions():
     Download missing descriptions.
     """
 
-    # Descriptions are only used for making a summary, so only fetch for listings without a summary
-    listings = Listing.select().where(Listing.summary == "")
+    listings = Listing.select()
 
     clean_listings = []
-    for listing in tqdm(listings, desc="Collecting Listings", unit="listing"):
-        path = util.description_path(listing)
-        if os.path.exists(path):
-            with open(path, "r") as f:
-                content = f.read()
-                # Sometimes descriptions are downloaded but empty or too short
-                if len(content) < 10:
-                    clean_listings.append(listing)
-        else:
+    for listing in listings:
+        if not util.description_downloaded(listing):
             clean_listings.append(listing)
     listings = clean_listings
 
