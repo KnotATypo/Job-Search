@@ -1,4 +1,5 @@
 import os
+import tarfile
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -9,6 +10,8 @@ from selenium_stealth import stealth
 from job_search.model import Job, BlacklistTerm, User
 
 load_dotenv()
+
+DATA_ARCHIVE = "data-archive.tar.gz"
 
 
 def new_browser(headless=True) -> webdriver.Chrome:
@@ -61,7 +64,7 @@ def write_description(listing, site) -> None:
     description = site.get_listing_description(listing.id)
     description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
     try:
-        with open(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt", "w+") as f:
+        with open(description_path(listing), "w+") as f:
             f.write(description_utf)
     except OSError as e:
         print(f"Error writing file for listing {listing.id}: {e}")
@@ -84,3 +87,24 @@ def apply_blacklist(job: Job) -> bool:
             job.save()
             return True
     return False
+
+
+def description_path(listing) -> str:
+    """
+    Returns the path to the description file for the given listing
+
+    listing -- The listing to get the path for
+    """
+    return f"{os.getenv('DATA_DIRECTORY')}/{listing.id}.txt"
+
+
+def description_downloaded(listing) -> bool:
+    """
+    Checks if the description file for the given listing exists
+
+    listing -- The listing to check
+    """
+    with tarfile.open(DATA_ARCHIVE, "r") as tar:
+        if listing.id in tar.getnames():
+            return True
+    return os.path.exists(description_path(listing))

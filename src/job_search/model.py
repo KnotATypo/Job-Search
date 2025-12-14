@@ -11,7 +11,8 @@ from peewee import (
     CompositeKey,
     TextField,
     PostgresqlDatabase,
-    BooleanField, DateTimeField,
+    BooleanField,
+    DateTimeField,
 )
 
 load_dotenv()

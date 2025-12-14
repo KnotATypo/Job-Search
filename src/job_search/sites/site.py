@@ -111,7 +111,7 @@ class Site:
 
             if new_job:
                 util.apply_blacklist(job)
-            elif not os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
+            elif not util.description_downloaded(listing):
                 # Sometimes even if the listing exists, the file might not
                 util.write_description(listing, self)
 

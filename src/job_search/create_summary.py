@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+from job_search import util
 from job_search.model import Listing, JobToListing
 
 load_dotenv()
@@ -21,7 +22,7 @@ def main():
     listings = [l for l in listings if (l.jobtolisting.job_id.status in ["new", "interested"]) and l.summary == ""]
     for listing in tqdm(listings):
         try:
-            with open(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt") as f:
+            with open(util.description_path(listing)) as f:
                 summarise_and_save(f.read(), listing)
         except FileNotFoundError as e:
             print(f"File for listing {listing.id} not found: {e}")
