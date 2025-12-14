@@ -3,30 +3,32 @@
 {% block title %}Applied Jobs{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="card-title">Applied Jobs</h2>
-    {% if jobs %}
-        <ul class="applied-jobs-list">
-        {% for job in jobs %}
-            <li class="applied-job-item">
-                <div class="applied-job-title">{{ job.title }}</div>
-                <div class="applied-job-company">{{ job.company }}</div>
-                <div class="applied-job-actions">
-                    <div class="applied-listing-buttons">
-                        {% for listing in job.listings %}
-                            <a href="{{ listing.url }}" target="_blank" class="btn btn-primary btn-sm">View on {{ listing.site }}</a><br>
-                        {% endfor %}
-                    </div>
-                    <form method="POST" action="{{ url_for('complete_job') }}" class="applied-complete-form">
-                        <input type="hidden" name="job_id" value="{{ job.id }}">
-                        <button type="submit" class="btn btn-danger btn-sm">Hide/Complete</button>
-                    </form>
-                </div>
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No jobs with 'applied' status found.</p>
-    {% endif %}
-</div>
+    <div class="card">
+        <h2 class="card-title">Applied Jobs</h2>
+        {% if jobs %}
+            <ul class="applied-jobs-list">
+                {% for job, sites in jobs %}
+                    <li class="applied-job-item">
+                        <div class="applied-job-title">{{ job.title }}</div>
+                        <div class="applied-job-company">{{ job.company }}</div>
+                        <div class="applied-job-actions">
+                            <div class="applied-listing-buttons">
+                                {% for site_name, site_url in sites %}
+                                    <a href="{{ site_url }}" target="_blank" class="btn btn-primary">
+                                        {{ site_name }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            <form method="POST" action="{{ url_for('complete_job') }}" class="applied-complete-form">
+                                <input type="hidden" name="job_id" value="{{ job.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Hide/Complete</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No jobs with 'applied' status found.</p>
+        {% endif %}
+    </div>
 {% endblock %}

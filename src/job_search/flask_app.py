@@ -1,4 +1,5 @@
 import os
+from typing import List, Tuple
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
@@ -24,9 +25,10 @@ app.secret_key = os.getenv("APP_SECRET_KEY")  # For flash messages
 
 def get_current_user():
     username = session.get("username")
-    if not username:
+    user_id = session.get("user_id")
+    if not username and not user_id:
         return None
-    return username, session.get("user_id")
+    return username, user_id
 
 
 # Route to select/set username
@@ -43,6 +45,7 @@ def set_username():
         else:
             flash("Please select a valid username.")
     return render_template("set_username.html", usernames=usernames)
+
 
 def require_user(f):
     @wraps(f)
@@ -75,7 +78,6 @@ def index():
         reading_count=reading_count,
         applying_count=applying_count,
         applied_count=applied_count,
-        username=username,
     )
 
 
@@ -83,7 +85,7 @@ def index():
 @require_user
 def triage():
     """Triage page for new jobs"""
-    username, user_id = get_current_user()
+    _, user_id = get_current_user()
     # Get the next job to triage
     job = Job.select().where((Job.status == "new") & (Job.user == user_id)).first()
 
@@ -94,7 +96,7 @@ def triage():
     # Get listings for this job
     listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
 
-    return render_template("triage.html", job=job, listings=listings, username=username)
+    return render_template("triage.html", job=job, listings=listings)
 
 
 @app.route("/triage/action", methods=["POST"])
@@ -129,7 +131,7 @@ def triage_action():
 @require_user
 def reading():
     """Reading page for interested jobs"""
-    username, user_id = get_current_user()
+    _, user_id = get_current_user()
     # Get the next job to read
     job = Job.select().where((Job.status == "interested") & (Job.user == user_id)).first()
 
@@ -137,22 +139,9 @@ def reading():
         flash("No more jobs to read!")
         return redirect(url_for("index"))
 
-    # Get listings for this job
-    listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
+    listings, sites = get_site_links(job)
 
-    # Create site objects for links
-    sites = []
-    for listing in listings:
-        if listing.listing_id.site == "seek":
-            sites.append(("Seek", Seek.get_url(listing.listing_id.id)))
-        elif listing.listing_id.site == "indeed":
-            sites.append(("Indeed", Indeed.get_url(listing.listing_id.id)))
-        elif listing.listing_id.site == "jora":
-            sites.append(("Jora", Jora.get_url(listing.listing_id.id)))
-        elif listing.listing_id.site == "linkedin":
-            sites.append(("LinkedIn", LinkedIn.get_url(listing.listing_id.id)))
-
-    return render_template("reading.html", job=job, listings=listings, sites=sites, username=username)
+    return render_template("reading.html", job=job, listings=listings, sites=sites)
 
 
 @app.route("/reading/action", methods=["POST"])
@@ -187,7 +176,7 @@ def reading_action():
 @require_user
 def applying():
     """Applying page for liked jobs"""
-    username, user_id = get_current_user()
+    _, user_id = get_current_user()
     # Get the next job to apply for
     job = Job.select().where((Job.status == "liked") & (Job.user == user_id)).first()
 
@@ -195,10 +184,15 @@ def applying():
         flash("No more jobs to apply for!")
         return redirect(url_for("index"))
 
-    # Get listings for this job
-    listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
+    listings, sites = get_site_links(job)
 
-    # Create site objects for links
+    return render_template("applying.html", job=job, listings=listings, sites=sites)
+
+
+def get_site_links(job: Job) -> Tuple[List[JobToListing], List[Tuple[str, str]]]:
+    """Generate site links for a job"""
+
+    listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
     sites = []
     for listing in listings:
         if listing.listing_id.site == "seek":
@@ -210,7 +204,7 @@ def applying():
         elif listing.listing_id.site == "linkedin":
             sites.append(("LinkedIn", LinkedIn.get_url(listing.listing_id.id)))
 
-    return render_template("applying.html", job=job, listings=listings, sites=sites, username=username)
+    return listings, sites
 
 
 @app.route("/applying/action", methods=["POST"])
@@ -231,8 +225,6 @@ def applying_action():
         flash(f"Marked '{job.title}' as application submitted")
     elif status == "not_interested":
         flash(f"Marked '{job.title}' as not pursuing")
-    else:
-        flash(f"Updated status for '{job.title}' to {status}")
 
     return redirect(url_for("applying"))
 
@@ -274,7 +266,6 @@ def delete_search_term(term):
 
 
 @app.route("/search_terms/<int:term_id>/remote", methods=["PATCH"])
-@require_user
 def toggle_search_term_remote(term_id):
     data = request.get_json(silent=True)
     if not data or "remote" not in data:
@@ -287,10 +278,9 @@ def toggle_search_term_remote(term_id):
         else:
             return jsonify({"error": "Invalid remote value"}), 400
 
-    _, user_id = get_current_user()
-    st = SearchTerm.get_or_none((SearchTerm.id == term_id) & (SearchTerm.user == user_id))
+    st = SearchTerm.get_or_none((SearchTerm.id == term_id))
     if not st:
-        return jsonify({"error": "Search term not found or not yours"}), 404
+        return jsonify({"error": "Search term not found"}), 404
 
     st.remote = remote_val
     st.save()
@@ -332,7 +322,7 @@ def add_blacklist_term():
 @app.route("/blacklist_terms/<term>", methods=["DELETE"])
 @require_user
 def delete_blacklist_term(term):
-    username, user_id = get_current_user()
+    _, user_id = get_current_user()
     requested_type = request.args.get("type")
     q = BlacklistTerm.delete().where(
         (BlacklistTerm.term == term) & (BlacklistTerm.user == user_id) & (BlacklistTerm.type == requested_type)
@@ -342,10 +332,8 @@ def delete_blacklist_term(term):
 
 
 @app.route("/manage_blacklist_terms")
-@require_user
 def manage_blacklist_terms():
-    _, user_id = get_current_user()
-    return render_template("manage_blacklist_terms.html", user_id=user_id)
+    return render_template("manage_blacklist_terms.html")
 
 
 @app.route("/run_blacklist", methods=["POST"])
@@ -366,34 +354,14 @@ def run_blacklist():
 @require_user
 def applied():
     """Applied jobs page"""
-    username, user_id = get_current_user()
+    _, user_id = get_current_user()
     jobs = Job.select().where((Job.status == "applied") & (Job.user == user_id))
-    jobs_with_listings = []
+
+    jobs_with_sites = []
     for job in jobs:
-        listings = JobToListing.select().where(JobToListing.job_id == job.id).join(Listing)
-        listing_objs = []
-        for listing in listings:
-            site = listing.listing_id.site
-            if site == "seek":
-                url = Seek.get_url(listing.listing_id.id)
-                site_name = "Seek"
-            elif site == "indeed":
-                url = Indeed.get_url(listing.listing_id.id)
-                site_name = "Indeed"
-            elif site == "jora":
-                url = Jora.get_url(listing.listing_id.id)
-                site_name = "Jora"
-            elif site == "linkedin":
-                url = LinkedIn.get_url(listing.listing_id.id)
-                site_name = "LinkedIn"
-            else:
-                url = None
-                site_name = site
-            if url:
-                listing_objs.append({"url": url, "site": site_name})
-        job_dict = {"id": job.id, "title": job.title, "company": job.company, "listings": listing_objs}
-        jobs_with_listings.append(job_dict)
-    return render_template("applied.html", jobs=jobs_with_listings, username=username)
+        jobs_with_sites.append((job, get_site_links(job)[1]))
+
+    return render_template("applied.html", jobs=jobs_with_sites)
 
 
 @app.route("/complete_job", methods=["POST"])

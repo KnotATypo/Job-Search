@@ -24,8 +24,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             try {
-                // server-provided user id (may be null) - render safely
-                const USER_ID = {{ user_id|tojson }};
                 // current selected blacklist type: 'title' or 'company'
                 // initialize from DOM so UI and state are consistent
                 const initTitleBtn = document.getElementById('type-title');
