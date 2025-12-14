@@ -1,7 +1,7 @@
 import os
 import re
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from dotenv import load_dotenv
 from tqdm import tqdm
@@ -91,7 +91,7 @@ class Site:
         def get_fuzzy_job(job: Job) -> str:
             return re.sub(r"\W", "", job.title.lower()) + "-" + re.sub(r"\W", "", job.company.lower())
 
-        def write_listing(job: Job, listing: Listing) -> None:
+        def write_listing(job: Job, listing: Listing, existing_jobs: Dict) -> None:
             new_job, new_listing = False, False
 
             if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site)) is None:
@@ -109,19 +109,18 @@ class Site:
             if new_job or new_listing:
                 JobToListing.create(job_id=job.id, listing_id=listing.id)
 
-            if not os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
+            if new_job:
+                util.apply_blacklist(job)
+            elif not os.path.exists(f"{os.getenv("DATA_DIRECTORY")}/{listing.id}.txt"):
                 # Sometimes even if the listing exists, the file might not
                 util.write_description(listing, self)
-
-        for _, job in listings:
-            util.apply_blacklist(job)
 
         existing_jobs = Job.select().where(Job.user == user_id)
         # Sometimes job titles/companies have different casing/punctuation
         existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
         for listing, job in listings:
             job.user = user_id
-            write_listing(job, listing)
+            write_listing(job, listing, existing_jobs)
 
     def build_page_link(self, term: str, remote: bool, page_number: int):
         """
