@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from dotenv import load_dotenv
@@ -10,7 +11,7 @@ from peewee import (
     CompositeKey,
     TextField,
     PostgresqlDatabase,
-    BooleanField,
+    BooleanField, DateTimeField,
 )
 
 load_dotenv()
@@ -28,6 +29,7 @@ class Listing(Model):
     id = TextField(primary_key=True)
     site = CharField()
     summary = TextField()
+    timestamp = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
         database = db
