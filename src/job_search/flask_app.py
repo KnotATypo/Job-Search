@@ -133,7 +133,14 @@ def reading():
     """Reading page for interested jobs"""
     _, user_id = get_current_user()
     # Get the next job to read
-    job = Job.select().where((Job.status == "interested") & (Job.user == user_id)).first()
+    job = (
+        Job.select()
+        .where((Job.status == "interested") & (Job.user == user_id))
+        .join(JobToListing)
+        .join(Listing)
+        .order_by(Listing.timestamp)
+        .first()
+    )
 
     if not job:
         flash("No more jobs to read!")
