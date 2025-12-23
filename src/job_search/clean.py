@@ -2,32 +2,58 @@ import os
 import os.path
 import shutil
 import tarfile
+from collections import Counter, defaultdict
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util, create_summary
-from job_search.model import Listing, Job, JobToListing
+from job_search.model import Listing, Job, JobToListing, User
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
-from job_search.util import DATA_ARCHIVE
+from job_search.util import DATA_ARCHIVE, get_fuzzy_job
 
 load_dotenv()
 
 
 def main():
     """
+    - Remove duplicate jobs
     - Update blacklisting
     - Download missing descriptions
     - Create summaries
     - Archive old descriptions
     """
 
+    remove_duplicates()
     reapply_blacklist()
     missing_descriptions()
     create_summary.main()
     archive_old_descriptions()
+
+
+def remove_duplicates():
+    """
+    Remove duplicate jobs in the database.
+    """
+    # TODO Find edge-case causing duplicates in db
+
+    users = list(User.select())
+    for user in users:
+        jobs = list(Job.select().where(Job.user == user))
+        fuzzy = defaultdict(list)
+        for job in jobs:
+            fuzzy[get_fuzzy_job(job)].append(job)
+        for key, value in tqdm(fuzzy.items(), desc=f"Removing duplicates for {user}"):
+            if len(value) == 1:
+                continue
+            new_status = Counter([j.status for j in value]).most_common()[0][0]
+            master_job = value[0]
+            Job.update(status=new_status).where(Job.id == master_job.id).execute()
+            for other_job in value[1:]:
+                JobToListing.update(job_id=master_job.id).where(JobToListing.job_id == other_job.id).execute()
+                Job.delete().where(Job.id == other_job.id).execute()
 
 
 def archive_old_descriptions():

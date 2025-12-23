@@ -1,4 +1,5 @@
 import os
+import re
 import tarfile
 
 from bs4 import BeautifulSoup
@@ -109,3 +110,7 @@ def description_downloaded(listing) -> bool:
             if listing.id + ".txt" in tar.getnames():
                 return True
     return os.path.exists(description_path(listing))
+
+
+def get_fuzzy_job(job: Job) -> str:
+    return re.sub(r"\W", "", job.title.lower()) + "-" + re.sub(r"\W", "", job.company.lower())

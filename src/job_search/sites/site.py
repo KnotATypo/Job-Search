@@ -1,5 +1,3 @@
-import os
-import re
 from dataclasses import dataclass
 from typing import List, Tuple, Dict
 
@@ -8,6 +6,7 @@ from tqdm import tqdm
 
 from job_search import util
 from job_search.model import PageCount, Job, Listing, JobToListing
+from job_search.util import get_fuzzy_job
 
 HTML_PARSER = "html.parser"
 
@@ -87,9 +86,6 @@ class Site:
         listings -- List of tuples pairing Listings to their Job.
         user_id -- The id of the user to save the jobs for.
         """
-
-        def get_fuzzy_job(job: Job) -> str:
-            return re.sub(r"\W", "", job.title.lower()) + "-" + re.sub(r"\W", "", job.company.lower())
 
         def write_listing(job: Job, listing: Listing, existing_jobs: Dict) -> None:
             new_job, new_listing = False, False
