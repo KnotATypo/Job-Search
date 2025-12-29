@@ -14,6 +14,11 @@ load_dotenv()
 
 DATA_ARCHIVE = "data-archive.tar.gz"
 
+archived_names = set()
+if os.path.exists(DATA_ARCHIVE):
+    with tarfile.open(DATA_ARCHIVE, "r") as tar:
+        archived_names = set(tar.getnames())
+
 
 def new_browser(headless=True) -> webdriver.Chrome:
     """
@@ -105,10 +110,8 @@ def description_downloaded(listing) -> bool:
 
     listing -- The listing to check
     """
-    if os.path.exists(DATA_ARCHIVE):
-        with tarfile.open(DATA_ARCHIVE, "r") as tar:
-            if listing.id + ".txt" in tar.getnames():
-                return True
+    if listing.id + ".txt" in archived_names:
+        return True
     return os.path.exists(description_path(listing))
 
 
