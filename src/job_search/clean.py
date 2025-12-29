@@ -100,7 +100,7 @@ def missing_descriptions():
     listings = Listing.select()
 
     clean_listings = []
-    for listing in listings:
+    for listing in tqdm(listings, desc="Looking for Descriptions", unit="listing"):
         if not util.description_downloaded(listing):
             clean_listings.append(listing)
     listings = clean_listings
