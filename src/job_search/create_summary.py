@@ -5,7 +5,7 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from job_search import util
-from job_search.model import Listing, JobToListing
+from job_search.model import Listing, JobToListing, Job
 
 load_dotenv()
 
@@ -15,12 +15,20 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
 def main():
-    listings = Listing.select(Listing, JobToListing).join(JobToListing).execute()
-    for l in [l for l in listings if (l.jobtolisting.job_id.status == "blacklist") and l.summary == ""]:
+    blacklist_listings = (
+        Listing.select().join(JobToListing).join(Job).where(Job.status == "blacklist", Listing.summary == "").execute()
+    )
+    for l in blacklist_listings:
         l.summary = "blacklist"
         l.save()
-    listings = [l for l in listings if (l.jobtolisting.job_id.status in ["new", "interested"]) and l.summary == ""]
-    for listing in tqdm(listings):
+    listings_to_summaries = (
+        Listing.select()
+        .join(JobToListing)
+        .join(Job)
+        .where(Job.status << ["new", "interested"], Listing.summary == "")
+        .execute()
+    )
+    for listing in tqdm(listings_to_summaries):
         try:
             with open(util.description_path(listing)) as f:
                 summarise_and_save(f.read(), listing)
