@@ -25,7 +25,7 @@ def main():
         Listing.select()
         .join(JobToListing)
         .join(Job)
-        .where(Job.status << ["new", "interested"], Listing.summary == "")
+        .where(Job.status << ["new", "interested"], Listing.summary << ["", "N/A"])
         .execute()
     )
     for listing in tqdm(listings_to_summaries):
