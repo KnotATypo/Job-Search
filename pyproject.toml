@@ -1,23 +1,23 @@
 [project]
 name = "job-search"
-version = "0.1.0"
+version = "1.0.0"
 description = "A project for searching and aggregating job listings."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "selenium-stealth>=1.0.6",
-    "beautifulsoup4>=4.12.3",
+    "beautifulsoup4>=4.14.3",
     "tqdm>=4.66.3",
-    "selenium>=4.19.0",
-    "peewee>=3.17.8",
-    "transformers>=4.47.0",
-    "flask>=3.0.0",
+    "selenium>=4.32.0",
+    "peewee>=3.19.0",
+    "transformers>=4.57.3",
+    "flask>=3.1.2",
     "waitress>=3.0.2",
     "psycopg2-binary>=2.9.10",
-    "black>=25.9.0",
+    "black>=25.12.0",
     "python-dotenv>=1.2.1",
-    "torch>=2.9.0",
-    "accelerate>=1.11.0",
+    "torch>=2.9.1",
+    "accelerate>=1.12.0",
 ]
 
 [[tool.uv.index]]
