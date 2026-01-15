@@ -7,7 +7,7 @@ from job_search.sites.seek import Seek
 from job_search.sites.site import Query, NotSupportedError
 
 
-def main():
+def search():
     # Fetch search terms from the database as objects
     search_terms = list(SearchTerm.select())
     sites = [Jora(), Seek(), LinkedIn()]
@@ -22,4 +22,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    search()

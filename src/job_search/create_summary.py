@@ -15,7 +15,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", dev
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
-def main():
+def create_summary():
     connection = psycopg2.connect(
         host=os.getenv("DATABASE_HOST"),
         database=os.getenv("DATABASE_NAME"),
@@ -95,4 +95,4 @@ def summary(description):
 
 
 if __name__ == "__main__":
-    main()
+    create_summary()

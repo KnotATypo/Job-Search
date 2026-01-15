@@ -17,7 +17,7 @@ from job_search.util import DATA_ARCHIVE, get_fuzzy_job
 load_dotenv()
 
 
-def main():
+def clean():
     """
     - Remove duplicate jobs
     - Update blacklisting
@@ -29,7 +29,7 @@ def main():
     remove_duplicates()
     reapply_blacklist()
     missing_descriptions()
-    create_summary.main()
+    create_summary.create_summary()
     archive_old_descriptions()
 
 
@@ -119,4 +119,4 @@ def missing_descriptions():
 
 
 if __name__ == "__main__":
-    main()
+    clean()

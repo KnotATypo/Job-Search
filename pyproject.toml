@@ -18,6 +18,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "torch>=2.9.1",
     "accelerate>=1.12.0",
+    "apscheduler>=3.11.2",
 ]
 
 [[tool.uv.index]]
@@ -25,10 +26,10 @@ name = "pytorch"
 url = "https://download.pytorch.org/whl/cpu"
 
 [project.scripts]
-search = "job_search.search:main"
+search = "job_search.search:search"
 host = "job_search.flask_app:start"
-summary = "job_search.create_summary:main"
-clean = "job_search.clean:main"
+summary = "job_search.create_summary:create_summary"
+clean = "job_search.clean:clean"
 
 [build-system]
 requires = ["uv_build>=0.9.6,<0.10.0"]

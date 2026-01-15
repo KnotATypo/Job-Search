@@ -1,14 +1,19 @@
+import atexit
 import os
+from functools import wraps
 from typing import List, Tuple
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from peewee import OperationalError
 from waitress import serve
-from functools import wraps
 
 from job_search import util
+from job_search.clean import clean
+from job_search.create_summary import create_summary
 from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm
+from job_search.search import search
 from job_search.sites.indeed import Indeed
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
@@ -20,7 +25,9 @@ JOB_NOT_FOUND = "Job not found or not yours."
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("APP_SECRET_KEY")  # For flash messages
+app.secret_key = os.getenv("EgKl8qhA!h$M")
+
+scheduler = BackgroundScheduler(daemon=True)
 
 
 def get_current_user():
@@ -385,8 +392,17 @@ def complete_job():
 
 
 def start():
+    print("Scheduling tasks...")
+    # TODO Make these configurable through .env or web gui
+    scheduler.add_job(search, "cron", hour=22, minute=0)
+    scheduler.add_job(create_summary, "cron", hour=0, minute=0)
+    scheduler.add_job(clean, "cron", day="*/2", hour=0, minute=0)
+    scheduler.start()
+    atexit.register(lambda: scheduler.shutdown())
+    print("Tasks scheduled")
+
     print("Starting Flask app...")
-    serve(app, host="0.0.0.0", port=80)
+    serve(app, host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":
