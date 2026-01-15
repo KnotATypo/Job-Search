@@ -59,7 +59,7 @@ DATABASE_HOST=
 The existing variables are suggested defaults; modify them as needed.
 
 - `DATA_DIRECTORY`: Directory to store job listing text.
-- `SUMMARY_MODEL_NAME`: The model used for summarizing job descriptions.
+- `SUMMARY_MODEL_NAME`: The model used for summarising job descriptions.
 - `APP_SECRET_KEY`: A secret key for the application.
 - `DATABASE_*`: Database connection details.
 
@@ -78,8 +78,8 @@ The application has 4 main commands:
 - `uv run clean`: Download missing job description texts and reapplies blacklist.
 - `uv run summary`: Generate summaries for job descriptions using the specified model.
 
-The recommended workflow is to host the web interface with a systemd service running `uv run host` and run
-`uv run search` and `uv run summary` as a cronjob daily or at the desired frequency.
+The main `host` service is configured to run the other 3 at configured times using a build-in scheduler. Currently this
+is hard-coded, but it will be configurable in the future.
 
 ### Web Interface
 
