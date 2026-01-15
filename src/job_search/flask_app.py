@@ -402,7 +402,7 @@ def start():
     print("Tasks scheduled")
 
     print("Starting Flask app...")
-    serve(app, host="0.0.0.0", port=8080)
+    serve(app, host="0.0.0.0", port=80)
 
 
 if __name__ == "__main__":
