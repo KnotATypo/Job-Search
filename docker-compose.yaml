@@ -1,0 +1,18 @@
+services:
+  app:
+    image: knotatypo/job-search:latest
+    ports:
+      - '3232:3232'
+    volumes:
+      - listing-data:/Job-Search/data
+    environment:
+      DATA_DIRECTORY: '/Job-Search/data'
+      SUMMARY_MODEL_NAME: 'Qwen/Qwen2.5-1.5B-Instruct'
+      APP_SECRET_KEY: ${APP_SECRET_KEY}
+      DATABASE_NAME: 'job_search'
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: ${DATABASE_HOST}
+
+volumes:
+  listing-data:
