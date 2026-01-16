@@ -7,12 +7,13 @@ from collections import Counter, defaultdict
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from job_search import util, create_summary
+from job_search import util
+from job_search.create_summary import create_summary
 from job_search.model import Listing, Job, JobToListing, User
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
-from job_search.util import DATA_ARCHIVE, get_fuzzy_job
+from job_search.util import DATA_ARCHIVE, get_fuzzy_job, LISTING_DIRECTORY
 
 load_dotenv()
 
@@ -29,7 +30,7 @@ def clean():
     remove_duplicates()
     reapply_blacklist()
     missing_descriptions()
-    create_summary.create_summary()
+    create_summary()
     archive_old_descriptions()
 
 
@@ -68,11 +69,11 @@ def archive_old_descriptions():
     if not os.path.exists("temp"):
         os.mkdir("temp")
 
-    for file in tqdm(os.listdir(os.getenv("DATA_DIRECTORY")), desc="Sorting Descriptions", unit="file"):
+    for file in tqdm(os.listdir(LISTING_DIRECTORY), desc="Sorting Descriptions", unit="file"):
         listing = Listing.select().where(Listing.id == file.removesuffix(".txt")).first()
         job = Job.select().join(JobToListing).where(JobToListing.listing_id == file.removesuffix(".txt")).first()
         if listing is None or job.status in ["not_interested", "blacklist"]:
-            shutil.move(f"{os.getenv('DATA_DIRECTORY')}/{file}", f"temp/{file}")
+            shutil.move(f"{LISTING_DIRECTORY}/{file}", f"temp/{file}")
 
     with tarfile.open(DATA_ARCHIVE, "w:gz") as tar:
         for file in tqdm(os.listdir("temp"), desc="Archiving Descriptions", unit="file"):

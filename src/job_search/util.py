@@ -12,7 +12,8 @@ from job_search.model import Job, BlacklistTerm, User
 
 load_dotenv()
 
-DATA_ARCHIVE = "data-archive.tar.gz"
+LISTING_DIRECTORY = os.getenv("DATA_DIRECTORY") + "/listings"
+DATA_ARCHIVE = os.getenv("DATA_DIRECTORY") + "/data-archive.tar.gz"
 
 archived_names = set()
 if os.path.exists(DATA_ARCHIVE):
@@ -101,7 +102,7 @@ def description_path(listing) -> str:
 
     listing -- The listing to get the path for
     """
-    return f"{os.getenv('DATA_DIRECTORY')}/{listing.id}.txt"
+    return f"{LISTING_DIRECTORY}/{listing.id}.txt"
 
 
 def description_downloaded(listing) -> bool:
