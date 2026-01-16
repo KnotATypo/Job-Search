@@ -12,10 +12,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set timestamp
-        id: ts
-        run: echo "ts=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
-        
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -27,5 +23,5 @@ jobs:
         with:
           push: true
           tags: |
-            job-search:${{ steps.ts.outputs.ts }}
+            job-search:${{ github.sha }}
             job-search:latest
