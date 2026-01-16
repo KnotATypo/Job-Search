@@ -23,5 +23,5 @@ jobs:
         with:
           push: true
           tags: |
-            job-search:${{ github.sha }}
-            job-search:latest
+            ${{ vars.DOCKER_USERNAME }}/job-search:${{ github.sha }}
+            ${{ vars.DOCKER_USERNAME }}/job-search:latest
