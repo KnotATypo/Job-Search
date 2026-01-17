@@ -1,7 +1,11 @@
 FROM python:3.13-slim
 
-RUN apt update && apt install wget chromium-driver chromium -y && apt clean && rm -rf /var/lib/apt/lists/*
-RUN wget -qO- https://astral.sh/uv/install.sh | sh
+RUN apt update && \
+    apt install -y --no-install-recommends chromium-headless-shell chromium-driver curl && \
+    curl -Ls https://astral.sh/uv/install.sh | sh && \
+    apt purge -y curl && \
+    apt autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN mkdir Job-Search
 WORKDIR /Job-Search
