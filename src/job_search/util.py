@@ -30,6 +30,10 @@ def new_browser(headless=True) -> webdriver.Chrome:
     options = Options()
     if headless:
         options.add_argument("--headless")
+
+    # Flag needed to run in Docker
+    options.add_argument("--no-sandbox")
+
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     driver = webdriver.Chrome(options=options)
