@@ -505,7 +505,7 @@ footer {
     gap: 0.7rem;
 }
 
-.applied-job-title {
+.list-job-title {
     font-size: 1.25rem;
     font-weight: bold;
     color: var(--light-text);
@@ -513,7 +513,7 @@ footer {
     word-break: break-word;
 }
 
-.applied-job-company {
+.list-job-company {
     font-size: 1.1rem;
     color: var(--medium-text);
     margin-bottom: 0.5rem;
@@ -537,11 +537,11 @@ footer {
 }
 
 @media (max-width: 600px) {
-    .applied-job-title {
+    .list-job-title {
         font-size: 1.1rem;
     }
 
-    .applied-job-company {
+    .list-job-company {
         font-size: 1rem;
     }
 

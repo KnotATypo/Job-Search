@@ -9,8 +9,8 @@
             <ul class="applied-jobs-list">
                 {% for job, sites in jobs %}
                     <li class="applied-job-item">
-                        <div class="applied-job-title">{{ job.title }}</div>
-                        <div class="applied-job-company">{{ job.company }}</div>
+                        <div class="list-job-title">{{ job.title }}</div>
+                        <div class="list-job-company">{{ job.company }}</div>
                         <div class="applied-job-actions">
                             <div class="applied-listing-buttons">
                                 {% for site_name, site_url in sites %}
