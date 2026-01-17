@@ -3,26 +3,31 @@
 {% block title %}Job Application Tracker{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="card-title">Application Process</h2>
-    <p class="card-text">Select a stage in the application process to begin</p>
+    <div class="card">
+        <h2 class="card-title">Application Process</h2>
+        <p class="card-text">Select a stage in the application process to begin</p>
 
-    <div class="workflow-stages">
-        <a href="{{ url_for('triage') }}" class="btn btn-success btn-block">
-            Initial Screening <span class="stage-count">({{ triage_count }})</span>
-        </a>
+        <div class="workflow-stages">
+            <a href="{{ url_for('triage') }}" class="btn btn-success btn-block">
+                Initial Screening <span class="stage-count">({{ triage_count }})</span>
+            </a>
 
-        <a href="{{ url_for('reading') }}" class="btn btn-primary btn-block">
-            Detailed Review <span class="stage-count">({{ reading_count }})</span>
-        </a>
+            <div style="display:flex; gap:0.4rem;">
+                <a href="{{ url_for('reading_list') }}" class="btn btn-primary" style="flex:0 0 60px;">
+                    List
+                </a>
+                <a href="{{ url_for('reading') }}" class="btn btn-primary" style="flex:1;">
+                    Detailed Review <span class="stage-count">({{ reading_count }})</span>
+                </a>
+            </div>
 
-        <a href="{{ url_for('applying') }}" class="btn btn-danger btn-block">
-            Application Submission <span class="stage-count">({{ applying_count }})</span>
-        </a>
+            <a href="{{ url_for('applying') }}" class="btn btn-danger btn-block">
+                Application Submission <span class="stage-count">({{ applying_count }})</span>
+            </a>
 
-        <a href="{{ url_for('applied') }}" class="btn btn-block btn-next">
-            Applied Jobs <span class="stage-count">({{ applied_count }})</span>
-        </a>
+            <a href="{{ url_for('applied') }}" class="btn btn-block btn-next">
+                Applied Jobs <span class="stage-count">({{ applied_count }})</span>
+            </a>
+        </div>
     </div>
-</div>
 {% endblock %}

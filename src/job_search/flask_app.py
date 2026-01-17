@@ -10,8 +10,10 @@ from peewee import OperationalError
 from waitress import serve
 
 from job_search import util
-from job_search.clean import clean
-from job_search.create_summary import create_summary
+
+# from job_search.clean import clean
+
+# from job_search.create_summary import create_summary
 from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm
 from job_search.search import search
 from job_search.sites.indeed import Indeed
@@ -132,6 +134,16 @@ def triage_action():
         flash(f"Skipped '{job.title}'")
 
     return redirect(url_for("triage"))
+
+
+@app.route("/reading_list")
+@require_user
+def reading_list():
+    """Applied jobs page"""
+    _, user_id = get_current_user()
+    jobs = Job.select().where((Job.status == "interested") & (Job.user == user_id))
+
+    return render_template("reading_list.html", jobs=jobs)
 
 
 @app.route("/reading")
@@ -395,8 +407,8 @@ def start():
     print("Scheduling tasks...")
     # TODO Make these configurable through .env or web gui
     scheduler.add_job(search, "cron", hour=22, minute=0)
-    scheduler.add_job(create_summary, "cron", hour=0, minute=0)
-    scheduler.add_job(clean, "cron", day="*/2", hour=0, minute=0)
+    # scheduler.add_job(create_summary, "cron", hour=0, minute=0)
+    # scheduler.add_job(clean, "cron", day="*/2", hour=0, minute=0)
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     print("Tasks scheduled")
