@@ -54,6 +54,11 @@ def set_username():
     return render_template("set_username.html", usernames=usernames)
 
 
+@app.route("/health_check")
+def health_check():
+    return jsonify({"status": "ok"})
+
+
 def require_user(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
