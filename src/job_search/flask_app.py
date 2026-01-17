@@ -146,23 +146,27 @@ def reading_list():
     return render_template("reading_list.html", jobs=jobs)
 
 
-@app.route("/reading")
+@app.route("/reading", defaults={"job_id": None})
+@app.route("/reading/<job_id>")
 @require_user
-def reading():
+def reading(job_id):
     """Reading page for interested jobs"""
     _, user_id = get_current_user()
-    # Get the next job to read
-    job = (
-        Job.select()
-        .where((Job.status == "interested") & (Job.user == user_id))
-        .join(JobToListing)
-        .join(Listing)
-        .order_by(Listing.timestamp)
-        .first()
-    )
 
-    if not job:
-        flash("No more jobs to read!")
+    if job_id is None:
+        # Get the next job to read
+        job = (
+            Job.select()
+            .where((Job.status == "interested") & (Job.user == user_id))
+            .join(JobToListing)
+            .join(Listing)
+            .first()
+        )
+    else:
+        job = Job.select().where(Job.id == job_id).join(JobToListing).join(Listing).first()
+
+    if not job or job is None:
+        flash("Job not found!")
         return redirect(url_for("index"))
 
     listings, sites = get_site_links(job)

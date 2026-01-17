@@ -9,7 +9,7 @@
                 <div class="applied-job-title">{{ job.title }}</div>
                 <div style="display:flex; gap:0.4rem;">
                     <div class="applied-job-company" style="flex:1;">{{ job.company }}</div>
-                    <a href="{{ url_for('reading_list') }}" class="btn btn-primary" style="flex:0 0 75px;">
+                    <a href="{{ url_for('reading') }}/{{ job.id }}" class="btn btn-primary" style="flex:0 0 75px;">
                         Go to
                     </a>
                 </div>
