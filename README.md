@@ -33,13 +33,13 @@ defined in `model.py`.
 
 The database consists of the following tables:
 
-- `blacklistterm`: Terms used to filter out unwanted job listings.
-- `job`: Stores job details.
-- `jobtolisting`: One-to-many relationship between jobs and listings.
 - `listing`: Individual job listings fetched from job sites.
 - `pagecount`: Tracks pagination for job site scraping.
-- `searchterm`: Terms used to search for job listings.
 - `user`: Stores user information.
+- `job`: Stores job details.
+- `jobtolisting`: One-to-many relationship between jobs and listings.
+- `searchterm`: Terms used to search for job listings.
+- `blacklistterm`: Terms used to filter out unwanted job listings.
 
 ### .env Configuration
 
@@ -59,7 +59,7 @@ DATABASE_HOST=
 The existing variables are suggested defaults; modify them as needed.
 
 - `DATA_DIRECTORY`: Directory to store job listing text.
-- `SUMMARY_MODEL_NAME`: The model used for summarising job descriptions.
+- `SUMMARY_MODEL_NAME`: The Ollama model used for summarising job descriptions.
 - `APP_SECRET_KEY`: A secret key for the application.
 - `DATABASE_*`: Database connection details.
 
@@ -75,10 +75,15 @@ The application has 4 main commands:
 
 - `uv run search`: Fetch new job listings from configured job sites.
 - `uv run host`: Start the web interface for managing job listings.
-- `uv run clean`: Download missing job description texts and reapplies blacklist.
+- `uv run clean`: 
+  - Remove duplicate jobs
+  - Update blacklisting
+  - Download missing descriptions
+  - Create summaries
+  - Archive old descriptions
 - `uv run summary`: Generate summaries for job descriptions using the specified model.
 
-The main `host` service is configured to run the other 3 at configured times using a build-in scheduler. Currently this
+The main `host` service is configured to run the other 3 at configured times using a build-in scheduler. Currently, this
 is hard-coded, but it will be configurable in the future.
 
 ### Web Interface
