@@ -54,11 +54,6 @@ header h1 {
     transition: color 0.3s;
 }
 
-.header-link:hover {
-    color: #f0f0f0;
-    text-decoration: none;
-}
-
 /* Main Content */
 main {
     max-width: 1200px;
@@ -114,17 +109,9 @@ main {
     color: var(--light-text);
 }
 
-.btn-primary:hover {
-    background-color: #2563eb; /* Lighter blue for hover */
-}
-
 .btn-success {
     background-color: var(--success-color);
     color: var(--light-text);
-}
-
-.btn-success:hover {
-    background-color: #10b981; /* Lighter green for hover */
 }
 
 .btn-danger {
@@ -132,18 +119,10 @@ main {
     color: var(--light-text);
 }
 
-.btn-danger:hover {
-    background-color: #dc2626; /* Lighter red for hover */
-}
-
 .btn-next {
     background-color: #6c3483;
     color: #fff;
     border: none;
-}
-
-.btn-next:hover {
-    background-color: #8e44ad;
 }
 
 .btn-block {
@@ -179,28 +158,6 @@ main {
 
 .card-text {
     margin-bottom: 1rem;
-}
-
-/* Small helper text under the card title */
-.toggle-help {
-    color: var(--medium-text);
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-/* Remote badge: filled for visibility */
-.remote-badge {
-    background: var(--success-color);
-    color: white;
-    border: none;
-    padding: 0.18rem 0.5rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    border-radius: 999px;
-    margin-left: 0.4rem;
-    letter-spacing: 0.02em;
 }
 
 /* Footer */
@@ -303,11 +260,6 @@ footer {
     transition: background 0.2s, color 0.2s;
 }
 
-.nav-link:hover, .nav-link:focus {
-    background: var(--primary-color);
-    color: var(--light-text);
-}
-
 /* Change Username link in navbar */
 .nav-link-username-change {
     margin-left: 1rem;
@@ -317,11 +269,6 @@ footer {
     padding: 0.25rem 0.9rem;
     border-radius: 4px;
     transition: background 0.2s, color 0.2s;
-}
-
-.nav-link-username-change:hover, .nav-link-username-change:focus {
-    background: #2563eb;
-    color: #fff;
 }
 
 /* Card for Manage Search Terms */
@@ -356,10 +303,6 @@ footer {
     background: var(--bg-color);
     color: var(--text-color);
     font-size: 1rem;
-}
-
-.btn-success:hover, .btn-success:focus {
-    background: #059669;
 }
 
 .terms-list {
@@ -521,21 +464,6 @@ footer {
     white-space: nowrap;
 }
 
-/* hide default checkbox appearance but keep it accessible */
-.term-checkbox {
-    appearance: auto;
-    -webkit-appearance: auto;
-    width: 1.15rem;
-    height: 1.15rem;
-    margin: 0;
-    flex: 0 0 auto;
-    cursor: pointer;
-}
-
-.term-checkbox::after {
-    display: none;
-}
-
 /* Ensure term layout aligns content and the options button correctly */
 .term-label {
     display: flex;
@@ -582,20 +510,6 @@ footer {
     overflow: visible;
     -webkit-font-smoothing: antialiased;
     transition: background 0.12s, border-color 0.12s, transform 0.06s, box-shadow 0.08s;
-}
-
-.options-btn:hover {
-    background: rgba(30,61,138,0.44);
-    border-color: rgba(255,255,255,0.22);
-    transform: translateY(-2%);
-    box-shadow: 0 8px 22px rgba(0,0,0,0.55);
-}
-
-.options-btn:focus {
-    outline: 2px solid rgba(59,130,246,0.6);
-    outline-offset: 2px;
-    background: rgba(30,61,138,0.44);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.6);
 }
 
 /* Settings modal (moved from manage_search_terms.html */
