@@ -1,5 +1,6 @@
 import datetime
 import os
+from enum import Enum
 
 from dotenv import load_dotenv
 from peewee import (
@@ -14,6 +15,7 @@ from peewee import (
     BooleanField,
     DateTimeField,
 )
+from peewee_enum_field import EnumField
 
 load_dotenv()
 
@@ -73,10 +75,22 @@ class JobToListing(Model):
         database = db
 
 
+class Location(Enum):
+    Australia = "Australia"
+    Brisbane = "Brisbane"
+    Melbourne = "Melbourne"
+    Sydney = "Sydney"
+    Adelaide = "Adelaide"
+    Perth = "Perth"
+    Darwin = "Darwin"
+    Hobart = "Hobart"
+
+
 class SearchTerm(Model):
     id = AutoField(primary_key=True)
     term = CharField()
     remote = BooleanField(default=False)
+    location = EnumField(Location, default=Location.Australia)
     user = ForeignKeyField(User, backref="search_terms")
 
     class Meta:
