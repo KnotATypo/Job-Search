@@ -318,7 +318,7 @@ def toggle_search_term_remote(term_id):
 def manage_search_terms():
     _, user_id = get_current_user()
     terms = SearchTerm.select().where(SearchTerm.user == user_id)
-    return render_template("manage_search_terms_new.html", terms=terms)
+    return render_template("manage_search_terms.html", terms=terms)
 
 
 @app.route("/blacklist_terms", methods=["GET"])
