@@ -106,7 +106,7 @@ class Site:
             job.user = user
             write_listing(job, listing, existing_jobs)
 
-    def build_page_link(self, term: str, remote: bool, page_number: int):
+    def build_page_link(self, query: SearchTerm, page_number: int):
         """
         Builds a link to a search page using templated QUERY_URL.
 
@@ -114,10 +114,20 @@ class Site:
         remote -- Whether to filter for remote jobs.
         page_number -- The page number of the search. Specific incrementing rules (e.g. increments of 10) should be handled before calling this function.
         """
-        query_string = self.QUERY_URL.replace("%%QUERY%%", term).replace("%%PAGE%%", str(page_number))
-        if remote:
+        query_string = self.QUERY_URL.replace("%%QUERY%%", self.adapt_term(query.term))
+        query_string = query_string.replace("%%PAGE%%", str(page_number))
+        if query.remote:
             query_string = self.add_remote_filter(query_string)
         return query_string
+
+    def adapt_term(self, term: str) -> str:
+        """
+        Adapts the given string to the format required by the given site, such as replacing spaces with %20.
+        By default, just return the term.
+
+        term -- The string to adapt.
+        """
+        return term
 
     def get_listings_from_page(self, query: SearchTerm, page_number) -> List[Tuple[Listing, Job]]:
         """

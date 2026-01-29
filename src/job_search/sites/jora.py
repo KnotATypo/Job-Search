@@ -25,7 +25,7 @@ class Jora(Site):
         return body.text
 
     def get_listings_from_page(self, query: SearchTerm, page_number: int) -> List[Tuple[Listing, Job]]:
-        link = self.build_page_link(query.term.replace("-", "+"), query.remote, page_number)
+        link = self.build_page_link(query, page_number)
         soup = get_page_soup(link)
         if soup.text.find("We have looked through all the results for you") != -1:
             return []
@@ -39,6 +39,9 @@ class Jora(Site):
         matches = [self.extract_info(x) for x in matches]
 
         return matches
+
+    def adapt_term(self, term: str) -> str:
+        return term.replace("-", "+")
 
     def extract_info(self, job) -> Tuple[Listing, Job]:
         link = job["href"]

@@ -24,7 +24,7 @@ class Seek(Site):
         return body.contents[0].text
 
     def get_listings_from_page(self, query: SearchTerm, page_number: int) -> List[Tuple[Listing, Job]]:
-        link = self.build_page_link(query.term, query.remote, page_number)
+        link = self.build_page_link(query, page_number)
         soup = get_page_soup(link)
         matches = soup.find_all("a", attrs={"data-automation": "jobTitle"})
         matches = [self.extract_info(x) for x in matches]

@@ -28,7 +28,7 @@ class LinkedIn(Site):
         return body
 
     def get_listings_from_page(self, query: SearchTerm, page_number: int) -> List[Tuple[Listing, Job]]:
-        link = self.build_page_link(query.term.replace("-", "%20"), query.remote, page_number * 10)
+        link = self.build_page_link(query, page_number * 10)
         soup = get_page_soup(link)
         cards = soup.find_all("li")
         if len(cards) == 0:
@@ -38,6 +38,9 @@ class LinkedIn(Site):
         jobs = [job for job in jobs if job is not None]
 
         return jobs
+
+    def adapt_term(self, term: str) -> str:
+        return term.replace("-", "%20")
 
     def extract_info(self, job) -> Tuple[Listing, Job] | None:
         links = job.find_all("a")
