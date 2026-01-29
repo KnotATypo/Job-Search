@@ -23,5 +23,21 @@ jobs:
         with:
           push: true
           tags: |
-            ${{ vars.DOCKER_USERNAME }}/job-search:${{ github.sha }}
-            ${{ vars.DOCKER_USERNAME }}/job-search:latest
+            ${{ vars.DOCKER_USERNAME }}/${{ vars.CONTAINER_TAG }}:${{ github.sha }}
+            ${{ vars.DOCKER_USERNAME }}/${{ vars.CONTAINER_TAG }}:latest
+
+      - name: Send HTTP request
+        id: webhook
+        uses: Tyrrrz/action-http-request@1.1.2
+        with:
+          url: https://docker-webhook.knotatypo.com/deploy/${{ vars.CONTAINER_TAG }}
+          method: POST
+          headers: |
+            Secret-Token: ${{ secrets.WEBHOOK_SECRET }}
+          retry-count: 3
+          retry-delay: 500
+
+      - name: Print outputs
+        run: |
+          echo "Status: ${{ steps.webhook.outputs.status }}"
+          echo "Body: ${{ steps.webhook.outputs.body }}"
