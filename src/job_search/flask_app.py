@@ -13,7 +13,7 @@ from job_search import util
 
 from job_search.clean import clean
 from job_search.create_summary import create_summary
-from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm
+from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm, Location
 from job_search.search import search
 from job_search.sites.indeed import Indeed
 from job_search.sites.jora import Jora
@@ -298,20 +298,22 @@ def delete_search_term(term_id):
     return jsonify({"deleted": deleted})
 
 
-@app.route("/search_terms/<int:term_id>/remote", methods=["PATCH"])
+@app.route("/search_terms/<term_id>", methods=["PATCH"])
 def toggle_search_term_remote(term_id):
-    data = request.get_json(silent=True)
-    if not data or "remote" not in data:
+    data = request.get_json()
+    if "remote" not in data or "location" not in data:
         return jsonify({"error": "Invalid payload"}), 400
     remote = data["remote"]
+    location = data["location"]
 
     st = SearchTerm.get_or_none((SearchTerm.id == term_id))
     if not st:
         return jsonify({"error": "Search term not found"}), 404
 
     st.remote = remote
+    st.location = Location(location)
     st.save()
-    return jsonify({"success": True, "id": st.id, "term": st.term, "remote": bool(st.remote)})
+    return jsonify({"success": True})
 
 
 @app.route("/manage_search_terms")

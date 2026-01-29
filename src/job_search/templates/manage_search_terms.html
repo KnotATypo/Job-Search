@@ -34,10 +34,9 @@
                     style="position:absolute; top:8px; right:8px; background:transparent; border:none; font-size:20px; cursor:pointer;">
                 &times;
             </button>
-            <h3 style="margin-top:0;">Configure Search Term</h3>
+            <h3 style="margin-top:0;" id="settings-term-text"></h3>
             <form id="settings-form">
                 <input type="hidden" id="settings-term-id">
-                <div style="margin-bottom:8px;"><strong>Term: </strong><span id="settings-term-text"></span></div>
                 <div style="margin-bottom:8px;"><label><input type="checkbox" id="settings-remote">Remote only</label>
                 </div>
                 <div style="margin-bottom:8px;">
@@ -111,8 +110,7 @@
             const id = document.getElementById('settings-term-id').value;
             const payload = {
                 remote: document.getElementById('settings-remote').checked,
-                location: document.getElementById('settings-location').value || null,
-                exclude_keywords: document.getElementById('settings-exclude').value || null
+                location: document.getElementById('settings-location').value,
             };
 
             fetch('/search_terms/' + encodeURIComponent(id), {
@@ -121,10 +119,6 @@
                 body: JSON.stringify(payload)
             })
                 .then(() => {
-                    // If backend returns success, reload. Otherwise still try to reload to reflect changes.
-                    location.reload();
-                })
-                .catch(() => {
                     location.reload();
                 });
         });
