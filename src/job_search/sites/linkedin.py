@@ -1,6 +1,6 @@
 from typing import Tuple, List
 
-from job_search.model import Listing, Job, SearchTerm
+from job_search.model import Listing, Job, SearchTerm, Location
 from job_search.sites.site import Site
 from job_search.util import get_page_soup
 
@@ -41,6 +41,20 @@ class LinkedIn(Site):
 
     def adapt_term(self, term: str) -> str:
         return term.replace("-", "%20")
+
+    def add_location(self, query_string: str, location: Location) -> str:
+        # As far as I can tell, these are magic numbers without meaning outside of LinkedIn
+        location_map = {
+            Location.Brisbane: "104468365",
+            Location.Perth: "103392068",
+            Location.Darwin: "102342003",
+            Location.Hobart: "101413980",
+            Location.Adelaide: "107042567",
+            Location.Melbourne: "100992797",
+            Location.Sydney: "104769905",
+            Location.Australia: "101452733",
+        }
+        return query_string + "&geoId=" + location_map[location]
 
     def extract_info(self, job) -> Tuple[Listing, Job] | None:
         links = job.find_all("a")

@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from bs4 import Tag
 
-from job_search.model import Listing, Job, SearchTerm
+from job_search.model import Listing, Job, SearchTerm, Location
 from job_search.sites.site import Site, NotSupportedError
 from job_search.util import get_page_soup
 
@@ -42,6 +42,19 @@ class Jora(Site):
 
     def adapt_term(self, term: str) -> str:
         return term.replace("-", "+")
+
+    def add_location(self, query_string: str, location: Location) -> str:
+        location_map = {
+            Location.Brisbane: "Brisbane+QLD",
+            Location.Perth: "Perth+WA",
+            Location.Darwin: "Darwin+NT",
+            Location.Hobart: "Hobart+TAS",
+            Location.Adelaide: "Adelaide+SA",
+            Location.Melbourne: "Melbourne+VIC",
+            Location.Sydney: "Sydney+NSW",
+            Location.Australia: "Australia",
+        }
+        return query_string + "&l=" + location_map[location]
 
     def extract_info(self, job) -> Tuple[Listing, Job]:
         link = job["href"]

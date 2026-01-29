@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 from bs4 import Tag
 
-from job_search.model import Listing, Job, SearchTerm
+from job_search.model import Listing, Job, SearchTerm, Location
 from job_search.sites.site import Site
 from job_search.util import get_page_soup
 
@@ -30,6 +30,20 @@ class Seek(Site):
         matches = [self.extract_info(x) for x in matches]
 
         return matches
+
+    def add_location(self, query_string: str, location: Location) -> str:
+        location_map = {
+            Location.Brisbane: "in-All-Brisbane-QLD",
+            Location.Perth: "in-All-Perth-WA",
+            Location.Darwin: "in-All-Darwin-NT",
+            Location.Hobart: "in-All-Hobart-TAS",
+            Location.Adelaide: "in-All-Adelaide-SA",
+            Location.Melbourne: "in-All-Melbourne-VIC",
+            Location.Sydney: "in-All-Sydney-NSW",
+            Location.Australia: "in-All-Australia",
+        }
+        index = query_string.index("?")
+        return query_string[:index] + location_map[location] + query_string[index:]
 
     def extract_info(self, job) -> Tuple[Listing, Job]:
         link = job["href"]

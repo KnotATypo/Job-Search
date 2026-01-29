@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import PageCount, Job, Listing, JobToListing, SearchTerm, User
+from job_search.model import PageCount, Job, Listing, JobToListing, SearchTerm, User, Location
 from job_search.util import get_fuzzy_job
 
 HTML_PARSER = "html.parser"
@@ -116,6 +116,7 @@ class Site:
         """
         query_string = self.QUERY_URL.replace("%%QUERY%%", self.adapt_term(query.term))
         query_string = query_string.replace("%%PAGE%%", str(page_number))
+        query_string = self.add_location(query_string, query.location)
         if query.remote:
             query_string = self.add_remote_filter(query_string)
         return query_string
@@ -128,6 +129,15 @@ class Site:
         term -- The string to adapt.
         """
         return term
+
+    def add_location(self, query_string: str, location: Location) -> str:
+        """
+        Adds the location to the query string.
+
+        query_string -- The partially constructed query string.
+        location -- The location enum to add to the query string.
+        """
+        raise NotImplementedError
 
     def get_listings_from_page(self, query: SearchTerm, page_number) -> List[Tuple[Listing, Job]]:
         """
