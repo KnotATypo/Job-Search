@@ -9,123 +9,38 @@
             <input type="text" id="new-term" class="term-input" placeholder="Add new search term" required>
             <button type="submit" class="btn btn-success">Add</button>
         </form>
-        <ul id="terms-list" class="terms-list"></ul>
+        <ul id="terms-list" class="terms-list">
+            {% for term in terms %}
+                <li class="term-row">
+                    <div class="term-left">
+                        <div class="term-label">
+                            <input type="checkbox" {% if term.remote %}checked{% endif %}
+                                   title="Only include remote jobs for '{{ term.term }}' (currently {{ term.remote }})"
+                                   class="term-checkbox" onchange="handleRemoteToggle({{ term.id }}, this)">
+                            <span class="term-text">{{ term.term }}</span>
+                            <button class="btn btn-danger btn-sm" onclick="deleteTerm({{ term.id }}, this)">Delete
+                            </button>
+                            {% if term.remote %}
+                                <span class="remote-badge"
+                                      title="This term will only return fully-remote roles (onsite/hybrid excluded)">REMOTE ONLY</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
     <script>
-        async function fetchSearchTerms() {
-            const res = await fetch('/search_terms');
-            if (!res.ok) throw new Error('Failed to fetch search terms');
-            return await res.json();
-        }
-
-        function createRemoteBadge() {
-            const b = document.createElement('span');
-            b.className = 'remote-badge';
-            b.textContent = 'REMOTE ONLY';
-            b.title = 'This term will only return fully-remote roles (onsite/hybrid excluded)';
-            return b;
-        }
-
-        function handleRemoteToggle(e) {
-            const checkbox = e.target;
-            const checked = checkbox.checked;
-            const id = checkbox.dataset.termId;
-            // disable while updating
+        function handleRemoteToggle(term_id, checkbox) {
             checkbox.disabled = true;
-            fetch('/search_terms/' + encodeURIComponent(id) + '/remote', {
+            fetch('/search_terms/' + encodeURIComponent(term_id) + '/remote', {
                 method: 'PATCH',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({remote: checked})
+                body: JSON.stringify({remote: checkbox.checked})
             })
-                .then(res => res.json())
-                .then(json => {
-                    if (!json || json.error) {
-                        alert('Failed to update remote: ' + (json && json.error ? json.error : 'unknown'));
-                        // revert
-                        checkbox.checked = !checked;
-                    } else {
-                        // Update badge state according to server response
-                        const parentLabel = checkbox.closest('.term-label');
-                        if (json.remote) {
-                            // append badge if missing
-                            if (!parentLabel.querySelector('.remote-badge')) {
-                                parentLabel.appendChild(createRemoteBadge());
-                            }
-                            checkbox.title = `Only include remote jobs for "${json.term}" (currently ON)`;
-                        } else {
-                            const existing = parentLabel.querySelector('.remote-badge');
-                            if (existing) existing.remove();
-                            checkbox.title = `Only include remote jobs for "${json.term}" (currently OFF)`;
-                        }
-                    }
-                })
-                .catch(() => {
-                    alert('Network error while updating remote');
-                    checkbox.checked = !checked;
-                })
-                .finally(() => {
-                    checkbox.disabled = false;
+                .then(() => {
+                    location.reload();
                 });
-        }
-
-        function createTermRow(obj) {
-            const li = document.createElement('li');
-            li.className = 'term-row';
-
-            // Left container: checkbox + label (inline)
-            const left = document.createElement('div');
-            left.className = 'term-left';
-
-            // Inline label to wrap checkbox and text for better click target
-            const termLabel = document.createElement('label');
-            termLabel.className = 'term-label';
-
-            // Native checkbox for remote
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = !!obj.remote;
-            checkbox.dataset.termId = obj.id;
-            checkbox.title = `Only include remote jobs for "${obj.term}" (currently ${obj.remote ? 'ON' : 'OFF'})`;
-            checkbox.setAttribute('aria-label', `Only include remote jobs for ${obj.term}`);
-            // point to explanatory help text for screen readers
-            checkbox.setAttribute('aria-describedby', 'toggle-help');
-            checkbox.className = 'term-checkbox';
-
-            const labelText = document.createElement('span');
-            labelText.className = 'term-text';
-            labelText.textContent = obj.term;
-
-            termLabel.appendChild(checkbox);
-            termLabel.appendChild(labelText);
-
-            // Small badge shown when remote flag is on
-            if (obj.remote) {
-                termLabel.appendChild(createRemoteBadge());
-            }
-
-            left.appendChild(termLabel);
-
-            // Delete button (keeps existing delete-by-term behavior)
-            const delBtn = document.createElement('button');
-            delBtn.textContent = 'Delete';
-            delBtn.className = 'btn btn-danger btn-sm';
-            delBtn.onclick = () => deleteTerm(obj.term);
-
-            // On change, PATCH remote flag
-            checkbox.addEventListener('change', handleRemoteToggle);
-
-            li.appendChild(left);
-            li.appendChild(delBtn);
-            return li;
-        }
-
-        async function fetchTerms() {
-            const terms = await fetchSearchTerms();
-            const list = document.getElementById('terms-list');
-            list.innerHTML = '';
-            terms.forEach(obj => {
-                list.appendChild(createTermRow(obj));
-            });
         }
 
         function addTerm(e) {
@@ -137,17 +52,19 @@
                 body: 'term=' + encodeURIComponent(term)
             })
                 .then(() => {
-                    document.getElementById('new-term').value = '';
-                    fetchTerms();
+                    location.reload();
                 });
         }
 
-        function deleteTerm(term) {
-            fetch('/search_terms/' + encodeURIComponent(term), {method: 'DELETE'})
-                .then(() => fetchTerms());
+        function deleteTerm(term_id, btn) {
+            if (!confirm('Delete this search term?')) return;
+            btn.disabled = true;
+            fetch('/search_terms/' + encodeURIComponent(term_id), {method: 'DELETE'})
+                .then(() => {
+                    location.reload();
+                });
         }
 
         document.getElementById('add-term-form').addEventListener('submit', addTerm);
-        window.onload = fetchTerms;
     </script>
 {% endblock %}

@@ -10,6 +10,7 @@ from peewee import OperationalError
 from waitress import serve
 
 from job_search import util
+
 from job_search.clean import clean
 from job_search.create_summary import create_summary
 from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm
@@ -289,11 +290,10 @@ def add_search_term():
         return jsonify({"error": str(e)}), 400
 
 
-@app.route("/search_terms/<term>", methods=["DELETE"])
+@app.route("/search_terms/<term_id>", methods=["DELETE"])
 @require_user
-def delete_search_term(term):
-    _, user_id = get_current_user()
-    q = SearchTerm.delete().where((SearchTerm.term == term) & (SearchTerm.user == user_id))
+def delete_search_term(term_id):
+    q = SearchTerm.delete().where(SearchTerm.id == term_id)
     deleted = q.execute()
     return jsonify({"deleted": deleted})
 
@@ -303,26 +303,22 @@ def toggle_search_term_remote(term_id):
     data = request.get_json(silent=True)
     if not data or "remote" not in data:
         return jsonify({"error": "Invalid payload"}), 400
-    remote_val = data.get("remote")
-    if not isinstance(remote_val, bool):
-        # Accept strings like 'true'/'false' as well
-        if isinstance(remote_val, str):
-            remote_val = remote_val.lower() == "true"
-        else:
-            return jsonify({"error": "Invalid remote value"}), 400
+    remote = data["remote"]
 
     st = SearchTerm.get_or_none((SearchTerm.id == term_id))
     if not st:
         return jsonify({"error": "Search term not found"}), 404
 
-    st.remote = remote_val
+    st.remote = remote
     st.save()
     return jsonify({"success": True, "id": st.id, "term": st.term, "remote": bool(st.remote)})
 
 
 @app.route("/manage_search_terms")
 def manage_search_terms():
-    return render_template("manage_search_terms.html")
+    _, user_id = get_current_user()
+    terms = SearchTerm.select().where(SearchTerm.user == user_id)
+    return render_template("manage_search_terms_new.html", terms=terms)
 
 
 @app.route("/blacklist_terms", methods=["GET"])
