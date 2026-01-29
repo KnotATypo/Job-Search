@@ -3,8 +3,8 @@ from typing import List, Tuple
 
 from bs4 import Tag
 
-from job_search.model import Listing, Job
-from job_search.sites.site import Site, NotSupportedError, Query
+from job_search.model import Listing, Job, SearchTerm
+from job_search.sites.site import Site, NotSupportedError
 from job_search.util import get_page_soup
 
 
@@ -24,7 +24,7 @@ class Jora(Site):
             return ""
         return body.text
 
-    def get_listings_from_page(self, query: Query, page_number) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchTerm, page_number: int) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(query.term.replace("-", "+"), query.remote, page_number)
         soup = get_page_soup(link)
         if soup.text.find("We have looked through all the results for you") != -1:

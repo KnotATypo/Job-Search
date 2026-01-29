@@ -1,27 +1,15 @@
-from dataclasses import dataclass
 from typing import List, Tuple, Dict
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import PageCount, Job, Listing, JobToListing
+from job_search.model import PageCount, Job, Listing, JobToListing, SearchTerm, User
 from job_search.util import get_fuzzy_job
 
 HTML_PARSER = "html.parser"
 
 load_dotenv()
-
-
-@dataclass
-class Query:
-    """
-    Represents a job search query.
-    """
-
-    term: str
-    user_id: int
-    remote: bool
 
 
 class NotSupportedError(Exception):
@@ -49,13 +37,13 @@ class Site:
         self.LISTING_URL = listing_url
         self.SITE_STRING = site_string.lower()
 
-    def download_new_listings(self, query: Query) -> None:
+    def download_new_listings(self, query: SearchTerm) -> None:
         """
         Download new listings by iterating through pages using the QUERY_URL, incrementing the page.
 
         query -- The Query object containing the search term, username, and remote filter.
         """
-        friendly_query = f"{query.term}, Remote: {query.remote}"
+        friendly_query = f"{query.term}, {query.location}" + ", Remote" if query.remote else ""
         page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=friendly_query)[0]
         expected_pages = page_count.pages
 
@@ -70,7 +58,7 @@ class Site:
                 listings = self.get_listings_from_page(query, page_num)
                 if len(listings) == 0:
                     break
-                self.save_listings(listings, query.user_id)
+                self.save_listings(listings, query.user)
                 page_num += 1
                 if page_num > expected_pages:
                     pbar.total += 1
@@ -79,7 +67,7 @@ class Site:
         page_count.pages = page_num
         page_count.save()
 
-    def save_listings(self, listings: List[Tuple[Listing, Job]], user_id: int) -> None:
+    def save_listings(self, listings: List[Tuple[Listing, Job]], user: User) -> None:
         """
         Saves the provided listings and jobs into the database and writes the body of the listing to the filesystem.
 
@@ -111,11 +99,11 @@ class Site:
                 # Sometimes even if the listing exists, the file might not
                 util.write_description(listing, self)
 
-        existing_jobs = Job.select().where(Job.user == user_id)
+        existing_jobs = Job.select().where(Job.user == user.id)
         # Sometimes job titles/companies have different casing/punctuation
         existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
         for listing, job in listings:
-            job.user = user_id
+            job.user = user
             write_listing(job, listing, existing_jobs)
 
     def build_page_link(self, term: str, remote: bool, page_number: int):
@@ -131,7 +119,7 @@ class Site:
             query_string = self.add_remote_filter(query_string)
         return query_string
 
-    def get_listings_from_page(self, query: Query, page_number) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchTerm, page_number) -> List[Tuple[Listing, Job]]:
         """
         Retrieves (Listing, Job) tuples from a given page number.
 

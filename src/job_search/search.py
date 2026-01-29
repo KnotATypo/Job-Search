@@ -4,7 +4,7 @@ from job_search.model import SearchTerm
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
-from job_search.sites.site import Query, NotSupportedError
+from job_search.sites.site import NotSupportedError
 
 
 def search():
@@ -15,7 +15,7 @@ def search():
     for site in tqdm(sites, desc="Sites", unit="site"):
         for st in tqdm(search_terms, desc="Terms", unit="term", leave=False):
             try:
-                site.download_new_listings(Query(st.term, st.user, st.remote))
+                site.download_new_listings(st)
             except NotSupportedError:
                 # Some sites do not support certain filters; skip these
                 pass
