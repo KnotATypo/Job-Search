@@ -4,7 +4,6 @@
 }
 
 :root {
-    /* Dark mode colors (always on) */
     --primary-color: #1e3a8a; /* Darker blue for header/footer */
     --success-color: #065f46; /* Darker green for success buttons */
     --danger-color: #991b1b; /* Darker red for danger buttons */
@@ -17,6 +16,15 @@
     --border-color: #444;
 }
 
+header, footer, .nav-link-username-change {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+}
+
+.btn, .nav-link, .nav-link-username-change {
+    transition: background 0.2s, color 0.2s;
+}
+
 body {
     font-family: 'Calibri', 'Arial', sans-serif;
     background-color: var(--bg-color);
@@ -26,10 +34,7 @@ body {
     line-height: 1.6;
 }
 
-/* Header */
 header {
-    background-color: var(--primary-color);
-    color: var(--light-text);
     padding: 1rem;
     text-align: center;
 }
@@ -54,14 +59,12 @@ header h1 {
     transition: color 0.3s;
 }
 
-/* Main Content */
 main {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
 }
 
-/* Flash Messages */
 .flash-messages {
     margin-bottom: 1.5rem;
 }
@@ -74,7 +77,6 @@ main {
     border-radius: 4px;
 }
 
-/* Buttons */
 .btn {
     display: inline-block;
     margin: 0.5rem 0;
@@ -87,17 +89,14 @@ main {
     font-size: 1rem;
     cursor: pointer;
     font-weight: 500;
-    transition: background 0.2s, color 0.2s;
 }
 
-/* Secondary button: subtle bordered button for non-primary actions */
 .btn-secondary {
     background: rgba(255, 255, 255, 0.03);
     color: var(--light-text);
     border: 1px solid var(--border-color);
 }
 
-/* Smaller variant */
 .btn-sm {
     padding: 0.25rem 0.6rem;
     font-size: 0.88rem;
@@ -130,7 +129,6 @@ main {
     width: 100%;
 }
 
-/* Cards */
 .card {
     background-color: var(--card-bg-color);
     border-radius: 8px;
@@ -160,16 +158,13 @@ main {
     margin-bottom: 1rem;
 }
 
-/* Footer */
 footer {
-    background-color: var(--primary-color);
     color: var(--light-text);
     text-align: center;
     padding: 1rem;
     margin-top: 2rem;
 }
 
-/* Home Page */
 .workflow-stages {
     display: flex;
     flex-direction: column;
@@ -183,7 +178,6 @@ footer {
     font-weight: bold;
 }
 
-/* Job Pages */
 .job-info {
     margin-bottom: 2rem;
 }
@@ -219,14 +213,12 @@ footer {
     margin-top: 2rem;
 }
 
-/* Progress indicator */
 .progress {
     text-align: right;
     color: var(--light-text);
     font-style: italic;
 }
 
-/* Status selector */
 .status-selector {
     margin-top: 1.5rem;
 }
@@ -240,7 +232,6 @@ footer {
     color: var(--text-color);
 }
 
-/* Navigation Bar */
 .navbar {
     background: var(--card-bg-color);
     display: flex;
@@ -257,24 +248,17 @@ footer {
     font-weight: 500;
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
-    transition: background 0.2s, color 0.2s;
 }
 
-/* Change Username link in navbar */
 .nav-link-username-change {
     margin-left: 1rem;
-    background: var(--primary-color);
-    color: var(--light-text);
     font-size: 0.98rem;
     padding: 0.25rem 0.9rem;
     border-radius: 4px;
-    transition: background 0.2s, color 0.2s;
 }
 
-/* Card for Manage Search Terms */
-.card.search-terms-card {
+.card.search-terms-card, .card.set-username-card {
     background: var(--card-bg-color);
-    max-width: 420px;
     margin: 2rem auto;
     padding: 2rem 2rem 1.5rem 2rem;
     border-radius: 12px;
@@ -282,7 +266,10 @@ footer {
     border: 1px solid var(--border-color);
 }
 
-.card.search-terms-card h2 {
+.card.search-terms-card { max-width: 420px; }
+.card.set-username-card { max-width: 400px; }
+
+.card.search-terms-card h2, .card.set-username-card h2 {
     margin-top: 0;
     margin-bottom: 1.5rem;
     text-align: center;
@@ -312,34 +299,16 @@ footer {
 }
 
 .terms-list li {
-    position: relative; /* allow absolute positioning removed previously */
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* left-align text; options button will be a flex child placed to the right */
+    justify-content: flex-start;
     background: var(--bg-color);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     margin-bottom: 0.5rem;
-    padding: 0.5rem 0.75rem; /* normal row padding; button is in flow so no extra right padding needed */
+    padding: 0.5rem 0.75rem;
     color: var(--text-color);
-}
-
-/* Username Card and Form */
-.card.set-username-card {
-    background: var(--card-bg-color);
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 2rem 2rem 1.5rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px var(--shadow-color);
-    border: 1px solid var(--border-color);
-}
-
-.set-username-card h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    color: var(--light-text);
 }
 
 .set-username-form {
@@ -354,7 +323,6 @@ footer {
     margin-bottom: 0.2rem;
 }
 
-/* Username in Navbar */
 .nav-username {
     margin-left: auto;
     color: var(--medium-text);
@@ -375,7 +343,6 @@ footer {
     }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .action-buttons {
         flex-direction: column;
@@ -390,7 +357,6 @@ footer {
     }
 }
 
-/* Applied Jobs Page Responsive Styles */
 .applied-jobs-list {
     list-style: none;
     padding: 0;
@@ -454,7 +420,6 @@ footer {
     }
 }
 
-/* Accessibility helper to visually hide labels but keep them for screen readers */
 .visually-hidden {
     position: absolute;
     height: 1px;
@@ -464,7 +429,6 @@ footer {
     white-space: nowrap;
 }
 
-/* Ensure term layout aligns content and the options button correctly */
 .term-label {
     display: flex;
     align-items: center; /* vertical centering */
@@ -486,7 +450,6 @@ footer {
 }
 
 .options-btn {
-    /* layout: make it a normal flex child so it's part of the row and vertically centered */
     position: relative; /* part of the row flow */
     display: inline-flex;
     align-items: center;
@@ -494,14 +457,12 @@ footer {
     margin-left: auto; /* push to the far right */
     align-self: center; /* ensure the button itself is centered in the row */
 
-    /* size & shape */
     width: 40px;
     height: 40px;
     padding: 6px;
     box-sizing: border-box;
     border-radius: 50%;
 
-    /* visual */
     background: rgba(30,61,138,0.36);
     color: var(--light-text);
     border: 1px solid rgba(255,255,255,0.16);
@@ -512,7 +473,6 @@ footer {
     transition: background 0.12s, border-color 0.12s, transform 0.06s, box-shadow 0.08s;
 }
 
-/* Settings modal (moved from manage_search_terms.html */
 #settings-modal {
     display: none;
     position: fixed;
@@ -570,7 +530,6 @@ footer {
     background: rgba(255, 255, 255, 0.03);
 }
 
-/* Small utility to ensure the modal overlay and content use flex centering */
 #settings-modal[style*="display:flex"] {
     display: flex;
 }
