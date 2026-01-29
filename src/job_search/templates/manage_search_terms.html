@@ -14,34 +14,56 @@
                 <li class="term-row">
                     <div class="term-left">
                         <div class="term-label">
-                            <input type="checkbox" {% if term.remote %}checked{% endif %}
-                                   title="Only include remote jobs for '{{ term.term }}' (currently {{ term.remote }})"
-                                   class="term-checkbox" onchange="handleRemoteToggle({{ term.id }}, this)">
                             <span class="term-text">{{ term.term }}</span>
-                            <button class="btn btn-danger btn-sm" onclick="deleteTerm({{ term.id }}, this)">Delete
+                            <button class="btn btn-secondary btn-sm"
+                                    onclick="openSettings({{ term.id }}, '{{ term.term }}', {{ 'true' if term.remote else 'false' }}, '{{ term.location.value }}', this)">
+                                Options
                             </button>
-                            {% if term.remote %}
-                                <span class="remote-badge"
-                                      title="This term will only return fully-remote roles (onsite/hybrid excluded)">REMOTE ONLY</span>
-                            {% endif %}
                         </div>
                     </div>
                 </li>
             {% endfor %}
         </ul>
     </div>
+
+    <!-- Modal for configuring a search term -->
+    <div id="settings-modal">
+        <div id="settings-overlay"></div>
+        <div class="modal-content card" style="position:relative;">
+            <button type="button" aria-label="Close" onclick="closeSettings()"
+                    style="position:absolute; top:8px; right:8px; background:transparent; border:none; font-size:20px; cursor:pointer;">
+                &times;
+            </button>
+            <h3 style="margin-top:0;">Configure Search Term</h3>
+            <form id="settings-form">
+                <input type="hidden" id="settings-term-id">
+                <div style="margin-bottom:8px;"><strong>Term: </strong><span id="settings-term-text"></span></div>
+                <div style="margin-bottom:8px;"><label><input type="checkbox" id="settings-remote">Remote only</label>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <label>Location:
+                        <select id="settings-location" name="location">
+                            <option value="Australia">Australia</option>
+                            <option value="Brisbane">Brisbane</option>
+                            <option value="Melbourne">Melbourne</option>
+                            <option value="Sydney">Sydney</option>
+                            <option value="Adelaide">Adelaide</option>
+                            <option value="Perth">Perth</option>
+                            <option value="Darwin">Darwin</option>
+                            <option value="Hobart">Hobart</option>
+                        </select>
+                    </label>
+                </div>
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-danger" id="modal-delete-btn">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        function handleRemoteToggle(term_id, checkbox) {
-            checkbox.disabled = true;
-            fetch('/search_terms/' + encodeURIComponent(term_id) + '/remote', {
-                method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({remote: checkbox.checked})
-            })
-                .then(() => {
-                    location.reload();
-                });
-        }
+        document.getElementById('add-term-form').addEventListener('submit', addTerm);
 
         function addTerm(e) {
             e.preventDefault();
@@ -56,15 +78,69 @@
                 });
         }
 
-        function deleteTerm(term_id, btn) {
+        // Settings modal logic
+        let _settingsInvokedButton = null;
+
+        function openSettings(term_id, term, remote, location, btn) {
+            _settingsInvokedButton = btn;
+
+            document.getElementById('settings-term-id').value = term_id;
+            document.getElementById('settings-term-text').textContent = term;
+            document.getElementById('settings-remote').checked = remote;
+            document.getElementById('settings-location').value = location;
+
+            // Show modal
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = 'flex';
+            // Focus first control
+            setTimeout(() => document.getElementById('settings-remote').focus(), 20);
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = 'none';
+            if (_settingsInvokedButton) {
+                _settingsInvokedButton.disabled = false;
+                _settingsInvokedButton = null;
+            }
+        }
+
+        // Save settings
+        document.getElementById('settings-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const id = document.getElementById('settings-term-id').value;
+            const payload = {
+                remote: document.getElementById('settings-remote').checked,
+                location: document.getElementById('settings-location').value || null,
+                exclude_keywords: document.getElementById('settings-exclude').value || null
+            };
+
+            fetch('/search_terms/' + encodeURIComponent(id), {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
+                .then(() => {
+                    // If backend returns success, reload. Otherwise still try to reload to reflect changes.
+                    location.reload();
+                })
+                .catch(() => {
+                    location.reload();
+                });
+        });
+
+        // Delete from modal
+        document.getElementById('modal-delete-btn').addEventListener('click', function () {
+            const id = document.getElementById('settings-term-id').value;
             if (!confirm('Delete this search term?')) return;
-            btn.disabled = true;
-            fetch('/search_terms/' + encodeURIComponent(term_id), {method: 'DELETE'})
+            this.disabled = true;
+            fetch('/search_terms/' + encodeURIComponent(id), {method: 'DELETE'})
                 .then(() => {
                     location.reload();
                 });
-        }
+        });
 
-        document.getElementById('add-term-form').addEventListener('submit', addTerm);
+        // Click outside modal content closes it
+        document.getElementById('settings-overlay').addEventListener('click', closeSettings);
     </script>
 {% endblock %}

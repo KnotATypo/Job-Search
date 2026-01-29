@@ -584,3 +584,42 @@ footer {
 .term-checkbox::after {
     display: none;
 }
+
+/* Settings modal (moved from manage_search_terms.html */
+#settings-modal { display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center; }
+#settings-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+#settings-modal .modal-content.card {
+    position: relative;
+    max-width: 520px;
+    width: 90%;
+    margin: auto;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 6px 24px var(--shadow-color);
+    background: var(--card-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+#settings-modal .modal-content.card input[type="text"],
+#settings-modal .modal-content.card input[type="search"],
+#settings-modal .modal-content.card textarea {
+    width: 100%;
+    padding: 0.45rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg-color);
+    color: var(--text-color);
+}
+#settings-modal .modal-content.card label { color: var(--medium-text); }
+#settings-modal .modal-content.card .btn { margin: 0; }
+#settings-modal .modal-content.card .btn-secondary {
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+#settings-modal .modal-content.card .btn-secondary:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+/* Small utility to ensure the modal overlay and content use flex centering */
+#settings-modal[style*="display:flex"] { display: flex; }
