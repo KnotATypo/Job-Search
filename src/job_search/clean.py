@@ -102,6 +102,13 @@ def missing_descriptions():
 
     clean_listings = []
     for listing in tqdm(listings, desc="Looking for Descriptions", unit="listing"):
+        path = util.description_path(listing)
+        # Remove any downloaded descriptions without any content
+        if os.path.exists(path):
+            with open(path) as f:
+                if f.read() == "":
+                    os.remove(path)
+
         if not util.description_downloaded(listing):
             clean_listings.append(listing)
     listings = clean_listings
