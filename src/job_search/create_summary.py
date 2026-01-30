@@ -55,13 +55,14 @@ def create_summary():
         l.save()
 
     need_summary = Listing.select().where(Listing.id << need_summary)
+    # Remove any listings that we don't have a description for. This will typically be archived jobs
+    need_summary = [listing for listing in need_summary if os.path.exists(util.description_path(listing))]
     for listing in tqdm(need_summary):
         try:
             with open(util.description_path(listing)) as f:
                 summarise_and_save(f.read(), listing)
-        except FileNotFoundError as e:
-            # This will fail if the listing has been archived, but jobs old enough to be archived are no longer relevant
-            print(f"File for listing {listing.id} not found: {e}")
+        except Exception as e:
+            print(f"Error in creating summary for {listing.id}:", type(e).__name__)
             summarise_and_save("", listing)
 
 
