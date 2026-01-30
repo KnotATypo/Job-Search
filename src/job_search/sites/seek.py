@@ -43,7 +43,7 @@ class Seek(Site):
             Location.Australia: "in-All-Australia",
         }
         index = query_string.index("?")
-        return query_string[:index] + location_map[location] + query_string[index:]
+        return query_string[:index] + "/" + location_map[location] + query_string[index:]
 
     def extract_info(self, job) -> Tuple[Listing, Job]:
         link = job["href"]
