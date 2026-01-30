@@ -19,6 +19,8 @@ if model_name not in [m.model for m in client.list().models]:
     print(f"Model {model_name} not found, please ensure this model exists")
     exit(1)
 
+SUMMARY_PROMPT = os.getenv("SUMMARY_PROMPT")
+
 
 def create_summary():
     connection = psycopg2.connect(
@@ -85,8 +87,8 @@ def summary(description):
         model=model_name,
         messages=[
             {
-                "role": "user",
-                "content": "Please create a single sentence summary of this job description without any corporate fluff",
+                "role": "system",
+                "content": SUMMARY_PROMPT,
             },
             {"role": "user", "content": description},
         ],

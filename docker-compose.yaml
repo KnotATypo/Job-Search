@@ -14,6 +14,7 @@ services:
       DATABASE_HOST:
       OLLAMA_HOST:
       SUMMARY_MODEL_NAME: 'qwen3:1.7b'
+      SUMMARY_PROMPT:
 
 volumes:
   listing-data:

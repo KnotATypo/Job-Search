@@ -47,7 +47,7 @@ The database consists of the following tables:
 
 Create a `.env` file in the project root with the following template:
 
-````dotenv
+```dotenv
 DATA_DIRECTORY=
 APP_SECRET_KEY=
 
@@ -58,7 +58,8 @@ DATABASE_HOST=
 
 OLLAMA_HOST=
 SUMMARY_MODEL_NAME=qwen3:1.7b
-````
+SUMMARY_PROMPT="Please create a single sentence summary of this job description without any corporate fluff. Focus on technical details such as required experience and the details of the work."
+```
 
 The existing variables are suggested defaults; modify them as needed.
 
@@ -67,6 +68,7 @@ The existing variables are suggested defaults; modify them as needed.
 - `DATABASE_*`: Database connection details.
 - `OLLAMA_HOST`: The host of the Ollama instance to use for summary generation.
 - `SUMMARY_MODEL_NAME`: The Ollama model used for summarising job descriptions.
+- `SUMMARY_PROMPT`: The prompt used to get the model to create a summary
 
 ## Usage
 
