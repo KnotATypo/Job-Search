@@ -43,7 +43,7 @@ class Site:
 
         query -- The Query object containing the search term, username, and remote filter.
         """
-        friendly_query = f"{query.term}, {query.location}" + ", Remote" if query.remote else ""
+        friendly_query = f"{query.term}, {query.location.name}" + (", Remote" if query.remote else "")
         page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=friendly_query)[0]
         expected_pages = page_count.pages
 
