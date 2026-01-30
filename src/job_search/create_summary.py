@@ -65,19 +65,21 @@ def create_summary():
     # Remove any listings that we don't have a description for. This will typically be archived jobs
     need_summary = [listing for listing in need_summary if os.path.exists(util.description_path(listing))]
     for listing in tqdm(need_summary):
-        try:
-            with open(util.description_path(listing)) as f:
-                summarise_and_save(f.read(), listing)
-        except Exception as e:
-            print(f"Error in creating summary for {listing.id}:", type(e).__name__)
-            summarise_and_save("", listing)
+        summarise_and_save(listing)
 
 
-def summarise_and_save(description: str, listing: Listing):
-    if description == "" or description == b"":
+def summarise_and_save(listing: Listing):
+    try:
+        with open(util.description_path(listing)) as f:
+            description = f.read()
+        if description != "":
+            response = summary(str(description))
+        else:
+            response = "N/A"
+    except Exception as e:
+        print(f"Error in creating summary for {listing.id}:", type(e).__name__)
         response = "N/A"
-    else:
-        response = summary(str(description))
+
     listing.summary = response
     listing.save()
 
