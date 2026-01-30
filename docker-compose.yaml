@@ -13,7 +13,7 @@ services:
       DATABASE_PASSWORD:
       DATABASE_HOST:
       OLLAMA_HOST:
-      SUMMARY_MODEL_NAME: 'Qwen/Qwen2.5-1.5B-Instruct'
+      SUMMARY_MODEL_NAME: 'qwen3:1.7b'
 
 volumes:
   listing-data:

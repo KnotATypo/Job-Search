@@ -57,7 +57,7 @@ DATABASE_PASSWORD=
 DATABASE_HOST=
 
 OLLAMA_HOST=
-SUMMARY_MODEL_NAME=qwen3:0.6b
+SUMMARY_MODEL_NAME=qwen3:1.7b
 ````
 
 The existing variables are suggested defaults; modify them as needed.
