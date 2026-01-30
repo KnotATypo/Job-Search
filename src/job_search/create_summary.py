@@ -2,17 +2,22 @@ import os
 
 import psycopg2
 from dotenv import load_dotenv
+from ollama import Client
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from job_search import util
 from job_search.model import Listing
 
 load_dotenv()
 
+# Connect to ollama and ensure the requested model is available
+client = Client(
+    host=os.getenv("OLLAMA_HOST"),
+)
 model_name = os.getenv("SUMMARY_MODEL_NAME")
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", device_map="auto")
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+if model_name not in [m.model for m in client.list().models]:
+    print(f"Model {model_name} not found, please ensure this model exists")
+    exit(1)
 
 
 def create_summary():
@@ -71,28 +76,23 @@ def summarise_and_save(description: str, listing: Listing):
         response = "N/A"
     else:
         response = summary(str(description))
-        if "!!!!!!" in response:
-            response = summary(str(description))
     listing.summary = response
     listing.save()
 
 
 def summary(description):
-    messages = [
-        {
-            "role": "system",
-            "content": "Please create a single sentence summary of this job description without any corporate fluff",
-        },
-        {"role": "user", "content": description},
-    ]
-    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
-    generated_ids = model.generate(**model_inputs, max_new_tokens=512)
-    generated_ids = [
-        output_ids[len(input_ids) :] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-    ]
-    response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-    return response
+    response = client.chat(
+        model=model_name,
+        messages=[
+            {
+                "role": "user",
+                "content": "Please create a single sentence summary of this job description without any corporate fluff",
+            },
+            {"role": "user", "content": description},
+        ],
+    )
+
+    return response.message.content
 
 
 if __name__ == "__main__":

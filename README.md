@@ -8,11 +8,13 @@ deprecated due to increased anti-scraping measures.
 
 ### Prerequisites
 
-- PostgreSQL database
 - Python 3.13
 - Chrome or Chromium browser (for web scraping)
+- PostgreSQL
+- Ollama
 
-Setting up these prerequisites is currently outside the scope of this guide.
+Setting up these prerequisites is currently outside the scope of this guide. If you run this application in Docker, both
+PostgreSQL and Ollama are very friendly to also be run together in a docker compose.
 
 ### Database Setup
 
@@ -47,21 +49,24 @@ Create a `.env` file in the project root with the following template:
 
 ````dotenv
 DATA_DIRECTORY=
-SUMMARY_MODEL_NAME=Qwen/Qwen2.5-1.5B-Instruct
 APP_SECRET_KEY=
 
 DATABASE_NAME=job_search
 DATABASE_USER=
 DATABASE_PASSWORD=
 DATABASE_HOST=
+
+OLLAMA_HOST=
+SUMMARY_MODEL_NAME=qwen3:0.6b
 ````
 
 The existing variables are suggested defaults; modify them as needed.
 
 - `DATA_DIRECTORY`: Directory to store job listing text.
-- `SUMMARY_MODEL_NAME`: The Ollama model used for summarising job descriptions.
 - `APP_SECRET_KEY`: A secret key for the application.
 - `DATABASE_*`: Database connection details.
+- `OLLAMA_HOST`: The host of the Ollama instance to use for summary generation.
+- `SUMMARY_MODEL_NAME`: The Ollama model used for summarising job descriptions.
 
 ## Usage
 
