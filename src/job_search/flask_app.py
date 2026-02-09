@@ -95,12 +95,18 @@ def index():
 
 
 @app.route("/triage")
+@app.route("/triage/<job_id>")
 @require_user
-def triage():
+def triage(job_id=None):
     """Triage page for new jobs"""
     _, user_id = get_current_user()
+
+    if job_id is None:
+        job = Job.select().where((Job.status == "new") & (Job.user == user_id)).first()
+        return redirect(url_for("triage", job_id=job.id))
+
     # Get the next job to triage
-    job = Job.select().where((Job.status == "new") & (Job.user == user_id)).first()
+    job = Job.get(Job.id == job_id)
 
     if not job:
         flash("No more jobs to triage!")
