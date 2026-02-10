@@ -102,8 +102,10 @@ def triage(job_id=None):
     _, user_id = get_current_user()
 
     if job_id is None:
-        job = Job.select().where((Job.status == "new") & (Job.user == user_id)).first()
-        return redirect(url_for("triage", job_id=job.id))
+        jobs = list(Job.select().where((Job.status == "new") & (Job.user == user_id)))
+        if len(jobs) == 0:
+            return redirect(url_for("index"))
+        return redirect(url_for("triage", job_id=jobs[0].id))
 
     # Get the next job to triage
     job = Job.get(Job.id == job_id)
