@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="card search-terms-card">
-        <h2>Manage Search Terms</h2>
-        <form id="add-term-form" class="add-term-form">
+    <div class="card search-queries-card">
+        <h2>Manage Search Queries</h2>
+        <form id="add-query-form" class="add-query-form">
             <label for="new-term" class="visually-hidden">New search term</label>
             <input type="text" id="new-term" class="term-input" placeholder="Add new search term" required>
             <button type="submit" class="btn btn-success">Add</button>
         </form>
-        <ul id="terms-list" class="terms-list">
-            {% for term in terms %}
-                <li class="term-row">
-                    <div class="term-label">
-                        <div class="term-main">
-                            <span class="term-text">{{ term.term }}</span>
+        <ul id="queries-list" class="queries-list">
+            {% for query in queries %}
+                <li class="query-row">
+                    <div class="query-label">
+                        <div class="query-main">
+                            <span class="query-text">{{ query.term }}</span>
                         </div>
                         <button type="button" class="btn btn-secondary btn-sm options-btn"
-                                aria-label="Options for {{ term.term }}"
-                                title="Options for {{ term.term }}"
-                                onclick="openSettings({{ term.id }}, '{{ term.term }}', {{ 'true' if term.remote else 'false' }}, '{{ term.location.value }}', this)">
+                                aria-label="Options for {{ query.term }}"
+                                title="Options for {{ query.term }}"
+                                onclick="openSettings({{ query.id }}, '{{ query.term }}', {{ 'true' if query.remote else 'false' }}, '{{ query.location.value }}', this)">
                             <svg class="options-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
                                  focusable="false">
                                 <path fill="currentColor"
@@ -31,7 +31,7 @@
         </ul>
     </div>
 
-    <!-- Modal for configuring a search term -->
+    <!-- Modal for configuring a search query -->
     <div id="settings-modal">
         <div id="settings-overlay"></div>
         <div class="modal-content card" style="position:relative;">
@@ -39,9 +39,9 @@
                     style="position:absolute; top:8px; right:8px; background:transparent; border:none; font-size:20px; cursor:pointer;">
                 &times;
             </button>
-            <h3 style="margin-top:0;" id="settings-term-text"></h3>
+            <h3 style="margin-top:0;" id="settings-query-text"></h3>
             <form id="settings-form">
-                <input type="hidden" id="settings-term-id">
+                <input type="hidden" id="settings-query-id">
                 <div style="margin-bottom:8px;"><label><input type="checkbox" id="settings-remote">Remote only</label>
                 </div>
                 <div style="margin-bottom:8px;">
@@ -67,12 +67,12 @@
     </div>
 
     <script>
-        document.getElementById('add-term-form').addEventListener('submit', addTerm);
+        document.getElementById('add-query-form').addEventListener('submit', addQuery);
 
-        function addTerm(e) {
+        function addQuery(e) {
             e.preventDefault();
             const term = document.getElementById('new-term').value;
-            fetch('/search_terms', {
+            fetch('/search_queries', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: 'term=' + encodeURIComponent(term)
@@ -85,11 +85,11 @@
         // Settings modal logic
         let _settingsInvokedButton = null;
 
-        function openSettings(term_id, term, remote, location, btn) {
+        function openSettings(query_id, term, remote, location, btn) {
             _settingsInvokedButton = btn;
 
-            document.getElementById('settings-term-id').value = term_id;
-            document.getElementById('settings-term-text').textContent = term;
+            document.getElementById('settings-query-id').value = query_id;
+            document.getElementById('settings-query-text').textContent = term;
             document.getElementById('settings-remote').checked = remote;
             document.getElementById('settings-location').value = location;
 
@@ -112,13 +112,13 @@
         // Save settings
         document.getElementById('settings-form').addEventListener('submit', function (e) {
             e.preventDefault();
-            const id = document.getElementById('settings-term-id').value;
+            const id = document.getElementById('settings-query-id').value;
             const payload = {
                 remote: document.getElementById('settings-remote').checked,
                 location: document.getElementById('settings-location').value,
             };
 
-            fetch('/search_terms/' + encodeURIComponent(id), {
+            fetch('/search_queries/' + encodeURIComponent(id), {
                 method: 'PATCH',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
@@ -130,10 +130,10 @@
 
         // Delete from modal
         document.getElementById('modal-delete-btn').addEventListener('click', function () {
-            const id = document.getElementById('settings-term-id').value;
-            if (!confirm('Delete this search term?')) return;
+            const id = document.getElementById('settings-query-id').value;
+            if (!confirm('Delete this search query?')) return;
             this.disabled = true;
-            fetch('/search_terms/' + encodeURIComponent(id), {method: 'DELETE'})
+            fetch('/search_queries/' + encodeURIComponent(id), {method: 'DELETE'})
                 .then(() => {
                     location.reload();
                 });

@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from job_search.model import Listing, Job, SearchTerm
+from job_search.model import Listing, Job, SearchQuery
 from job_search.sites.site import Site
 from job_search.util import get_page_soup
 
@@ -26,7 +26,7 @@ class Indeed(Site):
             body = soup.find("div", attrs={"class": "jobsearch-JobComponent-description"}).text
         return body
 
-    def get_listings_from_page(self, query: SearchTerm, page_number: int) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(query.term.replace("-", "+"), query.remote, page_number * 10)
         soup = get_page_soup(link)
         if soup.find("title").string == "Just a moment...":

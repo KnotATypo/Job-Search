@@ -257,7 +257,7 @@ footer {
     border-radius: 4px;
 }
 
-.card.search-terms-card, .card.set-username-card {
+.card.search-queries-card, .card.set-username-card {
     background: var(--card-bg-color);
     margin: 2rem auto;
     padding: 2rem 2rem 1.5rem 2rem;
@@ -266,17 +266,17 @@ footer {
     border: 1px solid var(--border-color);
 }
 
-.card.search-terms-card { max-width: 420px; }
+.card.search-queries-card { max-width: 420px; }
 .card.set-username-card { max-width: 400px; }
 
-.card.search-terms-card h2, .card.set-username-card h2 {
+.card.search-queries-card h2, .card.set-username-card h2 {
     margin-top: 0;
     margin-bottom: 1.5rem;
     text-align: center;
     color: var(--light-text);
 }
 
-.add-term-form {
+.add-query-form {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
@@ -292,13 +292,13 @@ footer {
     font-size: 1rem;
 }
 
-.terms-list {
+.queries-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.terms-list li {
+.queries-list li {
     position: relative;
     display: flex;
     align-items: center;
@@ -429,21 +429,21 @@ footer {
     white-space: nowrap;
 }
 
-.term-label {
+.query-label {
     display: flex;
     align-items: center; /* vertical centering */
     gap: 0.5rem;
     width: 100%;
 }
 
-.term-main {
+.query-main {
     flex: 1 1 auto; /* take remaining space so options button can sit to the right */
     display: flex;
     align-items: center;
     gap: 0.4rem;
 }
 
-.term-text {
+.query-text {
     display: inline-block;
     vertical-align: middle; /* align with the button */
     line-height: 1.2; /* stable line height */

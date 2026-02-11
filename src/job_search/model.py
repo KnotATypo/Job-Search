@@ -61,7 +61,7 @@ class Job(Model):
     title = TextField()
     company = TextField()
     status = CharField(default="new")
-    user = ForeignKeyField(User, backref="search_terms")
+    user = ForeignKeyField(User)
 
     class Meta:
         database = db
@@ -86,12 +86,12 @@ class Location(Enum):
     Hobart = "Hobart"
 
 
-class SearchTerm(Model):
+class SearchQuery(Model):
     id = AutoField(primary_key=True)
     term = CharField()
     remote = BooleanField(default=False)
     location = EnumField(Location, default=Location.Australia)
-    user = ForeignKeyField(User, backref="search_terms")
+    user = ForeignKeyField(User)
 
     class Meta:
         database = db
@@ -101,10 +101,10 @@ class BlacklistTerm(Model):
     id = AutoField(primary_key=True)
     term = CharField()
     type = CharField()
-    user = ForeignKeyField(User, backref="blacklist_terms")
+    user = ForeignKeyField(User)
 
     class Meta:
         database = db
 
 
-db.create_tables([Job, Listing, JobToListing, PageCount, SearchTerm, BlacklistTerm, User], safe=True)
+db.create_tables([Job, Listing, JobToListing, PageCount, SearchQuery, BlacklistTerm, User], safe=True)

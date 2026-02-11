@@ -13,13 +13,13 @@
     <div id="blacklist-status" style="margin-bottom:8px; color:#555; font-size:0.95rem;"></div>
 
     <button id="run-blacklist" class="btn btn-primary" style="margin-top: 16px;">Run Blacklist Now</button>
-    <div class="card search-terms-card">
+    <div class="card search-queries-card">
         <h2>Manage Blacklist Terms</h2>
-        <form id="add-term-form" class="add-term-form">
+        <form id="add-term-form" class="add-query-form">
             <input type="text" id="new-term" class="term-input" placeholder="Add new blacklist term" required>
             <button type="submit" class="btn btn-success">Add</button>
         </form>
-        <ul id="terms-list" class="terms-list"></ul>
+        <ul id="queries-list" class="queries-list"></ul>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -74,7 +74,7 @@
                             setType('company');
                         }
                         // visual feedback: flash the card border
-                        const card = document.querySelector('.search-terms-card');
+                        const card = document.querySelector('.search-queries-card');
                         if (card) {
                             card.style.transition = 'box-shadow 0.15s ease-in-out';
                             card.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.25)';
@@ -86,7 +86,7 @@
                 }
 
                 function fetchTerms() {
-                    const list = document.getElementById('terms-list');
+                    const list = document.getElementById('queries-list');
                     if (list) list.innerHTML = '<li class="loading">Loading...</li>';
                     const url = '/blacklist_terms?type=' + encodeURIComponent(currentType);
                     console.log('fetchTerms calling', url);

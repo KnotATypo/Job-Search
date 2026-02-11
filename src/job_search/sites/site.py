@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import PageCount, Job, Listing, JobToListing, SearchTerm, User, Location
+from job_search.model import PageCount, Job, Listing, JobToListing, SearchQuery, User, Location
 from job_search.util import get_fuzzy_job
 
 HTML_PARSER = "html.parser"
@@ -37,11 +37,11 @@ class Site:
         self.LISTING_URL = listing_url
         self.SITE_STRING = site_string.lower()
 
-    def download_new_listings(self, query: SearchTerm) -> None:
+    def download_new_listings(self, query: SearchQuery) -> None:
         """
         Download new listings by iterating through pages using the QUERY_URL, incrementing the page.
 
-        query -- The Query object containing the search term, username, and remote filter.
+        query -- The Query object containing information about the current search.
         """
         friendly_query = f"{query.term}, {query.location.name}" + (", Remote" if query.remote else "")
         page_count: PageCount = PageCount.get_or_create(site=self.SITE_STRING, query=friendly_query)[0]
@@ -106,11 +106,11 @@ class Site:
             job.user = user
             write_listing(job, listing, existing_jobs)
 
-    def build_page_link(self, query: SearchTerm, page_number: int):
+    def build_page_link(self, query: SearchQuery, page_number: int):
         """
         Builds a link to a search page using templated QUERY_URL.
 
-        term -- The search term.
+        query -- The search query.
         remote -- Whether to filter for remote jobs.
         page_number -- The page number of the search. Specific incrementing rules (e.g. increments of 10) should be handled before calling this function.
         """
@@ -139,7 +139,7 @@ class Site:
         """
         raise NotImplementedError
 
-    def get_listings_from_page(self, query: SearchTerm, page_number) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchQuery, page_number) -> List[Tuple[Listing, Job]]:
         """
         Retrieves (Listing, Job) tuples from a given page number.
 

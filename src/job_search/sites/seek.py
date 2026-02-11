@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 from bs4 import Tag
 
-from job_search.model import Listing, Job, SearchTerm, Location
+from job_search.model import Listing, Job, SearchQuery, Location
 from job_search.sites.site import Site
 from job_search.util import get_page_soup
 
@@ -23,7 +23,7 @@ class Seek(Site):
             return ""
         return body.contents[0].text
 
-    def get_listings_from_page(self, query: SearchTerm, page_number: int) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(query, page_number)
         soup = get_page_soup(link)
         matches = soup.find_all("a", attrs={"data-automation": "jobTitle"})

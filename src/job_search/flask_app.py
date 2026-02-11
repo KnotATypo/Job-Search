@@ -13,7 +13,7 @@ from job_search import util
 
 from job_search.clean import clean
 from job_search.create_summary import create_summary
-from job_search.model import Job, JobToListing, Listing, SearchTerm, User, BlacklistTerm, Location
+from job_search.model import Job, JobToListing, Listing, SearchQuery, User, BlacklistTerm, Location
 from job_search.search import search
 from job_search.sites.indeed import Indeed
 from job_search.sites.jora import Jora
@@ -271,52 +271,39 @@ def applying_action():
     return redirect(url_for("applying"))
 
 
-@app.route("/search_terms", methods=["GET"])
+@app.route("/search_queries", methods=["POST"])
 @require_user
-def get_search_terms():
-    _, user_id = get_current_user()
-    # Return search terms as objects so the frontend can show metadata like the `remote` flag
-    terms = [
-        {"id": st.id, "term": st.term, "remote": bool(st.remote)}
-        for st in SearchTerm.select().where(SearchTerm.user == user_id)
-    ]
-    return jsonify(terms)
-
-
-@app.route("/search_terms", methods=["POST"])
-@require_user
-def add_search_term():
+def add_search_query():
     term = request.form.get("term")
     if not term:
         return jsonify({"error": "No term provided"}), 400
 
     _, user_id = get_current_user()
     try:
-        st = SearchTerm.create(term=term, user=user_id)
+        st = SearchQuery.create(term=term, user=user_id)
         return jsonify({"success": True, "id": st.id, "term": st.term, "remote": bool(st.remote)})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 
-@app.route("/search_terms/<term_id>", methods=["DELETE"])
-@require_user
-def delete_search_term(term_id):
-    q = SearchTerm.delete().where(SearchTerm.id == term_id)
+@app.route("/search_queries/<query_id>", methods=["DELETE"])
+def delete_search_query(query_id):
+    q = SearchQuery.delete().where(SearchQuery.id == query_id)
     deleted = q.execute()
     return jsonify({"deleted": deleted})
 
 
-@app.route("/search_terms/<term_id>", methods=["PATCH"])
-def toggle_search_term_remote(term_id):
+@app.route("/search_queries/<query_id>", methods=["PATCH"])
+def update_search_query(query_id):
     data = request.get_json()
     if "remote" not in data or "location" not in data:
         return jsonify({"error": "Invalid payload"}), 400
     remote = data["remote"]
     location = data["location"]
 
-    st = SearchTerm.get_or_none((SearchTerm.id == term_id))
+    st = SearchQuery.get_or_none((SearchQuery.id == query_id))
     if not st:
-        return jsonify({"error": "Search term not found"}), 404
+        return jsonify({"error": "Search query not found"}), 404
 
     st.remote = remote
     st.location = Location(location)
@@ -324,11 +311,12 @@ def toggle_search_term_remote(term_id):
     return jsonify({"success": True})
 
 
-@app.route("/manage_search_terms")
-def manage_search_terms():
+@app.route("/manage_search_queries")
+@require_user
+def manage_search_queries():
     _, user_id = get_current_user()
-    terms = SearchTerm.select().where(SearchTerm.user == user_id).order_by(SearchTerm.id)
-    return render_template("manage_search_terms.html", terms=terms)
+    queries = SearchQuery.select().where(SearchQuery.user == user_id).order_by(SearchQuery.id)
+    return render_template("manage_search_queries.html", queries=queries)
 
 
 @app.route("/blacklist_terms", methods=["GET"])

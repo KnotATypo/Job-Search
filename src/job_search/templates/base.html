@@ -21,7 +21,7 @@
     <!-- Responsive Navigation -->
     <nav class="navbar" aria-label="Main Navigation">
         <a href="{{ url_for('index') }}" class="nav-link">Home</a>
-        <a href="{{ url_for('manage_search_terms') }}" class="nav-link">Manage Search Terms</a>
+        <a href="{{ url_for('manage_search_queries') }}" class="nav-link">Manage Search Queries</a>
         <a href="{{ url_for('manage_blacklist_terms') }}" class="nav-link">Manage Blacklist Terms</a>
         {% if session.username %}
             <span class="nav-username">User: {{ session.username }}</span>
@@ -32,7 +32,7 @@
         <div id="menu" class="menu-hidden">
             <div class="menu-header">Menu</div>
             <a href="{{ url_for('index') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Home</a>
-            <a href="{{ url_for('manage_search_terms') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Search Terms</a>
+            <a href="{{ url_for('manage_search_queries') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Search Terms</a>
             <a href="{{ url_for('manage_blacklist_terms') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Blacklist Terms</a>
             <a href="{{ url_for('set_username') }}" class="menu-link" onclick="document.getElementById('menu').classList.add('menu-hidden')">Change Username</a>
             {% if session.username %}
