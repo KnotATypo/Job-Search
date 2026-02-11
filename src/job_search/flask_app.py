@@ -10,7 +10,6 @@ from peewee import OperationalError
 from waitress import serve
 
 from job_search import util
-
 from job_search.clean import clean
 from job_search.create_summary import create_summary
 from job_search.model import Job, JobToListing, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
@@ -279,18 +278,19 @@ def add_search_query():
         return jsonify({"error": "No term provided"}), 400
 
     _, user_id = get_current_user()
-    try:
-        st = SearchQuery.create(term=term, user=user_id)
-        return jsonify({"success": True, "id": st.id, "term": st.term, "remote": bool(st.remote)})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    sq = SearchQuery.create(term=term, user=user_id)
+    for site in list(Site.select()):
+        # By default, enable query for all sites
+        SiteQuery.create(site=site.id, query=sq.id)
+
+    return jsonify({"success": True})
 
 
 @app.route("/search_queries/<query_id>", methods=["DELETE"])
 def delete_search_query(query_id):
-    q = SearchQuery.delete().where(SearchQuery.id == query_id)
-    deleted = q.execute()
-    return jsonify({"deleted": deleted})
+    sq = SearchQuery.get(SearchQuery.id == query_id)
+    sq.delete_instance(recursive=True)
+    return jsonify({"success": True})
 
 
 @app.route("/search_queries/<query_id>", methods=["PATCH"])
@@ -310,7 +310,7 @@ def update_search_query(query_id):
         if site_query is None and value:
             SiteQuery.create(site=site, query=query_id)
         elif site_query is not None and not value:
-            SiteQuery.delete().where(SiteQuery.site == site, SiteQuery.query == query_id).execute()
+            site_query.delete_instance()
 
     return jsonify({"success": True})
 
