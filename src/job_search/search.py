@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-from job_search.model import SearchQuery
+from job_search.model import SearchQuery, SiteQuery, Site
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
@@ -9,16 +9,27 @@ from job_search.sites.site import NotSupportedError
 
 def search():
     # Fetch search queries from the database as objects
-    search_queries = list(SearchQuery.select())
-    sites = [Jora(), Seek(), LinkedIn()]
+    queries = list(SiteQuery.select().join(SearchQuery))
+    for query in tqdm(queries, desc="Queries", unit="query", leave=False):
+        try:
+            site = get_site(query.site)
+            site.download_new_listings(query.query)
+        except NotSupportedError:
+            # Some sites do not support certain filters; skip these
+            # TODO Disable the ability to enable these sites when the filters are enabled
+            pass
 
-    for site in tqdm(sites, desc="Sites", unit="site"):
-        for st in tqdm(search_queries, desc="Queries", unit="query", leave=False):
-            try:
-                site.download_new_listings(st)
-            except NotSupportedError:
-                # Some sites do not support certain filters; skip these
-                pass
+
+def get_site(site: Site):
+    match site.id:
+        case "jora":
+            return Jora()
+        case "linkedin":
+            return LinkedIn()
+        case "seek":
+            return Seek()
+        case _:
+            raise NotImplementedError
 
 
 if __name__ == "__main__":
