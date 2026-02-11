@@ -97,6 +97,27 @@ class SearchQuery(Model):
         database = db
 
 
+class Site(Model):
+    id = TextField(primary_key=True)
+    name = TextField()
+
+    class Meta:
+        database = db
+
+
+class SiteQuery(Model):
+    """
+    Maps queries to the sites they are for.
+    """
+
+    query = ForeignKeyField(SearchQuery)
+    site = ForeignKeyField(Site)
+
+    class Meta:
+        database = db
+        primary_key = CompositeKey("site", "query")
+
+
 class BlacklistTerm(Model):
     id = AutoField(primary_key=True)
     term = CharField()
@@ -107,4 +128,4 @@ class BlacklistTerm(Model):
         database = db
 
 
-db.create_tables([Job, Listing, JobToListing, PageCount, SearchQuery, BlacklistTerm, User], safe=True)
+db.create_tables([Job, Listing, JobToListing, PageCount, SearchQuery, Site, SiteQuery, BlacklistTerm, User], safe=True)

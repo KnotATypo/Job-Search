@@ -13,7 +13,7 @@ from job_search import util
 
 from job_search.clean import clean
 from job_search.create_summary import create_summary
-from job_search.model import Job, JobToListing, Listing, SearchQuery, User, BlacklistTerm, Location
+from job_search.model import Job, JobToListing, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
 from job_search.search import search
 from job_search.sites.indeed import Indeed
 from job_search.sites.jora import Jora
@@ -296,18 +296,22 @@ def delete_search_query(query_id):
 @app.route("/search_queries/<query_id>", methods=["PATCH"])
 def update_search_query(query_id):
     data = request.get_json()
-    if "remote" not in data or "location" not in data:
-        return jsonify({"error": "Invalid payload"}), 400
     remote = data["remote"]
     location = data["location"]
+    sites = data["sites"]
 
     st = SearchQuery.get_or_none((SearchQuery.id == query_id))
-    if not st:
-        return jsonify({"error": "Search query not found"}), 404
-
     st.remote = remote
     st.location = Location(location)
     st.save()
+
+    for site, value in sites.items():
+        site_query = SiteQuery.get_or_none(SiteQuery.site == site, SiteQuery.query == query_id)
+        if site_query is None and value:
+            SiteQuery.create(site=site, query=query_id)
+        elif site_query is not None and not value:
+            SiteQuery.delete().where(SiteQuery.site == site, SiteQuery.query == query_id).execute()
+
     return jsonify({"success": True})
 
 
@@ -315,7 +319,14 @@ def update_search_query(query_id):
 @require_user
 def manage_search_queries():
     _, user_id = get_current_user()
-    queries = SearchQuery.select().where(SearchQuery.user == user_id).order_by(SearchQuery.id)
+    queries = list(SearchQuery.select().where(SearchQuery.user == user_id).order_by(SearchQuery.id))
+    sites = list(Site.select())
+    for query in queries:
+        sites_to_query = [sq.site.id for sq in SiteQuery.select().where(SiteQuery.query == query.id)]
+        query.sites = {
+            site.id: {"value": "true" if site.id in sites_to_query else "false", "name": site.name} for site in sites
+        }
+
     return render_template("manage_search_queries.html", queries=queries)
 
 
