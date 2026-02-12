@@ -93,13 +93,11 @@ class Site:
             if new_job or new_listing:
                 JobToListing.create(job_id=job.id, listing_id=listing.id)
 
-            if new_job:
-                util.apply_blacklist(job)
-            # Sometimes even if the listing exists, the file might not
-            elif not storage.description_download(listing.id):
+            util.apply_blacklist(job)
+            # Even if the listing exists, the description might not
+            if not storage.description_download(listing.id):
                 description = self.get_listing_description(listing.id)
-                description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
-                storage.write_description(description_utf, listing.id)
+                storage.write_description(description, listing.id)
 
         existing_jobs = Job.select().where(Job.user == user.id)
         # Sometimes job titles/companies have different casing/punctuation
