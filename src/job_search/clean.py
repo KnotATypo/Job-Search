@@ -1,7 +1,3 @@
-import os
-import os.path
-import shutil
-import tarfile
 from collections import Counter, defaultdict
 
 from dotenv import load_dotenv
@@ -13,7 +9,7 @@ from job_search.model import Listing, Job, JobToListing, User
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
-from job_search.util import DATA_ARCHIVE, get_fuzzy_job, LISTING_DIRECTORY
+from job_search.util import get_fuzzy_job, storage
 
 load_dotenv()
 
@@ -31,7 +27,7 @@ def clean():
     reapply_blacklist()
     missing_descriptions()
     create_summary()
-    archive_old_descriptions()
+    # archive_old_descriptions()
 
 
 def remove_duplicates():
@@ -57,28 +53,29 @@ def remove_duplicates():
                 Job.delete().where(Job.id == other_job.id).execute()
 
 
-def archive_old_descriptions():
-    """
-    Archive descriptions where the associated job is marked "not_interested" or "blacklist" or the listing no longer exists.
-    """
-
-    # TODO: Find a better way to handle archiving without extracting everything each time
-    if os.path.exists(DATA_ARCHIVE):
-        with tarfile.open(DATA_ARCHIVE, "r") as tar:
-            tar.extractall(path="temp")
-    if not os.path.exists("temp"):
-        os.mkdir("temp")
-
-    for file in tqdm(os.listdir(LISTING_DIRECTORY), desc="Sorting Descriptions", unit="file"):
-        listing = Listing.select().where(Listing.id == file.removesuffix(".txt")).first()
-        job = Job.select().join(JobToListing).where(JobToListing.listing_id == file.removesuffix(".txt")).first()
-        if listing is None or job.status in ["not_interested", "blacklist"]:
-            shutil.move(f"{LISTING_DIRECTORY}/{file}", f"temp/{file}")
-
-    with tarfile.open(DATA_ARCHIVE, "w:gz") as tar:
-        for file in tqdm(os.listdir("temp"), desc="Archiving Descriptions", unit="file"):
-            tar.add(f"temp/{file}", arcname=file)
-    shutil.rmtree("temp")
+# TODO: Currently decommissioned during storage upgrade
+# def archive_old_descriptions():
+#     """
+#     Archive descriptions where the associated job is marked "not_interested" or "blacklist" or the listing no longer exists.
+#     """
+#
+#     # TODO: Find a better way to handle archiving without extracting everything each time
+#     if os.path.exists(DATA_ARCHIVE):
+#         with tarfile.open(DATA_ARCHIVE, "r") as tar:
+#             tar.extractall(path="temp")
+#     if not os.path.exists("temp"):
+#         os.mkdir("temp")
+#
+#     for file in tqdm(os.listdir(LISTING_DIRECTORY), desc="Sorting Descriptions", unit="file"):
+#         listing = Listing.select().where(Listing.id == file.removesuffix(".txt")).first()
+#         job = Job.select().join(JobToListing).where(JobToListing.listing_id == file.removesuffix(".txt")).first()
+#         if listing is None or job.status in ["not_interested", "blacklist"]:
+#             shutil.move(f"{LISTING_DIRECTORY}/{file}", f"temp/{file}")
+#
+#     with tarfile.open(DATA_ARCHIVE, "w:gz") as tar:
+#         for file in tqdm(os.listdir("temp"), desc="Archiving Descriptions", unit="file"):
+#             tar.add(f"temp/{file}", arcname=file)
+#     shutil.rmtree("temp")
 
 
 def reapply_blacklist():
@@ -102,26 +99,16 @@ def missing_descriptions():
 
     clean_listings = []
     for listing in tqdm(listings, desc="Looking for Descriptions", unit="listing"):
-        path = util.description_path(listing)
-        # Remove any downloaded descriptions without any content
-        if os.path.exists(path):
-            with open(path) as f:
-                if f.read() == "":
-                    os.remove(path)
-
-        if not util.description_downloaded(listing):
+        if not storage.description_download(listing.id):
             clean_listings.append(listing)
     listings = clean_listings
 
     for listing in tqdm(listings, desc="Fetching Descriptions", unit="listing"):
-        if listing.site == "linkedin":
-            site = LinkedIn()
-        elif listing.site == "jora":
-            site = Jora()
-        elif listing.site == "seek":
-            site = Seek()
+        site_map = {"linkedin": LinkedIn(), "seek": Seek(), "jora": Jora()}
         try:
-            util.write_description(listing, site)
+            description = site_map[listing.site].get_listing_description(listing.id)
+            description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
+            storage.write_description(description_utf, listing.id)
         except Exception as e:
             print(f"Error fetching description for listing {listing.id}: {e}")
 

@@ -1,6 +1,5 @@
 import os
 import re
-import tarfile
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -9,16 +8,15 @@ from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
 
 from job_search.model import Job, BlacklistTerm, User
+from job_search.storage import S3Storage, FileStorage, Storage
 
 load_dotenv()
 
-LISTING_DIRECTORY = os.getenv("DATA_DIRECTORY") + "/listings"
-DATA_ARCHIVE = os.getenv("DATA_DIRECTORY") + "/data-archive.tar.gz"
-
-archived_names = set()
-if os.path.exists(DATA_ARCHIVE):
-    with tarfile.open(DATA_ARCHIVE, "r") as tar:
-        archived_names = set(tar.getnames())
+storage: Storage
+if os.getenv("S3_ENDPOINT_URL") is not None:  # Default to S3 if available
+    storage = S3Storage()
+else:
+    storage = FileStorage()
 
 
 def new_browser(headless=True) -> webdriver.Chrome:
@@ -65,22 +63,6 @@ def get_page_soup(link: str) -> BeautifulSoup:
     return soup
 
 
-def write_description(listing, site) -> None:
-    """
-    Writes the description of the listing to the file "data/{listing.id}.txt"
-
-    listing -- The listing to write
-    site -- The site object to get the description from
-    """
-    description = site.get_listing_description(listing.id)
-    description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
-    try:
-        with open(description_path(listing), "w+") as f:
-            f.write(description_utf)
-    except OSError as e:
-        print(f"Error writing file for listing {listing.id}: {e}")
-
-
 def apply_blacklist(job: Job) -> bool:
     """
     Applies the blacklist terms for the user to the given job
@@ -98,26 +80,6 @@ def apply_blacklist(job: Job) -> bool:
             job.save()
             return True
     return False
-
-
-def description_path(listing) -> str:
-    """
-    Returns the path to the description file for the given listing
-
-    listing -- The listing to get the path for
-    """
-    return f"{LISTING_DIRECTORY}/{listing.id}.txt"
-
-
-def description_downloaded(listing) -> bool:
-    """
-    Checks if the description file for the given listing exists
-
-    listing -- The listing to check
-    """
-    if listing.id + ".txt" in archived_names:
-        return True
-    return os.path.exists(description_path(listing))
 
 
 def get_fuzzy_job(job: Job) -> str:

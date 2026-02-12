@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from job_search import util
 from job_search.model import PageCount, Job, Listing, JobToListing, SearchQuery, User, Location
-from job_search.util import get_fuzzy_job
+from job_search.util import get_fuzzy_job, storage
 
 HTML_PARSER = "html.parser"
 
@@ -95,9 +95,11 @@ class Site:
 
             if new_job:
                 util.apply_blacklist(job)
-            elif not util.description_downloaded(listing):
-                # Sometimes even if the listing exists, the file might not
-                util.write_description(listing, self)
+            # Sometimes even if the listing exists, the file might not
+            elif not storage.description_download(listing.id):
+                description = self.get_listing_description(listing.id)
+                description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
+                storage.write_description(description_utf, listing.id)
 
         existing_jobs = Job.select().where(Job.user == user.id)
         # Sometimes job titles/companies have different casing/punctuation

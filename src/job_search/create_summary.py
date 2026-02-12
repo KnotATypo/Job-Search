@@ -5,15 +5,13 @@ from dotenv import load_dotenv
 from ollama import Client
 from tqdm import tqdm
 
-from job_search import util
 from job_search.model import Listing
+from job_search.util import storage
 
 load_dotenv()
 
 # Connect to ollama and ensure the requested model is available
-client = Client(
-    host=os.getenv("OLLAMA_HOST"),
-)
+client = Client(host=os.getenv("OLLAMA_HOST"))
 model_name = os.getenv("SUMMARY_MODEL_NAME")
 if model_name not in [m.model for m in client.list().models]:
     print(f"Model {model_name} not found, please ensure this model exists")
@@ -62,16 +60,15 @@ def create_summary():
         l.save()
 
     need_summary = Listing.select().where(Listing.id << need_summary)
-    # Remove any listings that we don't have a description for. This will typically be archived jobs
-    need_summary = [listing for listing in need_summary if os.path.exists(util.description_path(listing))]
+    # Remove any listings that we don't have a description for
+    need_summary = [listing for listing in need_summary if storage.description_download(listing.id)]
     for listing in tqdm(need_summary):
         summarise_and_save(listing)
 
 
 def summarise_and_save(listing: Listing):
     try:
-        with open(util.description_path(listing)) as f:
-            description = f.read()
+        description = storage.read_description(listing.id)
         if description != "":
             response = summary(str(description))
         else:

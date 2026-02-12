@@ -1,10 +1,12 @@
 from typing import List, Tuple
+from warnings import deprecated
 
 from job_search.model import Listing, Job, SearchQuery
 from job_search.sites.site import Site
 from job_search.util import get_page_soup
 
 
+@deprecated
 class Indeed(Site):
     """
     Currently deprecated due to anti-bot measures.
