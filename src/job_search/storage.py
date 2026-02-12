@@ -61,7 +61,7 @@ class FileStorage(Storage):
         """
         path = self._description_path(listing_id)
         if os.path.exists(path):
-            with open(self._description_path(listing_id), "r") as f:
+            with open(path, "r") as f:
                 return f.read()
         elif listing_id in self.archived_names:
             with tarfile.open(self.data_archive, "r") as tar:
@@ -103,15 +103,18 @@ class S3Storage(Storage):
         self.bucket = s3.Bucket("job-search")
 
     def write_description(self, description: str, listing_id: str) -> None:
-        self.bucket.put_object(Key=listing_id, Body=description)
+        if description == "":
+            print(f"Description for {listing_id} was empty")
+            return
+        self.bucket.put_object(Key=listing_id + ".txt", Body=description)
 
     def read_description(self, listing_id: str) -> str:
-        obj = self.bucket.Object(listing_id).get()
+        obj = self.bucket.Object(listing_id + ".txt").get()
         return obj["Body"].read().decode("utf-8")
 
     def description_download(self, listing_id: str) -> bool:
         try:
-            self.bucket.Object(listing_id).load()
+            self.bucket.Object(listing_id + ".txt").load()
             return True
         except botocore.exceptions.ClientError:
             return False
