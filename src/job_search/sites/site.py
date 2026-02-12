@@ -93,7 +93,8 @@ class Site:
             # Even if the listing exists, the description might not
             if not storage.description_download(listing.id):
                 description = self.get_listing_description(listing.id)
-                storage.write_description(description, listing.id)
+                if description is not None:
+                    storage.write_description(description, listing.id)
 
     def build_page_link(self, query: SearchQuery, page_number: int):
         """
@@ -153,7 +154,7 @@ class Site:
         """
         return self.LISTING_URL.replace("%%ID%%", str(job_id))
 
-    def get_listing_description(self, listing_id) -> str:
+    def get_listing_description(self, listing_id) -> str | None:
         """
         Retrieves the description of the listing. Returns plain text.
         """

@@ -15,12 +15,12 @@ class Seek(Site):
             "Seek",
         )
 
-    def get_listing_description(self, listing_id) -> str:
+    def get_listing_description(self, listing_id) -> str | None:
         link = self.build_job_link(listing_id)
         soup = get_page_soup(link)
         body: Tag = soup.find("div", attrs={"data-automation": "jobAdDetails"})
         if body is None:
-            return ""
+            return None
         return body.contents[0].text
 
     def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Tuple[Listing, Job]]:

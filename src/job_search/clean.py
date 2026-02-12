@@ -81,8 +81,8 @@ def missing_descriptions():
         site_map = {"linkedin": LinkedIn(), "seek": Seek(), "jora": Jora()}
         try:
             description = site_map[listing.site].get_listing_description(listing.id)
-            description_utf = description.encode("utf-8", "ignore").decode("utf-8", "ignore")
-            storage.write_description(description_utf, listing.id)
+            if description is not None:
+                storage.write_description(description, listing.id)
         except Exception as e:
             print(f"Error fetching description for listing {listing.id}: {e}")
 

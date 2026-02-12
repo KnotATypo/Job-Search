@@ -16,13 +16,13 @@ class Jora(Site):
             "Jora",
         )
 
-    def get_listing_description(self, listing_id) -> str:
+    def get_listing_description(self, listing_id) -> str | None:
         link = self.build_job_link(listing_id)
         soup = get_page_soup(link)
         body: Tag = soup.find("div", attrs={"id": "job-description-container"})
-        if body is None:
-            return ""
-        return body.text
+        if body is not None:
+            body = body.text
+        return body
 
     def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Tuple[Listing, Job]]:
         link = self.build_page_link(query, page_number)

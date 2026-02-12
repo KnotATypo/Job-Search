@@ -13,7 +13,7 @@ class LinkedIn(Site):
             "LinkedIn",
         )
 
-    def get_listing_description(self, listing_id) -> str:
+    def get_listing_description(self, listing_id) -> str | None:
         link = self.build_job_link(listing_id)
         body = None
         error_count = 0
@@ -21,9 +21,7 @@ class LinkedIn(Site):
             soup = get_page_soup(link)
             body = soup.find("div", attrs={"class": "show-more-less-html__markup"})
             error_count += 1
-        if body is None:
-            body = ""
-        else:
+        if body is not None:
             body = body.text
         return body
 
