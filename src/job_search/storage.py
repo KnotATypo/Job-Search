@@ -3,6 +3,9 @@ import sys
 import tarfile
 from abc import ABC, abstractmethod
 
+import boto3
+import botocore
+
 
 class Storage(ABC):
     archived_names = set()
@@ -20,7 +23,7 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def description_download(self, listing_id: str) -> str:
+    def description_download(self, listing_id: str) -> bool:
         pass
 
 
@@ -80,4 +83,35 @@ class FileStorage(Storage):
 
 
 class S3Storage(Storage):
-    pass
+    def __init__(self):
+        s3_endpoint_url = os.getenv("S3_ENDPOINT_URL")
+        s3_key_id = os.getenv("S3_KEY_ID")
+        s3_access_key = os.getenv("S3_ACCESS_KEY")
+        if not (s3_endpoint_url and s3_key_id and s3_access_key):
+            print("Please provide S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
+            raise Exception("S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
+
+        s3 = boto3.resource(
+            "s3",
+            endpoint_url=s3_endpoint_url,
+            aws_access_key_id=s3_key_id,
+            aws_secret_access_key=s3_access_key,
+            aws_session_token=None,
+            config=boto3.session.Config(signature_version="s3v4"),
+            verify=False,
+        )
+        self.bucket = s3.Bucket("job-search")
+
+    def write_description(self, description: str, listing_id: str) -> None:
+        self.bucket.put_object(Key=listing_id, Body=description)
+
+    def read_description(self, listing_id: str) -> str:
+        obj = self.bucket.Object(listing_id).get()
+        return obj["Body"].read().decode("utf-8")
+
+    def description_download(self, listing_id: str) -> bool:
+        try:
+            self.bucket.Object(listing_id).load()
+            return True
+        except botocore.exceptions.ClientError:
+            return False

@@ -14,7 +14,10 @@ load_dotenv()
 
 storage: Storage
 if os.getenv("S3_ENDPOINT_URL") is not None:  # Default to S3 if available
-    storage = S3Storage()
+    try:
+        storage = S3Storage()
+    except Exception as e:
+        storage = FileStorage()
 else:
     storage = FileStorage()
 
