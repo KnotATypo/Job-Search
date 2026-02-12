@@ -17,8 +17,8 @@
     {% for listing in listings %}
     <div class="job-summary">
         <h3 class="card-subtitle">Summary</h3>
-        <div class="card-text">{{ listing.listing_id.summary }}</div>
-        <div class="card-text">Source: {{ listing.listing_id.site|capitalize }}</div>
+        <div class="card-text">{{ listing.summary }}</div>
+        <div class="card-text">Source: {{ listing.site|capitalize }}</div>
     </div>
     {% endfor %}
 
