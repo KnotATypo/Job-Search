@@ -14,7 +14,6 @@ from job_search.clean import clean
 from job_search.create_summary import create_summary
 from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
 from job_search.search import search
-from job_search.sites.indeed import Indeed
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
@@ -232,8 +231,6 @@ def get_site_links(job: Job) -> Tuple[List[Listing], List[Tuple[str, str]]]:
     for listing in listings:
         if listing.site == "seek":
             sites.append(("Seek", Seek.get_url(listing.id)))
-        elif listing.site == "indeed":
-            sites.append(("Indeed", Indeed.get_url(listing.id)))
         elif listing.site == "jora":
             sites.append(("Jora", Jora.get_url(listing.id)))
         elif listing.site == "linkedin":
