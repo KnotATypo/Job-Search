@@ -12,7 +12,7 @@ from waitress import serve
 from job_search import util
 from job_search.clean import clean
 from job_search.create_summary import create_summary
-from job_search.model import Job, JobToListing, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
+from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
 from job_search.search import search
 from job_search.sites.indeed import Indeed
 from job_search.sites.jora import Jora
@@ -114,7 +114,7 @@ def triage(job_id=None):
         return redirect(url_for("index"))
 
     # Get listings for this job
-    listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
+    listings = list(Listing.select().where(Listing.job == job))
 
     return render_template("triage.html", job=job, listings=listings)
 
@@ -166,15 +166,9 @@ def reading(job_id):
 
     if job_id is None:
         # Get the next job to read
-        job = (
-            Job.select()
-            .where((Job.status == "interested") & (Job.user == user_id))
-            .join(JobToListing)
-            .join(Listing)
-            .first()
-        )
+        job = Job.select().where((Job.status == "interested") & (Job.user == user_id)).join(Listing).first()
     else:
-        job = Job.select().where(Job.id == job_id).join(JobToListing).join(Listing).first()
+        job = Job.select().where(Job.id == job_id).join(Listing).first()
 
     if not job or job is None:
         flash("Job not found!")
@@ -230,20 +224,20 @@ def applying():
     return render_template("applying.html", job=job, listings=listings, sites=sites)
 
 
-def get_site_links(job: Job) -> Tuple[List[JobToListing], List[Tuple[str, str]]]:
+def get_site_links(job: Job) -> Tuple[List[Listing], List[Tuple[str, str]]]:
     """Generate site links for a job"""
 
-    listings = list(JobToListing.select().where(JobToListing.job_id == job.id).join(Listing).execute())
+    listings = list(Listing.select().where(Listing.job == job))
     sites = []
     for listing in listings:
-        if listing.listing_id.site == "seek":
-            sites.append(("Seek", Seek.get_url(listing.listing_id.id)))
-        elif listing.listing_id.site == "indeed":
-            sites.append(("Indeed", Indeed.get_url(listing.listing_id.id)))
-        elif listing.listing_id.site == "jora":
-            sites.append(("Jora", Jora.get_url(listing.listing_id.id)))
-        elif listing.listing_id.site == "linkedin":
-            sites.append(("LinkedIn", LinkedIn.get_url(listing.listing_id.id)))
+        if listing.site == "seek":
+            sites.append(("Seek", Seek.get_url(listing.id)))
+        elif listing.site == "indeed":
+            sites.append(("Indeed", Indeed.get_url(listing.id)))
+        elif listing.site == "jora":
+            sites.append(("Jora", Jora.get_url(listing.id)))
+        elif listing.site == "linkedin":
+            sites.append(("LinkedIn", LinkedIn.get_url(listing.id)))
 
     return listings, sites
 

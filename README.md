@@ -39,7 +39,6 @@ The database consists of the following tables:
 - `pagecount`: Tracks pagination for job site scraping.
 - `user`: Stores user information.
 - `job`: Stores job details.
-- `jobtolisting`: One-to-many relationship between jobs and listings.
 - `searchterm`: Terms used to search for job listings.
 - `blacklistterm`: Terms used to filter out unwanted job listings.
 

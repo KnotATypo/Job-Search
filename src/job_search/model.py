@@ -28,26 +28,6 @@ db = PostgresqlDatabase(
 db.connect()
 
 
-class Listing(Model):
-    id = TextField(primary_key=True)
-    site = CharField()
-    summary = TextField()
-    timestamp = DateTimeField(default=datetime.datetime.now)
-
-    class Meta:
-        database = db
-
-
-class PageCount(Model):
-    site = CharField()
-    query = CharField()
-    pages = IntegerField(default=1)
-
-    class Meta:
-        database = db
-        primary_key = CompositeKey("site", "query")
-
-
 class User(Model):
     id = AutoField(primary_key=True)
     username = CharField(unique=True)
@@ -67,12 +47,25 @@ class Job(Model):
         database = db
 
 
-class JobToListing(Model):
-    job_id = ForeignKeyField(Job)
-    listing_id = ForeignKeyField(Listing)
+class Listing(Model):
+    id = TextField(primary_key=True)
+    job = ForeignKeyField(Job)
+    site = CharField()
+    summary = TextField()
+    timestamp = DateTimeField(default=datetime.datetime.now)
 
     class Meta:
         database = db
+
+
+class PageCount(Model):
+    site = CharField()
+    query = CharField()
+    pages = IntegerField(default=1)
+
+    class Meta:
+        database = db
+        primary_key = CompositeKey("site", "query")
 
 
 class Location(Enum):
@@ -128,4 +121,4 @@ class BlacklistTerm(Model):
         database = db
 
 
-db.create_tables([Job, Listing, JobToListing, PageCount, SearchQuery, Site, SiteQuery, BlacklistTerm, User], safe=True)
+db.create_tables([Job, Listing, PageCount, SearchQuery, Site, SiteQuery, BlacklistTerm, User], safe=True)

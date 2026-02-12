@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.model import PageCount, Job, Listing, JobToListing, SearchQuery, User, Location
+from job_search.model import PageCount, Job, Listing, SearchQuery, User, Location
 from job_search.util import get_fuzzy_job, storage
 
 HTML_PARSER = "html.parser"
@@ -74,37 +74,26 @@ class Site:
         listings -- List of tuples pairing Listings to their Job.
         user_id -- The id of the user to save the jobs for.
         """
-
-        def write_listing(job: Job, listing: Listing, existing_jobs: Dict) -> None:
-            new_job, new_listing = False, False
+        existing_jobs = Job.select().where(Job.user == user.id)
+        # Sometimes job titles/companies have different casing/punctuation
+        existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
+        for listing, job in listings:
+            job.user = user
+            if (job_fuzzy := get_fuzzy_job(job)) in existing_jobs.keys():
+                job = Job.get_by_id(existing_jobs[job_fuzzy])
+            else:
+                job.save()
 
             if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site)) is None:
-                new_listing = True
-                listing = Listing.create(id=listing.id, site=listing.site, summary="")
+                listing = Listing.create(id=listing.id, site=listing.site, summary="", job=job)
             else:
                 listing = existing_listing
-
-            if (job_fuzzy := get_fuzzy_job(job)) not in existing_jobs.keys():
-                new_job = True
-                job.save()
-            else:
-                job = Job.get_by_id(existing_jobs[job_fuzzy])
-
-            if new_job or new_listing:
-                JobToListing.create(job_id=job.id, listing_id=listing.id)
 
             util.apply_blacklist(job)
             # Even if the listing exists, the description might not
             if not storage.description_download(listing.id):
                 description = self.get_listing_description(listing.id)
                 storage.write_description(description, listing.id)
-
-        existing_jobs = Job.select().where(Job.user == user.id)
-        # Sometimes job titles/companies have different casing/punctuation
-        existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
-        for listing, job in listings:
-            job.user = user
-            write_listing(job, listing, existing_jobs)
 
     def build_page_link(self, query: SearchQuery, page_number: int):
         """

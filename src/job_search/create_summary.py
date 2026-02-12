@@ -32,9 +32,8 @@ def create_summary():
     cursor.execute(
         """
         SELECT l.id, summary, STRING_AGG(status, '|')
-        FROM jobtolisting
-                 JOIN public.job j ON j.id = jobtolisting.job_id
-                 JOIN public.listing l ON l.id = jobtolisting.listing_id
+        FROM listing l
+                 JOIN public.job j ON j.id = l.job_id
         GROUP BY l.id
         """
     )
