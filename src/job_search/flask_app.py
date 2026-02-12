@@ -25,7 +25,7 @@ JOB_NOT_FOUND = "Job not found or not yours."
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("APP_SECRET_KEY")
+app.secret_key = os.urandom(24)
 
 scheduler = BackgroundScheduler(daemon=True)
 

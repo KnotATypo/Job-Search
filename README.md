@@ -49,7 +49,6 @@ Create a `.env` file in the project root with the following template:
 
 ```dotenv
 DATA_DIRECTORY=
-APP_SECRET_KEY=
 
 DATABASE_NAME=job_search
 DATABASE_USER=
@@ -64,7 +63,6 @@ SUMMARY_PROMPT="Please create a single sentence summary of this job description 
 The existing variables are suggested defaults; modify them as needed.
 
 - `DATA_DIRECTORY`: Directory to store job listing text.
-- `APP_SECRET_KEY`: A secret key for the application.
 - `DATABASE_*`: Database connection details.
 - `OLLAMA_HOST`: The host of the Ollama instance to use for summary generation.
 - `SUMMARY_MODEL_NAME`: The Ollama model used for summarising job descriptions.
