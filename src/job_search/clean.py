@@ -69,7 +69,7 @@ def missing_descriptions():
     Download missing descriptions.
     """
 
-    listings = Listing.select()
+    listings = Listing.select().join(Job).where(Job.status << ["new", "interested"])
 
     clean_listings = []
     for listing in tqdm(listings, desc="Looking for Descriptions", unit="listing"):
