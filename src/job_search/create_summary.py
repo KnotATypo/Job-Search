@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from ollama import Client
 from tqdm import tqdm
 
+from job_search.logger import logger
 from job_search.model import Listing
 from job_search.util import storage
 
@@ -14,7 +15,7 @@ load_dotenv()
 client = Client(host=os.getenv("OLLAMA_HOST"))
 model_name = os.getenv("SUMMARY_MODEL_NAME")
 if model_name not in [m.model for m in client.list().models]:
-    print(f"Model {model_name} not found, please ensure this model exists")
+    logger.error(f"Model {model_name} not found")
     exit(1)
 
 SUMMARY_PROMPT = os.getenv("SUMMARY_PROMPT")
@@ -73,7 +74,7 @@ def summarise_and_save(listing: Listing):
         else:
             response = "N/A"
     except Exception as e:
-        print(f"Error in creating summary for {listing.id}:", type(e).__name__)
+        logger.warn(f"Error in creating summary for {listing.id}: {type(e).__name__} - {e}")
         response = "N/A"
 
     listing.summary = response

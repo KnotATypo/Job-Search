@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 import boto3
 import botocore
 
+from job_search.logger import logger
+
 
 class Storage(ABC):
     archived_names = set()
@@ -30,7 +32,7 @@ class Storage(ABC):
 class FileStorage(Storage):
     def __init__(self):
         if (data_dir := os.getenv("DATA_DIRECTORY")) is None:
-            print("DATA_DIRECTORY not set, defaulting to ./data", file=sys.stderr)
+            logger.warn("DATA_DIRECTORY not set, defaulting to ./data")
             data_dir = "./data"
         self.listing_directory = data_dir + "/listings"
         self.data_archive = data_dir + "/data-archive.tar.gz"
@@ -47,13 +49,13 @@ class FileStorage(Storage):
         listing_id -- The id of the listing
         """
         if description == "":
-            print(f"Description for {listing_id} was empty")
+            logger.debug(f"Description for {listing_id} was empty")
             return
         try:
             with open(self._description_path(listing_id), "w+") as f:
                 f.write(description)
         except OSError as e:
-            print(f"Error writing file for listing {listing_id}: {e}")
+            logger.warn(f"Error writing file for listing {listing_id}: {type(e).__name__} - {e}")
 
     def read_description(self, listing_id: str) -> str | None:
         """
@@ -88,7 +90,7 @@ class S3Storage(Storage):
         s3_key_id = os.getenv("S3_KEY_ID")
         s3_access_key = os.getenv("S3_ACCESS_KEY")
         if not (s3_endpoint_url and s3_key_id and s3_access_key):
-            print("Please provide S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
+            logger.warn("Please provide S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
             raise Exception("S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
 
         s3 = boto3.resource(
@@ -104,7 +106,7 @@ class S3Storage(Storage):
 
     def write_description(self, description: str, listing_id: str) -> None:
         if description == "":
-            print(f"Description for {listing_id} was empty")
+            logger.debug(f"Description for {listing_id} was empty")
             return
         self.bucket.put_object(Key=listing_id + ".txt", Body=description)
 

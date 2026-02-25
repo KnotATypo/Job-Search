@@ -12,6 +12,7 @@ from waitress import serve
 from job_search import util
 from job_search.clean import clean
 from job_search.create_summary import create_summary
+from job_search.logger import logger
 from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
 from job_search.search import search
 from job_search.sites.jora import Jora
@@ -80,8 +81,8 @@ def index():
             reading_count = Job.select().where((Job.status == "interested") & (Job.user == user_id)).count()
             applying_count = Job.select().where((Job.status == "liked") & (Job.user == user_id)).count()
             applied_count = Job.select().where((Job.status == "applied") & (Job.user == user_id)).count()
-        except OperationalError:
-            print("Database error")
+        except OperationalError as e:
+            logger.warn(f"Database error: {type(e).__name__} - {e}")
 
     return render_template(
         "index.html",
@@ -407,16 +408,16 @@ def complete_job():
 
 
 def start():
-    print("Scheduling tasks...")
+    logger.info("Scheduling tasks")
     # TODO Make these configurable through .env or web gui
     scheduler.add_job(search, "cron", hour=22, minute=0)
     scheduler.add_job(create_summary, "cron", hour=0, minute=0)
     scheduler.add_job(clean, "cron", day="*/2", hour=0, minute=0)
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
-    print("Tasks scheduled")
+    logger.info("Tasks scheduled")
 
-    print("Starting Flask app...")
+    logger.info("Starting Flask app")
     serve(app, host="0.0.0.0", port=3232)
 
 

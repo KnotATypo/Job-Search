@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
 
+from job_search.logger import logger
 from job_search.model import Job, BlacklistTerm, User
 from job_search.storage import S3Storage, FileStorage, Storage
 
@@ -16,8 +17,10 @@ storage: Storage
 if os.getenv("S3_ENDPOINT_URL") is not None:  # Default to S3 if available
     try:
         storage = S3Storage()
+        logger.info(f"Using S3 for storage at: {os.getenv('S3_ENDPOINT_URL')}")
     except Exception as e:
         storage = FileStorage()
+        logger.info("Unable to find S3 details. Defaulting to local file storage")
 else:
     storage = FileStorage()
 
