@@ -22,6 +22,7 @@ SUMMARY_PROMPT = os.getenv("SUMMARY_PROMPT")
 
 
 def create_summary():
+    configure_logging()
     connection = psycopg2.connect(
         host=os.getenv("DATABASE_HOST"),
         database=os.getenv("DATABASE_NAME"),
@@ -98,5 +99,4 @@ def summary(description):
 
 
 if __name__ == "__main__":
-    configure_logging()
     create_summary()

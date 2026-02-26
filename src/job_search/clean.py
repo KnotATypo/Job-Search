@@ -21,6 +21,7 @@ def clean():
     - Create summaries
     - Archive old descriptions
     """
+    configure_logging()
 
     reapply_blacklist()
     missing_descriptions()
@@ -64,5 +65,4 @@ def missing_descriptions():
 
 
 if __name__ == "__main__":
-    configure_logging()
     clean()

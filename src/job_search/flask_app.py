@@ -408,6 +408,7 @@ def complete_job():
 
 
 def start():
+    configure_logging()
     logger.info("Scheduling tasks")
     # TODO Make these configurable through .env or web gui
     scheduler.add_job(search, "cron", hour=22, minute=0)
@@ -422,5 +423,4 @@ def start():
 
 
 if __name__ == "__main__":
-    configure_logging()
     start()
