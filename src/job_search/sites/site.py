@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
+from job_search.logger import progress_bars
 from job_search.model import PageCount, Job, Listing, SearchQuery, User, Location
 from job_search.util import get_fuzzy_job, storage
 
@@ -53,6 +54,7 @@ class Site:
             desc=f"{self.SITE_STRING} - {friendly_query}",
             unit="page",
             leave=False,
+            disable=not progress_bars,
         ) as pbar:
             while True:
                 listings = self.get_listings_from_page(query, page_num)

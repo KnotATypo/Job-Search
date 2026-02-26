@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from ollama import Client
 from tqdm import tqdm
 
-from job_search.logger import logger
+from job_search.logger import logger, progress_bars
 from job_search.model import Listing
 from job_search.util import storage
 
@@ -62,7 +62,7 @@ def create_summary():
     need_summary = Listing.select().where(Listing.id << need_summary)
     # Remove any listings that we don't have a description for
     need_summary = [listing for listing in need_summary if storage.description_download(listing.id)]
-    for listing in tqdm(need_summary):
+    for listing in tqdm(need_summary, disable=not progress_bars):
         summarise_and_save(listing)
 
 
