@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 from job_search import util
 from job_search.create_summary import create_summary
-from job_search.logger import logger, progress_bars
+from job_search.logger import logger, progress_bars, configure_logging
 from job_search.model import Listing, Job
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
@@ -64,4 +64,5 @@ def missing_descriptions():
 
 
 if __name__ == "__main__":
+    configure_logging()
     clean()

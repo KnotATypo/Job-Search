@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from ollama import Client
 from tqdm import tqdm
 
-from job_search.logger import logger, progress_bars
+from job_search.logger import logger, progress_bars, configure_logging
 from job_search.model import Listing
 from job_search.util import storage
 
@@ -98,4 +98,5 @@ def summary(description):
 
 
 if __name__ == "__main__":
+    configure_logging()
     create_summary()

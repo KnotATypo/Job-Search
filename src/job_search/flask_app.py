@@ -12,7 +12,7 @@ from waitress import serve
 from job_search import util
 from job_search.clean import clean
 from job_search.create_summary import create_summary
-from job_search.logger import logger
+from job_search.logger import logger, configure_logging
 from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
 from job_search.search import search
 from job_search.sites.jora import Jora
@@ -422,4 +422,5 @@ def start():
 
 
 if __name__ == "__main__":
+    configure_logging()
     start()

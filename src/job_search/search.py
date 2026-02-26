@@ -9,8 +9,6 @@ from job_search.sites.site import NotSupportedError
 
 
 def search():
-    configure_logging()
-
     queries = list(SiteQuery.select().join(SearchQuery))
     for query in tqdm(queries, desc="Queries", unit="query", leave=False, disable=not progress_bars):
         try:
@@ -35,4 +33,5 @@ def get_site(site: Site):
 
 
 if __name__ == "__main__":
+    configure_logging()
     search()
