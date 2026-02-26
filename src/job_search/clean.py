@@ -23,12 +23,14 @@ def clean():
     """
     configure_logging()
 
+    logger.info("Starting clean")
     reapply_blacklist()
     missing_descriptions()
     create_summary()
 
 
 def reapply_blacklist():
+    logger.info("Reapplying blacklist")
     blacklist_jobs = Job.select().where(Job.status == "blacklist")
     for job in tqdm(blacklist_jobs, desc="Rechecking Backlists", unit="job", disable=not progress_bars):
         if not util.apply_blacklist(job):
@@ -44,6 +46,7 @@ def missing_descriptions():
     """
     Download missing descriptions.
     """
+    logger.info("Downloading missing descriptions")
 
     listings = Listing.select().join(Job).where(Job.status << ["new", "interested"])
 
