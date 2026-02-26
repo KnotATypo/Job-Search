@@ -64,6 +64,7 @@ def create_summary():
     need_summary = [listing for listing in need_summary if storage.description_download(listing.id)]
     for listing in tqdm(need_summary, disable=not progress_bars):
         summarise_and_save(listing)
+        logger.info(f"Summary saved for listing {listing.id}")
 
 
 def summarise_and_save(listing: Listing):

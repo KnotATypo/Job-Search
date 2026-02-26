@@ -84,6 +84,7 @@ def missing_descriptions():
             description = site_map[listing.site].get_listing_description(listing.id)
             if description is not None:
                 storage.write_description(description, listing.id)
+                logger.info(f"Description saved for listing {listing.id}")
         except Exception as e:
             logger.warn(f"Error in fetching description for listing {listing.id}: {type(e).__name__} - {e}")
 

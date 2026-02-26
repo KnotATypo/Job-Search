@@ -1,10 +1,10 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
-from job_search.logger import progress_bars
+from job_search.logger import progress_bars, logger
 from job_search.model import PageCount, Job, Listing, SearchQuery, User, Location
 from job_search.util import get_fuzzy_job, storage
 
@@ -69,6 +69,8 @@ class Site:
         page_count.pages = page_num
         page_count.save()
 
+        logger.info(f"Completed query {friendly_query}")
+
     def save_listings(self, listings: List[Tuple[Listing, Job]], user: User) -> None:
         """
         Saves the provided listings and jobs into the database and writes the body of the listing to the filesystem.
@@ -97,6 +99,8 @@ class Site:
                 description = self.get_listing_description(listing.id)
                 if description is not None:
                     storage.write_description(description, listing.id)
+
+            logger.info(f"Saved listing {listing.id} for job {job.id}")
 
     def build_page_link(self, query: SearchQuery, page_number: int):
         """
