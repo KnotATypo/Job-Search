@@ -54,7 +54,7 @@ def set_username():
     return render_template("set_username.html", usernames=usernames)
 
 
-@app.route("/health_check")
+@app.route("/health_check", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok"})
 
@@ -69,7 +69,7 @@ def require_user(f):
     return decorated_function
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 @require_user
 def index():
     """Main page with workflow stages"""
@@ -93,8 +93,8 @@ def index():
     )
 
 
-@app.route("/triage")
-@app.route("/triage/<job_id>")
+@app.route("/triage", methods=["GET"])
+@app.route("/triage/<job_id>", methods=["GET"])
 @require_user
 def triage(job_id=None):
     """Triage page for new jobs"""
@@ -147,7 +147,7 @@ def triage_action():
     return redirect(url_for("triage"))
 
 
-@app.route("/reading_list")
+@app.route("/reading_list", methods=["GET"])
 @require_user
 def reading_list():
     """Applied jobs page"""
@@ -157,8 +157,8 @@ def reading_list():
     return render_template("reading_list.html", jobs=jobs)
 
 
-@app.route("/reading", defaults={"job_id": None})
-@app.route("/reading/<job_id>")
+@app.route("/reading", defaults={"job_id": None}, methods=["GET"])
+@app.route("/reading/<job_id>", methods=["GET"])
 @require_user
 def reading(job_id):
     """Reading page for interested jobs"""
@@ -207,7 +207,7 @@ def reading_action():
     return redirect(url_for("reading"))
 
 
-@app.route("/applying")
+@app.route("/applying", methods=["GET"])
 @require_user
 def applying():
     """Applying page for liked jobs"""
@@ -307,7 +307,7 @@ def update_search_query(query_id):
     return jsonify({"success": True})
 
 
-@app.route("/manage_search_queries")
+@app.route("/manage_search_queries", methods=["GET"])
 @require_user
 def manage_search_queries():
     _, user_id = get_current_user()
@@ -361,7 +361,7 @@ def delete_blacklist_term(term):
     return jsonify({"deleted": deleted})
 
 
-@app.route("/manage_blacklist_terms")
+@app.route("/manage_blacklist_terms", methods=["GET"])
 def manage_blacklist_terms():
     return render_template("manage_blacklist_terms.html")
 
@@ -380,7 +380,7 @@ def run_blacklist():
     return jsonify({"message": f"Blacklist run for {username}. {filtered_count} jobs filtered."})
 
 
-@app.route("/applied")
+@app.route("/applied", methods=["GET"])
 @require_user
 def applied():
     """Applied jobs page"""
