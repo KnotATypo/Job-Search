@@ -28,43 +28,45 @@ db = PostgresqlDatabase(
 db.connect()
 
 
-class User(Model):
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+
+class User(BaseModel):
     id = AutoField(primary_key=True)
     username = CharField(unique=True)
 
-    class Meta:
-        database = db
 
-
-class Job(Model):
+class Job(BaseModel):
     id = AutoField(primary_key=True)
     title = TextField()
     company = TextField()
-    status = CharField(default="new")
+
+
+class JobStatus(BaseModel):
     user = ForeignKeyField(User)
+    job = ForeignKeyField(Job)
+    status = CharField(default="new")
 
     class Meta:
-        database = db
+        primary_key = CompositeKey("user", "job")
 
 
-class Listing(Model):
+class Listing(BaseModel):
     id = TextField(primary_key=True)
     job = ForeignKeyField(Job)
     site = CharField()
     summary = TextField()
     timestamp = DateTimeField(default=datetime.datetime.now)
 
-    class Meta:
-        database = db
 
-
-class PageCount(Model):
+class PageCount(BaseModel):
     site = CharField()
     query = CharField()
     pages = IntegerField(default=1)
 
     class Meta:
-        database = db
         primary_key = CompositeKey("site", "query")
 
 
@@ -79,26 +81,20 @@ class Location(Enum):
     Hobart = "Hobart"
 
 
-class SearchQuery(Model):
+class SearchQuery(BaseModel):
     id = AutoField(primary_key=True)
     term = CharField()
     remote = BooleanField(default=False)
     location = EnumField(Location, default=Location.Australia)
     user = ForeignKeyField(User)
 
-    class Meta:
-        database = db
 
-
-class Site(Model):
+class Site(BaseModel):
     id = TextField(primary_key=True)
     name = TextField()
 
-    class Meta:
-        database = db
 
-
-class SiteQuery(Model):
+class SiteQuery(BaseModel):
     """
     Maps queries to the sites they are for.
     """
@@ -107,18 +103,14 @@ class SiteQuery(Model):
     site = ForeignKeyField(Site)
 
     class Meta:
-        database = db
         primary_key = CompositeKey("site", "query")
 
 
-class BlacklistTerm(Model):
+class BlacklistTerm(BaseModel):
     id = AutoField(primary_key=True)
     term = CharField()
     type = CharField()
     user = ForeignKeyField(User)
 
-    class Meta:
-        database = db
 
-
-db.create_tables([Job, Listing, PageCount, SearchQuery, Site, SiteQuery, BlacklistTerm, User], safe=True)
+db.create_tables([Job, JobStatus, Listing, PageCount, SearchQuery, Site, SiteQuery, BlacklistTerm, User], safe=True)

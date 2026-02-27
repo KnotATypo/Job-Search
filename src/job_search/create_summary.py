@@ -36,9 +36,10 @@ def create_summary():
     # Get each listing with their summary and a pipe separated list of associated job statuses
     cursor.execute(
         """
-        SELECT l.id, summary, STRING_AGG(status, '|')
+        SELECT l.id, summary, STRING_AGG(js.status, '|')
         FROM listing l
-                 JOIN public.job j ON j.id = l.job_id
+                 JOIN job j ON j.id = l.job_id
+                 JOIN jobstatus js ON j.id = js.job_id
         GROUP BY l.id
         """
     )

@@ -4,7 +4,7 @@ from tqdm import tqdm
 from job_search import util
 from job_search.create_summary import create_summary
 from job_search.logger import logger, progress_bars, configure_logging
-from job_search.model import Listing, Job
+from job_search.model import Listing, Job, JobStatus
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
@@ -31,15 +31,16 @@ def clean():
 
 def reapply_blacklist():
     logger.info("Reapplying blacklist")
-    blacklist_jobs = Job.select().where(Job.status == "blacklist")
-    for job in tqdm(blacklist_jobs, desc="Rechecking Backlists", unit="job", disable=not progress_bars):
-        if not util.apply_blacklist(job):
-            job.status = "new"
-            job.save()
-
-    new_jobs = Job.select().where(Job.status == "new")
-    for job in tqdm(new_jobs, desc="Applying Blacklists", unit="job", disable=not progress_bars):
-        util.apply_blacklist(job)
+    for status in tqdm(JobStatus.select(), desc="Applying Blacklists", unit="job", disable=not progress_bars):
+        if util.pass_blacklist(status.job, status.user):
+            # It shouldn't be blacklisted but is
+            if status.status == "blacklist":
+                status.status = "new"
+        else:
+            # It should be blacklisted but isn't
+            if status.status == "new":
+                status.status = "blacklist"
+        status.save()
 
 
 def missing_descriptions():
@@ -48,7 +49,7 @@ def missing_descriptions():
     """
     logger.info("Downloading missing descriptions")
 
-    listings = Listing.select().join(Job).where(Job.status << ["new", "interested"])
+    listings = Listing.select().join(Job).join(JobStatus).where(JobStatus.status << ["new", "interested"])
 
     clean_listings = []
     for listing in tqdm(listings, desc="Looking for Descriptions", unit="listing", disable=not progress_bars):

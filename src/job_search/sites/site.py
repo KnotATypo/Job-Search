@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from job_search import util
 from job_search.logger import progress_bars, logger
-from job_search.model import PageCount, Job, Listing, SearchQuery, User, Location
+from job_search.model import PageCount, Job, Listing, SearchQuery, User, Location, JobStatus
 from job_search.util import get_fuzzy_job, storage
 
 HTML_PARSER = "html.parser"
@@ -78,29 +78,27 @@ class Site:
         listings -- List of tuples pairing Listings to their Job.
         user_id -- The id of the user to save the jobs for.
         """
-        existing_jobs = Job.select().where(Job.user == user.id)
         # Sometimes job titles/companies have different casing/punctuation
-        existing_jobs = {get_fuzzy_job(j): j.id for j in existing_jobs}
+        existing_jobs = {get_fuzzy_job(j): j.id for j in Job.select()}
         for listing, job in listings:
-            job.user = user
             if (job_fuzzy := get_fuzzy_job(job)) in existing_jobs.keys():
                 job = Job.get_by_id(existing_jobs[job_fuzzy])
             else:
                 job.save()
+                JobStatus.create(user=user, job=job, status="new" if util.pass_blacklist(job, user) else "blacklist")
+                logger.info(f"Added new job {job}")
 
-            if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site, job=job)) is None:
+            if (existing_listing := Listing.get_or_none(id=listing.id)) is None:
                 listing = Listing.create(id=listing.id, site=listing.site, summary="", job=job)
+                logger.info(f"Created new listing {listing} for job {job}")
             else:
                 listing = existing_listing
 
-            util.apply_blacklist(job)
             # Even if the listing exists, the description might not
             if not storage.description_download(listing.id):
                 description = self.get_listing_description(listing.id)
                 if description is not None:
                     storage.write_description(description, listing.id)
-
-            logger.info(f"Saved listing {listing.id} for job {job.id}")
 
     def build_page_link(self, query: SearchQuery, page_number: int):
         """

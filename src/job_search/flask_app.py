@@ -6,14 +6,13 @@ from typing import List, Tuple
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
-from peewee import OperationalError
 from waitress import serve
 
 from job_search import util
 from job_search.clean import clean
 from job_search.create_summary import create_summary
 from job_search.logger import logger, configure_logging
-from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site
+from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site, JobStatus
 from job_search.search import search
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
@@ -73,16 +72,12 @@ def require_user(f):
 @require_user
 def index():
     """Main page with workflow stages"""
-    username, user_id = get_current_user()
-    triage_count = -1
-    while triage_count < 0:
-        try:
-            triage_count = Job.select().where((Job.status == "new") & (Job.user == user_id)).count()
-            reading_count = Job.select().where((Job.status == "interested") & (Job.user == user_id)).count()
-            applying_count = Job.select().where((Job.status == "liked") & (Job.user == user_id)).count()
-            applied_count = Job.select().where((Job.status == "applied") & (Job.user == user_id)).count()
-        except OperationalError as e:
-            logger.warn(f"Database error: {type(e).__name__} - {e}")
+    _, user_id = get_current_user()
+
+    triage_count = JobStatus.select().where((JobStatus.status == "new") & (JobStatus.user == user_id)).count()
+    reading_count = JobStatus.select().where((JobStatus.status == "interested") & (JobStatus.user == user_id)).count()
+    applying_count = JobStatus.select().where((JobStatus.status == "liked") & (JobStatus.user == user_id)).count()
+    applied_count = JobStatus.select().where((JobStatus.status == "applied") & (JobStatus.user == user_id)).count()
 
     return render_template(
         "index.html",
@@ -101,7 +96,7 @@ def triage(job_id=None):
     _, user_id = get_current_user()
 
     if job_id is None:
-        jobs = list(Job.select().where((Job.status == "new") & (Job.user == user_id)))
+        jobs = list(Job.select().join(JobStatus).where((JobStatus.status == "new") & (JobStatus.user == user_id)))
         if len(jobs) == 0:
             return redirect(url_for("index"))
         return redirect(url_for("triage", job_id=jobs[0].id))
@@ -152,7 +147,7 @@ def triage_action():
 def reading_list():
     """Applied jobs page"""
     _, user_id = get_current_user()
-    jobs = Job.select().where((Job.status == "interested") & (Job.user == user_id))
+    jobs = Job.select().join(JobStatus).where((JobStatus.status == "interested") & (JobStatus.user == user_id))
 
     return render_template("reading_list.html", jobs=jobs)
 
@@ -166,7 +161,13 @@ def reading(job_id):
 
     if job_id is None:
         # Get the next job to read
-        job = Job.select().where((Job.status == "interested") & (Job.user == user_id)).join(Listing).first()
+        job = (
+            Job.select()
+            .join(JobStatus)
+            .where((JobStatus.status == "interested") & (JobStatus.user == user_id))
+            .join(Listing)
+            .first()
+        )
     else:
         job = Job.select().where(Job.id == job_id).join(Listing).first()
 
@@ -213,7 +214,7 @@ def applying():
     """Applying page for liked jobs"""
     _, user_id = get_current_user()
     # Get the next job to apply for
-    job = Job.select().where((Job.status == "liked") & (Job.user == user_id)).first()
+    job = Job.select().join(JobStatus).where((JobStatus.status == "liked") & (JobStatus.user == user_id)).first()
 
     if not job:
         flash("No more jobs to apply for!")
@@ -271,7 +272,7 @@ def add_search_query():
 
     _, user_id = get_current_user()
     sq = SearchQuery.create(term=term, user=user_id)
-    for site in list(Site.select()):
+    for site in Site.select():
         # By default, enable query for all sites
         SiteQuery.create(site=site.id, query=sq.id)
 
@@ -371,10 +372,12 @@ def manage_blacklist_terms():
 def run_blacklist():
     username, user_id = get_current_user()
 
-    new_jobs = Job.select().where((Job.status == "new") & (Job.user == user_id))
+    new_jobs = Job.select().join(JobStatus).where((JobStatus.status == "new") & (JobStatus.user == user_id))
     filtered_count = 0
     for job in new_jobs:
-        if util.apply_blacklist(job):
+        if not util.pass_blacklist(job, user_id):
+            job.status = "blacklist"
+            job.save()
             filtered_count += 1
 
     return jsonify({"message": f"Blacklist run for {username}. {filtered_count} jobs filtered."})
@@ -385,7 +388,7 @@ def run_blacklist():
 def applied():
     """Applied jobs page"""
     _, user_id = get_current_user()
-    jobs = Job.select().where((Job.status == "applied") & (Job.user == user_id))
+    jobs = Job.select().join(JobStatus).where((JobStatus.status == "applied") & (JobStatus.user == user_id))
 
     jobs_with_sites = []
     for job in jobs:

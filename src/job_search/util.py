@@ -69,23 +69,21 @@ def get_page_soup(link: str) -> BeautifulSoup:
     return soup
 
 
-def apply_blacklist(job: Job) -> bool:
+def pass_blacklist(job: Job, user: User) -> bool:
     """
     Applies the blacklist terms for the user to the given job
 
     job -- The job to apply the blacklist to
     """
 
-    blacklist = BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.id == job.user)
+    blacklist = BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.id == user)
     for term in blacklist:
         # Title terms are case-insensitive and fuzzy, company terms are case-sensitive and exact
         if (term.type == "title" and term.term.lower() in job.title.lower()) or (
             term.type == "company" and term.term == job.company
         ):
-            job.status = "blacklist"
-            job.save()
-            return True
-    return False
+            return False
+    return True
 
 
 def get_fuzzy_job(job: Job) -> str:
