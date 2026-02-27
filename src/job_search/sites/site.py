@@ -88,7 +88,7 @@ class Site:
             else:
                 job.save()
 
-            if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site)) is None:
+            if (existing_listing := Listing.get_or_none(id=listing.id, site=listing.site, job=job)) is None:
                 listing = Listing.create(id=listing.id, site=listing.site, summary="", job=job)
             else:
                 listing = existing_listing
