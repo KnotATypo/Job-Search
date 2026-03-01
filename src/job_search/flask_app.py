@@ -114,32 +114,39 @@ def triage(job_id=None):
     return render_template("triage.html", job=job, listings=listings)
 
 
-@app.route("/triage/action", methods=["POST"])
-def triage_action():
+@app.route("/update_status", methods=["POST"])
+@require_user
+def update_status():
     """Handle triage actions (yes/no)"""
-    job_id = request.form.get("job_id")
-    action = request.form.get("action")
+    _, user_id = get_current_user()
 
-    if not job_id or not action:
+    job_id = request.form.get("job_id")
+    new_status = request.form.get("status")
+    redirect_page = request.form.get("redirect_page")
+
+    if not job_id or new_status not in [
+        "new",
+        "interested",
+        "not_interested",
+        "liked",
+        "applied",
+        "complete",
+        "blacklist",
+    ]:
         flash(INVALID_REQUEST)
-        return redirect(url_for("triage"))
+        return redirect(url_for("index"))
 
     job = Job.get_or_none((Job.id == job_id))
 
     if not job:
         flash(JOB_NOT_FOUND)
-        return redirect(url_for("triage"))
+        return redirect(url_for("index"))
 
-    if action == "interested":
-        job.status = "interested"
-        job.save()
-        flash(f"Marked '{job.title}' for further review")
-    elif action == "not_interested":
-        job.status = "not_interested"
-        job.save()
-        flash(f"Skipped '{job.title}'")
+    JobStatus.update(status=new_status).where((JobStatus.user == user_id) & (JobStatus.job == job_id)).execute()
 
-    return redirect(url_for("triage"))
+    flash(f"Marked '{job.title}' as {new_status}")
+
+    return redirect(url_for(redirect_page))
 
 
 @app.route("/reading_list", methods=["GET"])
@@ -180,34 +187,6 @@ def reading(job_id):
     return render_template("reading.html", job=job, listings=listings, sites=sites)
 
 
-@app.route("/reading/action", methods=["POST"])
-def reading_action():
-    """Handle reading actions (like/dislike)"""
-    job_id = request.form.get("job_id")
-    action = request.form.get("action")
-
-    if not job_id or not action:
-        flash(INVALID_REQUEST)
-        return redirect(url_for("reading"))
-
-    job = Job.get_or_none((Job.id == job_id))
-
-    if not job:
-        flash(JOB_NOT_FOUND)
-        return redirect(url_for("reading"))
-
-    if action == "liked":
-        job.status = "liked"
-        job.save()
-        flash(f"Marked '{job.title}' for application")
-    elif action == "not_interested":
-        job.status = "not_interested"
-        job.save()
-        flash(f"Marked '{job.title}' as not a good fit")
-
-    return redirect(url_for("reading"))
-
-
 @app.route("/applying", methods=["GET"])
 @require_user
 def applying():
@@ -239,28 +218,6 @@ def get_site_links(job: Job) -> Tuple[List[Listing], List[Tuple[str, str]]]:
             sites.append(("LinkedIn", LinkedIn.get_url(listing.id)))
 
     return listings, sites
-
-
-@app.route("/applying/action", methods=["POST"])
-@require_user
-def applying_action():
-    """Handle applying actions (status update)"""
-    job_id = request.form.get("job_id")
-    status = request.form.get("status")
-
-    if not job_id or not status:
-        flash(INVALID_REQUEST)
-        return redirect(url_for("applying"))
-
-    job = Job.get_by_id(job_id)
-    job.status = status
-    job.save()
-    if status == "applied":
-        flash(f"Marked '{job.title}' as application submitted")
-    elif status == "not_interested":
-        flash(f"Marked '{job.title}' as not pursuing")
-
-    return redirect(url_for("applying"))
 
 
 @app.route("/search_queries", methods=["POST"])
@@ -395,19 +352,6 @@ def applied():
         jobs_with_sites.append((job, get_site_links(job)[1]))
 
     return render_template("applied.html", jobs=jobs_with_sites)
-
-
-@app.route("/complete_job", methods=["POST"])
-def complete_job():
-    job_id = request.form.get("job_id")
-    job = Job.get_or_none((Job.id == job_id))
-    if job:
-        job.status = "complete"
-        job.save()
-        flash(f"Job '{job.title}' marked as complete and hidden.")
-    else:
-        flash(JOB_NOT_FOUND)
-    return redirect(url_for("applied"))
 
 
 def start():

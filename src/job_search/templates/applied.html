@@ -19,9 +19,12 @@
                                     </a>
                                 {% endfor %}
                             </div>
-                            <form method="POST" action="{{ url_for('complete_job') }}" class="applied-complete-form">
+                            <form method="POST" action="{{ url_for('update_status') }}" class="applied-complete-form">
                                 <input type="hidden" name="job_id" value="{{ job.id }}">
-                                <button type="submit" class="btn btn-danger btn-sm">Hide/Complete</button>
+                                <input type="hidden" name="redirect_page" value="applied">
+                                <button type="submit" name="status" value="complete" class="btn btn-danger btn-sm">
+                                    Hide/Complete
+                                </button>
                             </form>
                         </div>
                     </li>

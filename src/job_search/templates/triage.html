@@ -5,40 +5,41 @@
 {% block header_title %}Initial Screening{% endblock %}
 
 {% block header_extra %}
-<div class="progress">Screening new job listings</div>
+    <div class="progress">Screening new job listings</div>
 {% endblock %}
 
 {% block content %}
-{% if job %}
-<div class="job-info">
-    <h2 class="job-title">{{ job.title }}</h2>
-    <div class="job-company">{{ job.company }}</div>
+    {% if job %}
+        <div class="job-info">
+            <h2 class="job-title">{{ job.title }}</h2>
+            <div class="job-company">{{ job.company }}</div>
 
-    {% for listing in listings %}
-    <div class="job-summary">
-        <h3 class="card-subtitle">Summary</h3>
-        <div class="card-text">{{ listing.summary }}</div>
-        <div class="card-text">Source: {{ listing.site|capitalize }}</div>
-    </div>
-    {% endfor %}
+            {% for listing in listings %}
+                <div class="job-summary">
+                    <h3 class="card-subtitle">Summary</h3>
+                    <div class="card-text">{{ listing.summary }}</div>
+                    <div class="card-text">Source: {{ listing.site|capitalize }}</div>
+                </div>
+            {% endfor %}
 
-    <form action="{{ url_for('triage_action') }}" method="post">
-        <input type="hidden" name="job_id" value="{{ job.id }}">
-        <div class="action-buttons">
-            <button type="submit" name="action" value="interested" class="btn btn-success">
-                Review Further
-            </button>
-            <button type="submit" name="action" value="not_interested" class="btn btn-danger">
-                Skip Listing
-            </button>
+            <form action="{{ url_for('update_status') }}" method="post">
+                <input type="hidden" name="job_id" value="{{ job.id }}">
+                <input type="hidden" name="redirect_page" value="triage">
+                <div class="action-buttons">
+                    <button type="submit" name="status" value="interested" class="btn btn-success">
+                        Review Further
+                    </button>
+                    <button type="submit" name="status" value="not_interested" class="btn btn-danger">
+                        Skip Listing
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
-</div>
-{% else %}
-<div class="card">
-    <h2 class="card-title">No Jobs to Triage</h2>
-    <p class="card-text">There are no new jobs to triage at this time.</p>
-    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
-</div>
-{% endif %}
+    {% else %}
+        <div class="card">
+            <h2 class="card-title">No Jobs to Triage</h2>
+            <p class="card-text">There are no new jobs to triage at this time.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+        </div>
+    {% endif %}
 {% endblock %}

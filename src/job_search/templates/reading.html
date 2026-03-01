@@ -5,51 +5,52 @@
 {% block header_title %}Detailed Review{% endblock %}
 
 {% block header_extra %}
-<div class="progress">Reviewing potential opportunities</div>
+    <div class="progress">Reviewing potential opportunities</div>
 {% endblock %}
 
 {% block content %}
-{% if job %}
-<div class="job-info">
-    <h2 class="job-title">{{ job.title }}</h2>
-    <div class="job-company">{{ job.company }}</div>
+    {% if job %}
+        <div class="job-info">
+            <h2 class="job-title">{{ job.title }}</h2>
+            <div class="job-company">{{ job.company }}</div>
 
-    {% for listing in listings %}
-    <div class="job-summary">
-        <h3 class="card-subtitle">Summary</h3>
-        <div class="card-text">{{ listing.summary }}</div>
-        <div class="card-text">Source: {{ listing.site|capitalize }}</div>
-    </div>
-    {% endfor %}
-
-    <div class="job-links">
-        <h3 class="card-subtitle">Open Job Listings</h3>
-        <div class="action-buttons">
-            {% for site_name, site_url in sites %}
-            <a href="{{ site_url }}" target="_blank" class="btn btn-primary">
-                {{ site_name }}
-            </a>
+            {% for listing in listings %}
+                <div class="job-summary">
+                    <h3 class="card-subtitle">Summary</h3>
+                    <div class="card-text">{{ listing.summary }}</div>
+                    <div class="card-text">Source: {{ listing.site|capitalize }}</div>
+                </div>
             {% endfor %}
-        </div>
-    </div>
 
-    <form action="{{ url_for('reading_action') }}" method="post">
-        <input type="hidden" name="job_id" value="{{ job.id }}">
-        <div class="action-buttons">
-            <button type="submit" name="action" value="liked" class="btn btn-success">
-                Apply for Position
-            </button>
-            <button type="submit" name="action" value="not_interested" class="btn btn-danger">
-                Not a Good Fit
-            </button>
+            <div class="job-links">
+                <h3 class="card-subtitle">Open Job Listings</h3>
+                <div class="action-buttons">
+                    {% for site_name, site_url in sites %}
+                        <a href="{{ site_url }}" target="_blank" class="btn btn-primary">
+                            {{ site_name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <form action="{{ url_for('update_status') }}" method="post">
+                <input type="hidden" name="job_id" value="{{ job.id }}">
+                <input type="hidden" name="redirect_page" value="reading">
+                <div class="action-buttons">
+                    <button type="submit" name="status" value="liked" class="btn btn-success">
+                        Apply for Position
+                    </button>
+                    <button type="submit" name="status" value="not_interested" class="btn btn-danger">
+                        Not a Good Fit
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
-</div>
-{% else %}
-<div class="card">
-    <h2 class="card-title">No Jobs to Read</h2>
-    <p class="card-text">There are no jobs to review at this time.</p>
-    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
-</div>
-{% endif %}
+    {% else %}
+        <div class="card">
+            <h2 class="card-title">No Jobs to Read</h2>
+            <p class="card-text">There are no jobs to review at this time.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+        </div>
+    {% endif %}
 {% endblock %}
