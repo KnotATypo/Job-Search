@@ -168,15 +168,14 @@ def reading(job_id):
 
     if job_id is None:
         # Get the next job to read
-        job = (
-            Job.select()
-            .join(JobStatus)
-            .where((JobStatus.status == "interested") & (JobStatus.user == user_id))
-            .join(Listing)
-            .first()
+        jobs = list(
+            Job.select().join(JobStatus).where((JobStatus.status == "interested") & (JobStatus.user == user_id))
         )
-    else:
-        job = Job.select().where(Job.id == job_id).join(Listing).first()
+        if len(jobs) == 0:
+            return redirect(url_for("index"))
+        return redirect(url_for("reading", job_id=jobs[0].id))
+
+    job = Job.select().where(Job.id == job_id).join(Listing).first()
 
     if not job or job is None:
         flash("Job not found!")
