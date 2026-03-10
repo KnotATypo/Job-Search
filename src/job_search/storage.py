@@ -25,7 +25,7 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def description_download(self, listing_id: str) -> bool:
+    def description_downloaded(self, listing_id: str) -> bool:
         pass
 
 
@@ -71,7 +71,7 @@ class FileStorage(Storage):
         else:
             return None
 
-    def description_download(self, listing_id: str) -> bool:
+    def description_downloaded(self, listing_id: str) -> bool:
         """
         Checks if the description of the listing has been downloaded.
         """
@@ -114,7 +114,7 @@ class S3Storage(Storage):
         obj = self.bucket.Object(listing_id + ".txt").get()
         return obj["Body"].read().decode("utf-8")
 
-    def description_download(self, listing_id: str) -> bool:
+    def description_downloaded(self, listing_id: str) -> bool:
         try:
             self.bucket.Object(listing_id + ".txt").load()
             return True

@@ -53,7 +53,7 @@ def missing_descriptions():
 
     clean_listings = []
     for listing in tqdm(listings, desc="Looking for Descriptions", unit="listing", disable=not progress_bars):
-        if not storage.description_download(listing.id):
+        if not storage.description_downloaded(listing.id):
             clean_listings.append(listing)
     listings = clean_listings
 

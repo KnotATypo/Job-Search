@@ -66,7 +66,7 @@ def create_summary():
 
     need_summary = Listing.select().where(Listing.id << need_summary)
     # Remove any listings that we don't have a description for
-    need_summary = [listing for listing in need_summary if storage.description_download(listing.id)]
+    need_summary = [listing for listing in need_summary if storage.description_downloaded(listing.id)]
     for listing in tqdm(need_summary, disable=not progress_bars):
         summarise_and_save(listing)
         logger.info(f"Summary saved for listing {listing.id}")

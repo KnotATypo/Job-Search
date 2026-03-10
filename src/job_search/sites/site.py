@@ -95,7 +95,7 @@ class Site:
                 listing = existing_listing
 
             # Even if the listing exists, the description might not
-            if not storage.description_download(listing.id):
+            if not storage.description_downloaded(listing.id):
                 description = self.get_listing_description(listing.id)
                 if description is not None:
                     storage.write_description(description, listing.id)
