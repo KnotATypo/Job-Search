@@ -87,4 +87,4 @@ def pass_blacklist(job: Job, user: User) -> bool:
 
 
 def get_fuzzy_job(job: Job) -> str:
-    return re.sub(r"\W", "", job.title.lower()) + "-" + re.sub(r"\W", "", job.company.lower())
+    return re.sub(r"\W", "", job.title.lower()) + "-" + re.sub(r"\W", "", job.company.lower()).removesuffix("ptyltd")
