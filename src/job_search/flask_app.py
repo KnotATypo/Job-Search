@@ -328,12 +328,12 @@ def manage_blacklist_terms():
 def run_blacklist():
     username, user_id = get_current_user()
 
-    new_jobs = Job.select().join(JobStatus).where((JobStatus.status == "new") & (JobStatus.user == user_id))
+    new_statuses = JobStatus.select().where((JobStatus.user == user_id) & (JobStatus.status == "new"))
     filtered_count = 0
-    for job in new_jobs:
-        if not util.pass_blacklist(job, user_id):
-            job.status = "blacklist"
-            job.save()
+    for status in new_statuses:
+        if not util.pass_blacklist(status.job, user_id):
+            status.status = "blacklist"
+            status.save()
             filtered_count += 1
 
     return jsonify({"message": f"Blacklist run for {username}. {filtered_count} jobs filtered."})
