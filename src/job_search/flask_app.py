@@ -12,7 +12,7 @@ from job_search import util
 from job_search.clean import clean
 from job_search.create_summary import create_summary
 from job_search.logger import logger, configure_logging
-from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site, JobStatus
+from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site, JobStatus, db
 from job_search.search import search
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
@@ -319,6 +319,7 @@ def delete_blacklist_term(term):
 
 
 @app.route("/manage_blacklist_terms", methods=["GET"])
+@require_user
 def manage_blacklist_terms():
     return render_template("manage_blacklist_terms.html")
 
@@ -353,13 +354,30 @@ def applied():
     return render_template("applied.html", jobs=jobs_with_sites)
 
 
+@app.before_request
+def _db_connect():
+    if db.is_closed():
+        db.connect()
+
+
+@app.teardown_request
+def _db_close(exception):
+    if not db.is_closed():
+        db.close()
+
+
+def run_with_db(func):
+    with db:
+        func()
+
+
 def start():
     configure_logging()
     logger.info("Scheduling tasks")
     # TODO Make these configurable through .env or web gui
-    scheduler.add_job(search, "cron", hour=22, minute=0)
-    scheduler.add_job(create_summary, "cron", hour=0, minute=0)
-    scheduler.add_job(clean, "cron", day="*/2", hour=0, minute=0)
+    scheduler.add_job(run_with_db, "cron", args=[search], hour=22, minute=0)
+    scheduler.add_job(run_with_db, "cron", args=[create_summary], hour=0, minute=0)
+    scheduler.add_job(run_with_db, "cron", args=[clean], day="*/2", hour=0, minute=0)
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     logger.info("Tasks scheduled")
