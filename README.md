@@ -47,25 +47,30 @@ The database consists of the following tables:
 Create a `.env` file in the project root with the following template:
 
 ```dotenv
+{
 DATA_DIRECTORY=
+} or {
+S3_ENDPOINT_URL=
+S3_KEY_ID=
+S3_ACCESS_KEY=
+}
 
-DATABASE_NAME=job_search
 DATABASE_USER=
 DATABASE_PASSWORD=
 DATABASE_HOST=
 
 OLLAMA_HOST=
-SUMMARY_MODEL_NAME=qwen3:1.7b
 SUMMARY_PROMPT="Please create a single sentence summary of this job description without any corporate fluff. Focus on technical details such as required experience and the details of the work."
 ```
 
-The existing variables are suggested defaults; modify them as needed.
+Storage will default to local directory (Override with `DATA_DIRECTORY`) unless provided with appropriate S3 login details.
 
-- `DATA_DIRECTORY`: Directory to store job listing text.
+- `S3_*`: S3 connection details.
 - `DATABASE_*`: Database connection details.
 - `OLLAMA_HOST`: The host of the Ollama instance to use for summary generation.
-- `SUMMARY_MODEL_NAME`: The Ollama model used for summarising job descriptions.
-- `SUMMARY_PROMPT`: The prompt used to get the model to create a summary
+- `SUMMARY_PROMPT`: The prompt used to get the model to create a summary.
+- `SUMMARY_MODEL_NAME`: (Optional) Override for Ollama model used for summarising job descriptions. Defaults to `qwen3:1.7b`
+- `DATABASE_NAME`: (Optional) Override database name. Defaults to `job_search`
 
 ## Usage
 

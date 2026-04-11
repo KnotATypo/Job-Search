@@ -13,7 +13,7 @@ load_dotenv()
 
 # Connect to ollama and ensure the requested model is available
 client = Client(host=os.getenv("OLLAMA_HOST"))
-model_name = os.getenv("SUMMARY_MODEL_NAME")
+model_name = os.getenv("SUMMARY_MODEL_NAME", "qwen3:1.7b")
 if model_name not in [m.model for m in client.list().models]:
     logger.error(f"Model {model_name} not found")
     exit(1)
@@ -28,7 +28,7 @@ def create_summary():
 
     connection = psycopg2.connect(
         host=os.getenv("DATABASE_HOST"),
-        database=os.getenv("DATABASE_NAME"),
+        database=os.getenv("DATABASE_NAME", "job_search"),
         user=os.getenv("DATABASE_USER"),
         password=os.getenv("DATABASE_PASSWORD"),
     )
