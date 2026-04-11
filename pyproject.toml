@@ -7,19 +7,19 @@ requires-python = ">=3.13"
 dependencies = [
     "selenium-stealth>=1.0.6",
     "beautifulsoup4>=4.14.3",
-    "tqdm>=4.66.3",
+    "tqdm>=4.67.3",
     "selenium>=4.32.0",
     "peewee>=3.19.0",
     "flask>=3.1.2",
     "waitress>=3.0.2",
     "psycopg2-binary>=2.9.10",
     "black>=25.12.0",
-    "python-dotenv>=1.2.1",
+    "python-dotenv>=1.2.2",
     "apscheduler>=3.11.2",
     "peewee-enum-field>=0.2.0",
     "ollama>=0.6.1",
     "boto3>=1.42.47",
-    "boto3-stubs~=1.42.47",
+    "boto3-stubs~=1.42.88",
 ]
 
 [project.scripts]
