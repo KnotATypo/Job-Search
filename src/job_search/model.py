@@ -87,6 +87,7 @@ class SearchQuery(BaseModel):
     remote = BooleanField(default=False)
     location = EnumField(Location, default=Location.Australia)
     user = ForeignKeyField(User)
+    days_since_post = IntegerField(default=0)
 
 
 class Site(BaseModel):

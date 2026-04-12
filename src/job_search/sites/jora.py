@@ -65,3 +65,6 @@ class Jora(Site):
 
     def add_remote_filter(self, query_string: str) -> str:
         raise NotSupportedError
+
+    def add_days_filter(self, query_string: str, days: int) -> str:
+        return query_string + f"&=a{days}d"

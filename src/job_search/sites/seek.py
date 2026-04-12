@@ -59,3 +59,11 @@ class Seek(Site):
     def add_remote_filter(self, query_string: str) -> str:
         index = query_string.index("?")
         return query_string[:index] + "/remote" + query_string[index:]
+
+    def add_days_filter(self, query_string: str, days: int) -> str:
+        if "?" in query_string:
+            query_string += "&"
+        else:
+            query_string += "?"
+        query_string += f"daterange={days}"
+        return query_string

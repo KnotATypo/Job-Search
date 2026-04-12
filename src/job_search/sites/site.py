@@ -113,6 +113,8 @@ class Site:
         query_string = self.add_location(query_string, query.location)
         if query.remote:
             query_string = self.add_remote_filter(query_string)
+        if query.days_since_post != 0:
+            query_string = self.add_days_filter(query_string, query.days_since_post)
         return query_string
 
     def adapt_term(self, term: str) -> str:
@@ -172,8 +174,16 @@ class Site:
         """
         raise NotImplementedError
 
+    def add_days_filter(self, query_string: str, days: int) -> str:
+        """
+        Add a "days since posted" filter to the query string.
+
+        query_string -- The original query string.
+        """
+        raise NotImplementedError
+
     @classmethod
-    def get_url(cls, job_id) -> str:
+    def get_url(cls, listing_id) -> str:
         """Return the URL for a job listing given its ID."""
         instance = cls()
-        return instance.build_job_link(job_id)
+        return instance.build_job_link(listing_id)
