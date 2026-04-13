@@ -73,10 +73,10 @@ class Site:
 
     def save_listings(self, listings: List[Listing], user: User) -> None:
         """
-        Saves the provided listings and jobs into the database and writes the body of the listing to the filesystem.
+        Saves the provided listings into the database and writes the body of the listing to the filesystem.
 
-        listings -- List of tuples pairing Listings to their Job.
-        user_id -- The id of the user to save the jobs for.
+        listings -- List of Listings.
+        user_id -- The id of the user to save the listings for.
         """
         for listing in listings:
             # Create a status for the job if it doesn't already exist
