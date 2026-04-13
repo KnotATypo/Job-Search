@@ -1,9 +1,10 @@
 import re
-from typing import List, Tuple
+from typing import List
 
 from bs4 import Tag
 
-from job_search.model import Listing, Job, SearchQuery, Location
+from job_search import util
+from job_search.model import Listing, SearchQuery, Location
 from job_search.sites.site import Site, NotSupportedError
 from job_search.util import get_page_soup
 
@@ -24,7 +25,7 @@ class Jora(Site):
             body = body.text
         return body
 
-    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Listing]:
         link = self.build_page_link(query, page_number)
         soup = get_page_soup(link)
         if soup.text.find("We have looked through all the results for you") != -1:
@@ -56,12 +57,12 @@ class Jora(Site):
         }
         return query_string + "&l=" + location_map[location]
 
-    def extract_info(self, job) -> Tuple[Listing, Job]:
-        link = job["href"]
+    def extract_info(self, listing) -> Listing:
+        link = listing["href"]
         listing_id = link[link.rindex("/") + 1 : link.index("?")]
-        title = job.text
-        company = job.parent.parent.parent.parent.find("span", attrs={"class", "job-company"}).text
-        return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
+        title = listing.text
+        company = listing.parent.parent.parent.parent.find("span", attrs={"class", "job-company"}).text
+        return Listing(id=listing_id, site=self.SITE_STRING, job=util.get_or_create_job(title, company))
 
     def add_remote_filter(self, query_string: str) -> str:
         raise NotSupportedError

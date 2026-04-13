@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 from bs4 import Tag
 
+from job_search import util
 from job_search.model import Listing, Job, SearchQuery, Location
 from job_search.sites.site import Site
 from job_search.util import get_page_soup
@@ -23,7 +24,7 @@ class Seek(Site):
             return None
         return body.contents[0].text
 
-    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Listing]:
         link = self.build_page_link(query, page_number)
         soup = get_page_soup(link)
         matches = soup.find_all("a", attrs={"data-automation": "jobTitle"})
@@ -45,16 +46,16 @@ class Seek(Site):
         index = query_string.index("?")
         return query_string[:index] + "/" + location_map[location] + query_string[index:]
 
-    def extract_info(self, job) -> Tuple[Listing, Job]:
-        link = job["href"]
+    def extract_info(self, listing) -> Listing:
+        link = listing["href"]
         listing_id = link[link.rindex("/") + 1 : link.index("?")]
-        title = job.string
-        company_field = job.parent.parent.parent.find("a", attrs={"data-automation": "jobCompany"})
+        title = listing.string
+        company_field = listing.parent.parent.parent.find("a", attrs={"data-automation": "jobCompany"})
         if company_field is not None:
             company = company_field.string
         else:
             company = "None"
-        return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
+        return Listing(id=listing_id, site=self.SITE_STRING, job=util.get_or_create_job(title, company))
 
     def add_remote_filter(self, query_string: str) -> str:
         index = query_string.index("?")

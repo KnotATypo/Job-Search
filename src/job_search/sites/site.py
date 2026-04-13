@@ -6,7 +6,7 @@ from tqdm import tqdm
 from job_search import util
 from job_search.logger import progress_bars, logger
 from job_search.model import PageCount, Job, Listing, SearchQuery, User, Location, JobStatus
-from job_search.util import get_fuzzy_job, storage
+from job_search.util import storage
 
 HTML_PARSER = "html.parser"
 
@@ -71,26 +71,23 @@ class Site:
 
         logger.info(f"Completed query {friendly_query}")
 
-    def save_listings(self, listings: List[Tuple[Listing, Job]], user: User) -> None:
+    def save_listings(self, listings: List[Listing], user: User) -> None:
         """
         Saves the provided listings and jobs into the database and writes the body of the listing to the filesystem.
 
         listings -- List of tuples pairing Listings to their Job.
         user_id -- The id of the user to save the jobs for.
         """
-        # Sometimes job titles/companies have different casing/punctuation
-        existing_jobs = {get_fuzzy_job(j): j.id for j in Job.select()}
-        for listing, job in listings:
-            if (job_fuzzy := get_fuzzy_job(job)) in existing_jobs.keys():
-                job = Job.get_by_id(existing_jobs[job_fuzzy])
-            else:
-                job.save()
-                JobStatus.create(user=user, job=job, status="new" if util.pass_blacklist(job, user) else "blacklist")
-                logger.info(f"Added new job {job}")
+        for listing in listings:
+            # Create a status for the job if it doesn't already exist
+            if JobStatus.get(job=listing.job, user=user) is None:
+                JobStatus.create(
+                    user=user, job=listing.job, status="new" if util.pass_blacklist(listing.job, user) else "blacklist"
+                )
 
             if (existing_listing := Listing.get_or_none(id=listing.id)) is None:
-                listing = Listing.create(id=listing.id, site=listing.site, summary="", job=job)
-                logger.info(f"Created new listing {listing} for job {job}")
+                listing.save()
+                logger.info(f"Created new listing {listing} for job {listing.job}")
             else:
                 listing = existing_listing
 
@@ -135,18 +132,18 @@ class Site:
         """
         raise NotImplementedError
 
-    def get_listings_from_page(self, query: SearchQuery, page_number) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchQuery, page_number) -> List[Listing]:
         """
-        Retrieves (Listing, Job) tuples from a given page number.
+        Retrieves Listings from a given page number.
 
         page_number -- The page number of the search. For sites which require increments larger than +1 are handled inside this function.
         query -- The search query.
         """
         raise NotImplementedError
 
-    def extract_info(self, job) -> Tuple[Listing, Job]:
+    def extract_info(self, listing) -> Listing:
         """
-        Extracts information from BeautifulSoup page element into a (Listing, Job) tuple.
+        Extracts information from BeautifulSoup page element into a Listing.
 
         job -- Element to extract information from.
         """

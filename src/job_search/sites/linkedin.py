@@ -1,6 +1,7 @@
-from typing import Tuple, List
+from typing import List
 
-from job_search.model import Listing, Job, SearchQuery, Location
+from job_search import util
+from job_search.model import Listing, SearchQuery, Location
 from job_search.sites.site import Site
 from job_search.util import get_page_soup
 
@@ -25,7 +26,7 @@ class LinkedIn(Site):
             body = body.text
         return body
 
-    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Tuple[Listing, Job]]:
+    def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Listing]:
         link = self.build_page_link(query, page_number * 10)
         soup = get_page_soup(link)
         cards = soup.find_all("li")
@@ -33,7 +34,7 @@ class LinkedIn(Site):
             return []
 
         jobs = [self.extract_info(card) for card in cards]
-        jobs = [job for job in jobs if job is not None]
+        jobs = [j for j in jobs if j is not None]
 
         return jobs
 
@@ -54,8 +55,8 @@ class LinkedIn(Site):
         }
         return query_string + "&geoId=" + location_map[location]
 
-    def extract_info(self, job) -> Tuple[Listing, Job] | None:
-        links = job.find_all("a")
+    def extract_info(self, listing) -> Listing | None:
+        links = listing.find_all("a")
         link = links[0]["href"]
         if "https://au" not in link:
             return None
@@ -65,7 +66,7 @@ class LinkedIn(Site):
             company = "None"
         else:
             company = links[1].text.strip()
-        return Listing(id=listing_id, site=self.SITE_STRING), Job(title=title, company=company)
+        return Listing(id=listing_id, site=self.SITE_STRING, job=util.get_or_create_job(title, company))
 
     def add_remote_filter(self, query_string: str) -> str:
         return query_string + "&f_WT=2"

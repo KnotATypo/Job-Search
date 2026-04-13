@@ -69,6 +69,25 @@ def get_page_soup(link: str) -> BeautifulSoup:
     return soup
 
 
+def get_or_create_job(title: str, company: str) -> Job:
+    def _get_fuzzy_job(inner_title: str, inner_company: str) -> str:
+        return (
+            re.sub(r"\W", "", inner_title.lower())
+            + "-"
+            + re.sub(r"\W", "", inner_company.lower()).removesuffix("ptyltd")
+        )
+
+    existing_jobs = {_get_fuzzy_job(j.title, j.company): j.id for j in Job.select()}
+
+    if (job_fuzzy := _get_fuzzy_job(title, company)) in existing_jobs.keys():
+        job = Job.get_by_id(existing_jobs[job_fuzzy])
+    else:
+        job = Job.create(title=title, company=company)
+        logger.info(f"Added new job {job}")
+
+    return job
+
+
 def pass_blacklist(job: Job, user: User) -> bool:
     """
     Applies the blacklist terms for the user to the given job
@@ -84,7 +103,3 @@ def pass_blacklist(job: Job, user: User) -> bool:
         ):
             return False
     return True
-
-
-def get_fuzzy_job(job: Job) -> str:
-    return re.sub(r"\W", "", job.title.lower()) + "-" + re.sub(r"\W", "", job.company.lower()).removesuffix("ptyltd")
