@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 from dotenv import load_dotenv
@@ -87,7 +88,9 @@ class Site:
             )
 
             if (existing_listing := Listing.get_or_none(id=listing.id)) is None:
-                listing.save()
+                Listing.create(
+                    id=listing.id, job=listing.job, site=listing.site, summary="", timestamp=datetime.datetime.now()
+                )
                 logger.info(f"Created new listing {listing} for job {listing.job}")
             else:
                 listing = existing_listing
