@@ -22,7 +22,7 @@
                             <form method="POST" action="{{ url_for('update_status') }}" class="applied-complete-form">
                                 <input type="hidden" name="job_id" value="{{ job.id }}">
                                 <input type="hidden" name="redirect_page" value="applied">
-                                <button type="submit" name="status" value="complete" class="btn btn-danger btn-sm">
+                                <button type="submit" name="status" value="COMPLETE" class="btn btn-danger btn-sm">
                                     Hide/Complete
                                 </button>
                             </form>
@@ -31,7 +31,7 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No jobs with 'applied' status found.</p>
+            <p>No jobs with 'APPLIED' status found.</p>
         {% endif %}
     </div>
 {% endblock %}

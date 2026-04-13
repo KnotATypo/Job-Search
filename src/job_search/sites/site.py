@@ -1,11 +1,11 @@
-from typing import List, Tuple
+from typing import List
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
 from job_search import util
 from job_search.logger import progress_bars, logger
-from job_search.model import PageCount, Job, Listing, SearchQuery, User, Location, JobStatus
+from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status
 from job_search.util import storage
 
 HTML_PARSER = "html.parser"
@@ -80,10 +80,11 @@ class Site:
         """
         for listing in listings:
             # Create a status for the job if it doesn't already exist
-            if JobStatus.get(job=listing.job, user=user) is None:
-                JobStatus.create(
-                    user=user, job=listing.job, status="new" if util.pass_blacklist(listing.job, user) else "blacklist"
-                )
+            JobStatus.get_or_create(
+                user=user,
+                job=listing.job,
+                defaults={"status": Status.NEW if util.pass_blacklist(listing.job, user) else Status.BLACKLIST},
+            )
 
             if (existing_listing := Listing.get_or_none(id=listing.id)) is None:
                 listing.save()

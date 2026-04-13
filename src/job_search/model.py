@@ -44,10 +44,20 @@ class Job(BaseModel):
     company = TextField()
 
 
+class Status(Enum):
+    NEW = "New"
+    INTERESTED = "Interested"
+    LIKED = "Liked"
+    APPLIED = "Applied"
+    NOT_INTERESTED = "Not Interested"
+    BLACKLIST = "Blacklist"
+    COMPLETE = "Complete"
+
+
 class JobStatus(BaseModel):
     user = ForeignKeyField(User)
     job = ForeignKeyField(Job)
-    status = CharField(default="new")
+    status = EnumField(Status, default=Status.NEW)
 
     class Meta:
         primary_key = CompositeKey("user", "job")

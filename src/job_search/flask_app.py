@@ -12,7 +12,19 @@ from job_search import util
 from job_search.clean import clean
 from job_search.create_summary import create_summary
 from job_search.logger import logger, configure_logging
-from job_search.model import Job, Listing, SearchQuery, User, BlacklistTerm, Location, SiteQuery, Site, JobStatus, db
+from job_search.model import (
+    Job,
+    Listing,
+    SearchQuery,
+    User,
+    BlacklistTerm,
+    Location,
+    SiteQuery,
+    Site,
+    JobStatus,
+    db,
+    Status,
+)
 from job_search.search import search
 from job_search.sites.jora import Jora
 from job_search.sites.linkedin import LinkedIn
@@ -74,10 +86,12 @@ def index():
     """Main page with workflow stages"""
     _, user_id = get_current_user()
 
-    triage_count = JobStatus.select().where((JobStatus.status == "new") & (JobStatus.user == user_id)).count()
-    reading_count = JobStatus.select().where((JobStatus.status == "interested") & (JobStatus.user == user_id)).count()
-    applying_count = JobStatus.select().where((JobStatus.status == "liked") & (JobStatus.user == user_id)).count()
-    applied_count = JobStatus.select().where((JobStatus.status == "applied") & (JobStatus.user == user_id)).count()
+    triage_count = JobStatus.select().where((JobStatus.status == Status.NEW) & (JobStatus.user == user_id)).count()
+    reading_count = (
+        JobStatus.select().where((JobStatus.status == Status.INTERESTED) & (JobStatus.user == user_id)).count()
+    )
+    applying_count = JobStatus.select().where((JobStatus.status == Status.LIKED) & (JobStatus.user == user_id)).count()
+    applied_count = JobStatus.select().where((JobStatus.status == Status.APPLIED) & (JobStatus.user == user_id)).count()
 
     return render_template(
         "index.html",
@@ -96,7 +110,7 @@ def triage(job_id=None):
     _, user_id = get_current_user()
 
     if job_id is None:
-        jobs = list(Job.select().join(JobStatus).where((JobStatus.status == "new") & (JobStatus.user == user_id)))
+        jobs = list(Job.select().join(JobStatus).where((JobStatus.status == Status.NEW) & (JobStatus.user == user_id)))
         if len(jobs) == 0:
             return redirect(url_for("index"))
         return redirect(url_for("triage", job_id=jobs[0].id))
@@ -125,13 +139,13 @@ def update_status():
     redirect_page = request.form.get("redirect_page")
 
     if not job_id or new_status not in [
-        "new",
-        "interested",
-        "not_interested",
-        "liked",
-        "applied",
-        "complete",
-        "blacklist",
+        "NEW",
+        "INTERESTED",
+        "NOT_INTERESTED",
+        "LIKED",
+        "APPLIED",
+        "COMPLETE",
+        "BLACKLIST",
     ]:
         flash(INVALID_REQUEST)
         return redirect(url_for("index"))
@@ -142,7 +156,7 @@ def update_status():
         flash(JOB_NOT_FOUND)
         return redirect(url_for("index"))
 
-    JobStatus.update(status=new_status).where((JobStatus.user == user_id) & (JobStatus.job == job_id)).execute()
+    JobStatus.update(status=Status(new_status)).where((JobStatus.user == user_id) & (JobStatus.job == job_id)).execute()
 
     flash(f"Marked '{job.title}' as {new_status}")
 
@@ -154,7 +168,7 @@ def update_status():
 def reading_list():
     """Applied jobs page"""
     _, user_id = get_current_user()
-    jobs = Job.select().join(JobStatus).where((JobStatus.status == "interested") & (JobStatus.user == user_id))
+    jobs = Job.select().join(JobStatus).where((JobStatus.status == Status.INTERESTED) & (JobStatus.user == user_id))
 
     return render_template("reading_list.html", jobs=jobs)
 
@@ -169,7 +183,7 @@ def reading(job_id):
     if job_id is None:
         # Get the next job to read
         jobs = list(
-            Job.select().join(JobStatus).where((JobStatus.status == "interested") & (JobStatus.user == user_id))
+            Job.select().join(JobStatus).where((JobStatus.status == Status.INTERESTED) & (JobStatus.user == user_id))
         )
         if len(jobs) == 0:
             return redirect(url_for("index"))
@@ -192,7 +206,7 @@ def applying():
     """Applying page for liked jobs"""
     _, user_id = get_current_user()
     # Get the next job to apply for
-    job = Job.select().join(JobStatus).where((JobStatus.status == "liked") & (JobStatus.user == user_id)).first()
+    job = Job.select().join(JobStatus).where((JobStatus.status == Status.LIKED) & (JobStatus.user == user_id)).first()
 
     if not job:
         flash("No more jobs to apply for!")
@@ -329,11 +343,11 @@ def manage_blacklist_terms():
 def run_blacklist():
     username, user_id = get_current_user()
 
-    new_statuses = JobStatus.select().where((JobStatus.user == user_id) & (JobStatus.status == "new"))
+    new_statuses = JobStatus.select().where((JobStatus.user == user_id) & (JobStatus.status == Status.NEW))
     filtered_count = 0
     for status in new_statuses:
         if not util.pass_blacklist(status.job, user_id):
-            status.status = "blacklist"
+            status.status = Status.BLACKLIST
             status.save()
             filtered_count += 1
 
@@ -345,7 +359,7 @@ def run_blacklist():
 def applied():
     """Applied jobs page"""
     _, user_id = get_current_user()
-    jobs = Job.select().join(JobStatus).where((JobStatus.status == "applied") & (JobStatus.user == user_id))
+    jobs = Job.select().join(JobStatus).where((JobStatus.status == Status.APPLIED) & (JobStatus.user == user_id))
 
     jobs_with_sites = []
     for job in jobs:
