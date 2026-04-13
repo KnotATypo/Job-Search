@@ -152,13 +152,13 @@ class Site:
         """
         raise NotImplementedError
 
-    def build_job_link(self, job_id) -> str:
+    def build_job_link(self, listing_id) -> str:
         """
         Builds a link to an individual job page using templated LISTING_URL.
 
         job_id -- The job id of the individual job page.
         """
-        return self.LISTING_URL.replace("%%ID%%", str(job_id))
+        return self.LISTING_URL.replace("%%ID%%", str(listing_id))
 
     def get_listing_description(self, listing_id) -> str | None:
         """

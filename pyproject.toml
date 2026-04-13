@@ -20,6 +20,7 @@ dependencies = [
     "ollama>=0.6.1",
     "boto3>=1.42.47",
     "boto3-stubs~=1.42.88",
+    "requests>=2.33.1",
 ]
 
 [project.scripts]
