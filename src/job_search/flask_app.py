@@ -139,13 +139,13 @@ def update_status():
     redirect_page = request.form.get("redirect_page")
 
     if not job_id or new_status not in [
-        "NEW",
-        "INTERESTED",
-        "NOT_INTERESTED",
-        "LIKED",
-        "APPLIED",
-        "COMPLETE",
-        "BLACKLIST",
+        "New",
+        "Interested",
+        "Not Interested",
+        "Liked",
+        "Applied",
+        "Complete",
+        "Blacklist",
     ]:
         flash(INVALID_REQUEST)
         return redirect(url_for("index"))
