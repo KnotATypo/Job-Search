@@ -54,8 +54,8 @@ def create_summary():
         elif any(has_blacklist) and listing[1] == "blacklist":
             # Listings that have previously been given the "blacklist" summary, but now have an associated job that isn't blacklisted
             need_summary.append(listing[0])
-        elif listing[1] in ["", "N/A"] and any(x in ["NEW", "INTERESTED"] for x in listing[2].split("|")):
-            # Remaining jobs without summaries that are still relevant to users
+        elif listing[1] in ["", "N/A", "blacklist"] and any(x in ["NEW", "INTERESTED"] for x in listing[2].split("|")):
+            # Remaining jobs without summaries that are still relevant to users, or jobs that have been un-blacklisted
             need_summary.append(listing[0])
     connection.close()
 
