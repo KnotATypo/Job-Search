@@ -18,7 +18,7 @@ class NotSupportedError(Exception):
     pass
 
 
-class Site:
+class BaseSite:
     """
     Superclass for all sites.
     """
@@ -149,15 +149,15 @@ class Site:
         """
         Extracts information from BeautifulSoup page element into a Listing.
 
-        job -- Element to extract information from.
+        listing -- Element to extract information from.
         """
         raise NotImplementedError
 
-    def build_job_link(self, listing_id) -> str:
+    def build_listing_link(self, listing_id) -> str:
         """
-        Builds a link to an individual job page using templated LISTING_URL.
+        Builds a link to an individual listing page using templated LISTING_URL.
 
-        job_id -- The job id of the individual job page.
+        listing_id -- The listing id of the individual listing page.
         """
         return self.LISTING_URL.replace("%%ID%%", str(listing_id))
 
@@ -184,7 +184,14 @@ class Site:
         raise NotImplementedError
 
     @classmethod
-    def get_url(cls, listing_id) -> str:
-        """Return the URL for a job listing given its ID."""
-        instance = cls()
-        return instance.build_job_link(listing_id)
+    def get_site_instance(cls, site_string: str):
+        """
+        Gets an instance of the site class corresponding to the given site.
+
+        site_string -- The plain text name of the site.
+        """
+        site_string = site_string.lower()
+        site_classes = {cls.__name__.lower(): cls for cls in BaseSite.__subclasses__()}
+        if site_string not in site_classes:
+            raise NotSupportedError(f"Site {site_string} is not supported.")
+        return site_classes[site_string]()

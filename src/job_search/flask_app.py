@@ -26,9 +26,7 @@ from job_search.model import (
     Status,
 )
 from job_search.search import search
-from job_search.sites.jora import Jora
-from job_search.sites.linkedin import LinkedIn
-from job_search.sites.seek import Seek
+from job_search.sites.base_site import BaseSite
 
 INVALID_REQUEST = "Invalid request"
 JOB_NOT_FOUND = "Job not found or not yours."
@@ -223,12 +221,8 @@ def get_site_links(job: Job) -> Tuple[List[Listing], List[Tuple[str, str]]]:
     listings = list(Listing.select().where(Listing.job == job))
     sites = []
     for listing in listings:
-        if listing.site == "seek":
-            sites.append(("Seek", Seek.get_url(listing.id)))
-        elif listing.site == "jora":
-            sites.append(("Jora", Jora.get_url(listing.id)))
-        elif listing.site == "linkedin":
-            sites.append(("LinkedIn", LinkedIn.get_url(listing.id)))
+        site_instance = BaseSite.get_site_instance(listing.site)
+        sites.append(site_instance.build_listing_link(listing.id))
 
     return listings, sites
 

@@ -79,7 +79,7 @@ def get_or_create_job(title: str, company: str) -> Job:
 
     existing_jobs = {_get_fuzzy_job(j.title, j.company): j.id for j in Job.select()}
 
-    if (job_fuzzy := _get_fuzzy_job(title, company)) in existing_jobs.keys():
+    if (job_fuzzy := _get_fuzzy_job(title, company)) in existing_jobs:
         job = Job.get_by_id(existing_jobs[job_fuzzy])
     else:
         job = Job.create(title=title, company=company)

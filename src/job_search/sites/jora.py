@@ -5,11 +5,11 @@ from bs4 import Tag
 
 from job_search import util
 from job_search.model import Listing, SearchQuery, Location
-from job_search.sites.site import Site, NotSupportedError
+from job_search.sites.base_site import BaseSite, NotSupportedError
 from job_search.util import get_page_soup
 
 
-class Jora(Site):
+class Jora(BaseSite):
     def __init__(self):
         super().__init__(
             "https://au.jora.com/j?q=%%QUERY%%&p=%%PAGE%%",
@@ -18,7 +18,7 @@ class Jora(Site):
         )
 
     def get_listing_description(self, listing_id) -> str | None:
-        link = self.build_job_link(listing_id)
+        link = self.build_listing_link(listing_id)
         soup = get_page_soup(link)
         body: Tag = soup.find("div", attrs={"id": "job-description-container"})
         if body is not None:

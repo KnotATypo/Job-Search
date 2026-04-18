@@ -1,14 +1,14 @@
-from typing import List, Tuple
+from typing import List
 
 from bs4 import Tag
 
 from job_search import util
-from job_search.model import Listing, Job, SearchQuery, Location
-from job_search.sites.site import Site
+from job_search.model import Listing, SearchQuery, Location
+from job_search.sites.base_site import BaseSite
 from job_search.util import get_page_soup
 
 
-class Seek(Site):
+class Seek(BaseSite):
     def __init__(self):
         super().__init__(
             "https://www.seek.com.au/%%QUERY%%-jobs?page=%%PAGE%%",
@@ -17,7 +17,7 @@ class Seek(Site):
         )
 
     def get_listing_description(self, listing_id) -> str | None:
-        link = self.build_job_link(listing_id)
+        link = self.build_listing_link(listing_id)
         soup = get_page_soup(link)
         body: Tag = soup.find("div", attrs={"data-automation": "jobAdDetails"})
         if body is None:

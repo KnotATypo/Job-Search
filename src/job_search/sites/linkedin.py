@@ -2,11 +2,11 @@ from typing import List
 
 from job_search import util
 from job_search.model import Listing, SearchQuery, Location
-from job_search.sites.site import Site
+from job_search.sites.base_site import BaseSite
 from job_search.util import get_page_soup
 
 
-class LinkedIn(Site):
+class LinkedIn(BaseSite):
     def __init__(self):
         super().__init__(
             "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=%%QUERY%%&start=%%PAGE%%&geoId=101452733",
@@ -15,7 +15,7 @@ class LinkedIn(Site):
         )
 
     def get_listing_description(self, listing_id) -> str | None:
-        link = self.build_job_link(listing_id)
+        link = self.build_listing_link(listing_id)
         body = None
         error_count = 0
         while body is None and error_count < 5:
