@@ -1,12 +1,15 @@
 import datetime
+import importlib
+import pkgutil
 from typing import List
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+import job_search.sites
 from job_search.utilities import util
 from job_search.utilities.logger import progress_bars, logger
-from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status
+from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status, Site
 from job_search.utilities.util import storage
 
 HTML_PARSER = "html.parser"
@@ -184,13 +187,15 @@ class BaseSite:
         raise NotImplementedError
 
     @classmethod
-    def get_site_instance(cls, site_string: str):
+    def get_site_instance(cls, site: Site):
         """
         Gets an instance of the site class corresponding to the given site.
 
         site_string -- The plain text name of the site.
         """
-        site_string = site_string.lower()
+        for _, module_name, _ in pkgutil.iter_modules(job_search.sites.__path__):
+            importlib.import_module(f"job_search.sites.{module_name}")
+        site_string = site.name.lower()
         site_classes = {cls.__name__.lower(): cls for cls in BaseSite.__subclasses__()}
         if site_string not in site_classes:
             raise NotSupportedError(f"Site {site_string} is not supported.")

@@ -11,7 +11,7 @@ def search():
     queries = list(SiteQuery.select().join(SearchQuery))
     for query in tqdm(queries, desc="Queries", unit="query", leave=False, disable=not progress_bars):
         try:
-            site = BaseSite.get_site_instance(query.site.name)
+            site = BaseSite.get_site_instance(query.site)
             site.download_new_listings(query.query)
         except NotSupportedError:
             # Some sites do not support certain filters; skip these
