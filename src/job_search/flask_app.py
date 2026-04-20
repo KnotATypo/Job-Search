@@ -222,7 +222,7 @@ def get_site_links(job: Job) -> Tuple[List[Listing], List[Tuple[str, str]]]:
     sites = []
     for listing in listings:
         site_instance = BaseSite.get_site_instance(listing.site)
-        sites.append(site_instance.build_listing_link(listing.id))
+        sites.append((listing.site.name, site_instance.build_listing_link(listing.id)))
 
     return listings, sites
 

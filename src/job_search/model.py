@@ -63,10 +63,15 @@ class JobStatus(BaseModel):
         primary_key = CompositeKey("user", "job")
 
 
+class Site(BaseModel):
+    id = TextField(primary_key=True)
+    name = TextField()
+
+
 class Listing(BaseModel):
     id = TextField(primary_key=True)
     job = ForeignKeyField(Job)
-    site = CharField()
+    site = ForeignKeyField(Site)
     summary = TextField()
     timestamp = DateTimeField(default=datetime.datetime.now)
 
@@ -98,11 +103,6 @@ class SearchQuery(BaseModel):
     location = EnumField(Location, default=Location.Australia)
     user = ForeignKeyField(User)
     days_since_post = IntegerField(default=0)
-
-
-class Site(BaseModel):
-    id = TextField(primary_key=True)
-    name = TextField()
 
 
 class SiteQuery(BaseModel):
