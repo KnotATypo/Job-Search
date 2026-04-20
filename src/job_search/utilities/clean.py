@@ -1,12 +1,12 @@
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from job_search import util
-from job_search.create_summary import create_summary
-from job_search.logger import logger, progress_bars, configure_logging
+from job_search.utilities import util
+from job_search.utilities.create_summary import create_summary
+from job_search.utilities.logger import logger, progress_bars, configure_logging
 from job_search.model import Listing, Job, JobStatus, Status
-from job_search.sites.base_site import BaseSite
-from job_search.util import storage
+from job_search.base_site import BaseSite
+from job_search.utilities.util import storage
 
 load_dotenv()
 

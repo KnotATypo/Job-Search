@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from waitress import serve
 
-from job_search import util
-from job_search.clean import clean
-from job_search.create_summary import create_summary
-from job_search.logger import logger, configure_logging
+from job_search.utilities import util
+from job_search.utilities.clean import clean
+from job_search.utilities.create_summary import create_summary
+from job_search.utilities.logger import logger, configure_logging
 from job_search.model import (
     Job,
     Listing,
@@ -26,7 +26,7 @@ from job_search.model import (
     Status,
 )
 from job_search.search import search
-from job_search.sites.base_site import BaseSite
+from job_search.base_site import BaseSite
 
 INVALID_REQUEST = "Invalid request"
 JOB_NOT_FOUND = "Job not found or not yours."

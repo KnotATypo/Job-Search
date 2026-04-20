@@ -7,7 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
 
-from job_search.logger import logger
+from job_search.utilities.logger import logger
 from job_search.model import Job, BlacklistTerm, User
 from job_search.storage import S3Storage, FileStorage, Storage
 

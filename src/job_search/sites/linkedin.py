@@ -1,9 +1,9 @@
 from typing import List
 
-from job_search import util
+from job_search.utilities import util
 from job_search.model import Listing, SearchQuery, Location
-from job_search.sites.base_site import BaseSite
-from job_search.util import get_page_soup
+from job_search.base_site import BaseSite
+from job_search.utilities.util import get_page_soup
 
 
 class LinkedIn(BaseSite):

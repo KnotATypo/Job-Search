@@ -1,8 +1,8 @@
 from tqdm import tqdm
 
-from job_search.logger import progress_bars, configure_logging, logger
+from job_search.utilities.logger import progress_bars, configure_logging, logger
 from job_search.model import SearchQuery, SiteQuery
-from job_search.sites.base_site import NotSupportedError, BaseSite
+from job_search.base_site import BaseSite, NotSupportedError
 
 
 def search():
@@ -11,7 +11,7 @@ def search():
     queries = list(SiteQuery.select().join(SearchQuery))
     for query in tqdm(queries, desc="Queries", unit="query", leave=False, disable=not progress_bars):
         try:
-            site = BaseSite.get_site_instance(query.site)
+            site = BaseSite.get_site_instance(query.site.name)
             site.download_new_listings(query.query)
         except NotSupportedError:
             # Some sites do not support certain filters; skip these

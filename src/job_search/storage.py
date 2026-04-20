@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import boto3
 import botocore
 
-from job_search.logger import logger
+from job_search.utilities.logger import logger
 
 
 class Storage(ABC):

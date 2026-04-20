@@ -4,10 +4,10 @@ from typing import List
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from job_search import util
-from job_search.logger import progress_bars, logger
+from job_search.utilities import util
+from job_search.utilities.logger import progress_bars, logger
 from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status
-from job_search.util import storage
+from job_search.utilities.util import storage
 
 HTML_PARSER = "html.parser"
 

@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 from ollama import Client
 from tqdm import tqdm
 
-from job_search.logger import logger, progress_bars, configure_logging
+from job_search.utilities.logger import logger, progress_bars, configure_logging
 from job_search.model import Listing
-from job_search.util import storage
+from job_search.utilities.util import storage
 
 load_dotenv()
 
