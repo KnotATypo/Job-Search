@@ -1,28 +1,35 @@
+from time import sleep
+from typing import List
+
 from dotenv import load_dotenv
+from selenium.common import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait
 from tqdm import tqdm
 
+from job_search.base_site import BaseSite
+from job_search.model import Listing, Job, JobStatus, Status
 from job_search.utilities import util
 from job_search.utilities.create_summary import create_summary
 from job_search.utilities.logger import logger, progress_bars, configure_logging
-from job_search.model import Listing, Job, JobStatus, Status
-from job_search.base_site import BaseSite
-from job_search.utilities.util import storage
+from job_search.utilities.util import storage, new_browser
 
 load_dotenv()
 
 
 def clean():
     """
-    - Remove duplicate jobs
     - Update blacklisting
+    - Check if listings have expired
     - Download missing descriptions
     - Create summaries
-    - Archive old descriptions
     """
     configure_logging()
 
     logger.info("Starting clean")
     reapply_blacklist()
+    check_expired()
     missing_descriptions()
     create_summary()
 
@@ -39,6 +46,51 @@ def reapply_blacklist():
             if status.status == Status.NEW:
                 status.status = Status.BLACKLIST
         status.save()
+
+
+def check_expired():
+    """
+    Checks if listings have expired based on the presence of page elements determined by each site
+    """
+    logger.info("Checking expired listings")
+    listings: List[Listing]
+    listings = (
+        Listing.select()
+        .join(Job)
+        .join(JobStatus)
+        .where(JobStatus.status << [Status.NEW, Status.INTERESTED, Status.LIKED])
+    )
+
+    browser = new_browser(headless=False)
+
+    for listing in tqdm(listings, desc="Checking expired listings", unit="listing", disable=not progress_bars):
+        site: BaseSite = BaseSite.get_site_instance(listing.site)
+        browser.get(site.build_listing_link(listing))
+        try:
+            sleep(1)
+            # Seek check
+            WebDriverWait(browser, 1).until_not(
+                ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation="expiredJobPage"]'))
+            )
+
+            # Jora check
+            WebDriverWait(browser, 1).until_not(
+                ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="flash-container error"]'))
+            )
+
+            # LinkedIn checks
+            WebDriverWait(browser, 1).until_not(
+                ec.presence_of_element_located((By.CSS_SELECTOR, 'span[class="not-found-cta"]'))
+            )
+            WebDriverWait(browser, 1).until_not(
+                ec.presence_of_element_located((By.CSS_SELECTOR, 'figcaption[class="closed-job__flavor--closed"]'))
+            )
+            if browser.current_url.endswith("trk=expired_jd_redirect"):
+                raise TimeoutException("Expired")
+            print()
+        except TimeoutException:
+            logger.debug(f"Listing {listing.id} is expired")
+            JobStatus.update(status=Status.NOT_INTERESTED).where(JobStatus.job == listing.job).execute()
 
 
 def missing_descriptions():
