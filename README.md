@@ -1,8 +1,7 @@
 # Job Search
 
 A comprehensive multi-user tool to streamline your job search process by automating job listing retrieval and
-summarisation. Currently, it supports LinkedIn, Seek, and Jora for Australian job listings. Indeed support has been
-deprecated due to increased anti-scraping measures.
+summarisation. Currently, it supports LinkedIn, Seek, and Jora for Australian job listings.
 
 ## Setup
 
@@ -35,12 +34,15 @@ defined in `model.py`.
 
 The database consists of the following tables:
 
+- `blacklistterm`: Terms used to filter out unwanted job listings.
+- `job`: Stores job details.
+- `jobstatus`: Stores mappings for job + user -> status
 - `listing`: Individual job listings fetched from job sites.
 - `pagecount`: Tracks pagination for job site scraping.
+- `searchquery`: Stores details of the queries for searches such as location
+- `site`: Lookup for friendly name of each site
+- `sitequery`: Defines which queries should be used with which sites
 - `user`: Stores user information.
-- `job`: Stores job details.
-- `searchterm`: Terms used to search for job listings.
-- `blacklistterm`: Terms used to filter out unwanted job listings.
 
 ### .env Configuration
 
@@ -63,13 +65,15 @@ OLLAMA_HOST=
 SUMMARY_PROMPT="Please create a single sentence summary of this job description without any corporate fluff. Focus on technical details such as required experience and the details of the work."
 ```
 
-Storage will default to local directory (Override with `DATA_DIRECTORY`) unless provided with appropriate S3 login details.
+Storage will default to local directory (Override with `DATA_DIRECTORY`) unless provided with appropriate S3 login
+details.
 
 - `S3_*`: S3 connection details.
 - `DATABASE_*`: Database connection details.
 - `OLLAMA_HOST`: The host of the Ollama instance to use for summary generation.
 - `SUMMARY_PROMPT`: The prompt used to get the model to create a summary.
-- `SUMMARY_MODEL_NAME`: (Optional) Override for Ollama model used for summarising job descriptions. Defaults to `qwen3:1.7b`
+- `SUMMARY_MODEL_NAME`: (Optional) Override for Ollama model used for summarising job descriptions. Defaults to
+  `qwen3:1.7b`
 - `DATABASE_NAME`: (Optional) Override database name. Defaults to `job_search`
 
 ## Usage
@@ -84,12 +88,12 @@ The application has 4 main commands:
 
 - `uv run search`: Fetch new job listings from configured job sites.
 - `uv run host`: Start the web interface for managing job listings.
-- `uv run clean`: 
-  - Remove duplicate jobs
-  - Update blacklisting
-  - Download missing descriptions
-  - Create summaries
-  - Archive old descriptions
+- `uv run clean`:
+    - Remove duplicate jobs
+    - Update blacklisting
+    - Download missing descriptions
+    - Create summaries
+    - Archive old descriptions
 - `uv run summary`: Generate summaries for job descriptions using the specified model.
 
 The main `host` service is configured to run the other 3 at configured times using a build-in scheduler. Currently, this
@@ -115,3 +119,7 @@ secure local network with external access disabled or protected by Tailscale or 
 
 Much of the front-end code, particularly the CSS and HTML is written by a combination of LLMs including JetBrains Junie
 and GitHub Copilot (GPT-5 mini).
+
+There is an `auto-apply.py` script which can automatically apply to listings (under certain conditions), however this is
+encrypted as this whole project is already on thin ice in the eyes of the Terms of Service of these sites. Feel free to
+reach out to me if you have further interest in this function and I can help you set up your own.
