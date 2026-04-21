@@ -83,7 +83,7 @@ def get_or_create_job(title: str, company: str) -> Job:
         job = Job.get_by_id(existing_jobs[job_fuzzy])
     else:
         job = Job.create(title=title, company=company)
-        logger.info(f"Added new job {job}")
+        logger.debug(f"Added new job {job}")
 
     return job
 
