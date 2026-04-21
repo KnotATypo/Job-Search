@@ -49,6 +49,7 @@ class Status(Enum):
     INTERESTED = "Interested"
     LIKED = "Liked"
     APPLIED = "Applied"
+    AUTO_APPLIED = "Auto Applied"
     NOT_INTERESTED = "Not Interested"
     BLACKLIST = "Blacklist"
     COMPLETE = "Complete"
