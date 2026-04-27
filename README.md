@@ -123,3 +123,5 @@ and GitHub Copilot (GPT-5 mini).
 There is an `auto-apply.py` script which can automatically apply to listings (under certain conditions), however this is
 encrypted as this whole project is already on thin ice in the eyes of the Terms of Service of these sites. Feel free to
 reach out to me if you have further interest in this function and I can help you set up your own.
+
+<a href="https://www.flaticon.com/free-icons/job" title="job icons">Job icons created by Freepik - Flaticon</a>
