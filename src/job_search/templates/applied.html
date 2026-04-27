@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% block title %}Applied Jobs{% endblock %}
-
 {% block content %}
     <div class="card">
         <h2 class="card-title">Applied Jobs</h2>
@@ -31,7 +29,7 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No jobs with 'APPLIED' status found.</p>
+            <p>No jobs with 'Applied' status found.</p>
         {% endif %}
     </div>
 {% endblock %}

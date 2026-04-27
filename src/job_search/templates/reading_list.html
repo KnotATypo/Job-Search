@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% block title %}Jobs for Review{% endblock %}
-
 {% block content %}
     {% if jobs %}
         {% for job in jobs %}
@@ -16,6 +14,6 @@
             </div>
         {% endfor %}
     {% else %}
-        <p>No jobs with 'interested' status found.</p>
+        <p>No jobs with 'Interested' status found.</p>
     {% endif %}
 {% endblock %}
