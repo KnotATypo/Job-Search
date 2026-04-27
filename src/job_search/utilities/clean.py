@@ -61,7 +61,7 @@ def check_expired():
         .where(JobStatus.status << [Status.NEW, Status.INTERESTED, Status.LIKED])
     )
 
-    browser = new_browser(headless=False)
+    browser = new_browser()
 
     for listing in tqdm(listings, desc="Checking expired listings", unit="listing", disable=not progress_bars):
         site: BaseSite = BaseSite.get_site_instance(listing.site)
