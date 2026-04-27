@@ -8,7 +8,7 @@ from job_search.base_site import BaseSite, NotSupportedError
 def search():
     configure_logging()
     logger.info("Starting search")
-    queries = list(SiteQuery.select().join(SearchQuery))
+    queries = list(SiteQuery.select().join(SearchQuery).where(SearchQuery.auto_apply == False))
     for query in tqdm(queries, desc="Queries", unit="query", leave=False, disable=not progress_bars):
         try:
             site = BaseSite.get_site_instance(query.site)

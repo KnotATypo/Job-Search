@@ -36,6 +36,9 @@ class BaseModel(Model):
 class User(BaseModel):
     id = AutoField(primary_key=True)
     username = CharField(unique=True)
+    email = TextField(null=True)
+    email_password = TextField(null=True)
+    webhook_url = TextField(null=True)
 
 
 class Job(BaseModel):
@@ -104,6 +107,7 @@ class SearchQuery(BaseModel):
     location = EnumField(Location, default=Location.Australia)
     user = ForeignKeyField(User)
     days_since_post = IntegerField(default=0)
+    auto_apply = BooleanField(default=False)
 
 
 class SiteQuery(BaseModel):
