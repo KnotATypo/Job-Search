@@ -8,10 +8,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from waitress import serve
 
-from job_search.utilities import util
-from job_search.utilities.clean import clean
-from job_search.utilities.create_summary import create_summary
-from job_search.utilities.logger import logger, configure_logging
+from job_search.base_site import BaseSite
 from job_search.model import (
     Job,
     Listing,
@@ -26,7 +23,10 @@ from job_search.model import (
     Status,
 )
 from job_search.search import search
-from job_search.base_site import BaseSite
+from job_search.utilities import util
+from job_search.utilities.clean import clean
+from job_search.utilities.create_summary import create_summary
+from job_search.utilities.logger import logger, configure_logging
 
 INVALID_REQUEST = "Invalid request"
 JOB_NOT_FOUND = "Job not found or not yours."
@@ -39,28 +39,23 @@ app.secret_key = os.urandom(24)
 scheduler = BackgroundScheduler(daemon=True)
 
 
-def get_current_user():
-    username = session.get("username")
-    user_id = session.get("user_id")
-    if not username and not user_id:
-        return None
-    return username, user_id
+@app.route("/set_user", methods=["GET", "POST"])
+def set_user():
+    if "user_id" in session:
+        del session["user_id"]
+        del session["username"]
 
-
-# Route to select/set username
-@app.route("/set_username", methods=["GET", "POST"])
-def set_username():
     usernames = [u.username for u in User.select().order_by(User.username)]
     if request.method == "POST":
         username = request.form.get("username")
         if username and username in usernames:
             session["username"] = username
             session["user_id"] = User.get(User.username == username).id
-            flash(f"Username set to {username}")
+            flash(f"User set to {username}")
             return redirect(url_for("index"))
         else:
             flash("Please select a valid username.")
-    return render_template("set_username.html", usernames=usernames)
+    return render_template("set_user.html", usernames=usernames)
 
 
 @app.route("/health_check", methods=["GET"])
@@ -71,8 +66,8 @@ def health_check():
 def require_user(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not get_current_user():
-            return redirect(url_for("set_username"))
+        if "user_id" not in session:
+            return redirect(url_for("set_user"))
         return f(*args, **kwargs)
 
     return decorated_function
@@ -82,7 +77,7 @@ def require_user(f):
 @require_user
 def index():
     """Main page with workflow stages"""
-    _, user_id = get_current_user()
+    user_id = session["user_id"]
 
     triage_count = JobStatus.select().where((JobStatus.status == Status.NEW) & (JobStatus.user == user_id)).count()
     reading_count = (
@@ -105,10 +100,13 @@ def index():
 @require_user
 def triage(job_id=None):
     """Triage page for new jobs"""
-    _, user_id = get_current_user()
 
     if job_id is None:
-        jobs = list(Job.select().join(JobStatus).where((JobStatus.status == Status.NEW) & (JobStatus.user == user_id)))
+        jobs = list(
+            Job.select()
+            .join(JobStatus)
+            .where((JobStatus.status == Status.NEW) & (JobStatus.user == session["user_id"]))
+        )
         if len(jobs) == 0:
             return redirect(url_for("index"))
         return redirect(url_for("triage", job_id=jobs[0].id))
@@ -130,7 +128,6 @@ def triage(job_id=None):
 @require_user
 def update_status():
     """Handle triage actions (yes/no)"""
-    _, user_id = get_current_user()
 
     job_id = request.form.get("job_id")
     new_status = request.form.get("status")
@@ -154,7 +151,9 @@ def update_status():
         flash(JOB_NOT_FOUND)
         return redirect(url_for("index"))
 
-    JobStatus.update(status=Status(new_status)).where((JobStatus.user == user_id) & (JobStatus.job == job_id)).execute()
+    JobStatus.update(status=Status(new_status)).where(
+        (JobStatus.user == session["user_id"]) & (JobStatus.job == job_id)
+    ).execute()
 
     flash(f"Marked '{job.title}' as {new_status}")
 
@@ -165,8 +164,11 @@ def update_status():
 @require_user
 def reading_list():
     """Applied jobs page"""
-    _, user_id = get_current_user()
-    jobs = Job.select().join(JobStatus).where((JobStatus.status == Status.INTERESTED) & (JobStatus.user == user_id))
+    jobs = (
+        Job.select()
+        .join(JobStatus)
+        .where((JobStatus.status == Status.INTERESTED) & (JobStatus.user == session["user_id"]))
+    )
 
     return render_template("reading_list.html", jobs=jobs)
 
@@ -176,12 +178,13 @@ def reading_list():
 @require_user
 def reading(job_id):
     """Reading page for interested jobs"""
-    _, user_id = get_current_user()
 
     if job_id is None:
         # Get the next job to read
         jobs = list(
-            Job.select().join(JobStatus).where((JobStatus.status == Status.INTERESTED) & (JobStatus.user == user_id))
+            Job.select()
+            .join(JobStatus)
+            .where((JobStatus.status == Status.INTERESTED) & (JobStatus.user == session["user_id"]))
         )
         if len(jobs) == 0:
             return redirect(url_for("index"))
@@ -202,9 +205,13 @@ def reading(job_id):
 @require_user
 def applying():
     """Applying page for liked jobs"""
-    _, user_id = get_current_user()
     # Get the next job to apply for
-    job = Job.select().join(JobStatus).where((JobStatus.status == Status.LIKED) & (JobStatus.user == user_id)).first()
+    job = (
+        Job.select()
+        .join(JobStatus)
+        .where((JobStatus.status == Status.LIKED) & (JobStatus.user == session["user_id"]))
+        .first()
+    )
 
     if not job:
         flash("No more jobs to apply for!")
@@ -234,8 +241,7 @@ def add_search_query():
     if not term:
         return jsonify({"error": "No term provided"}), 400
 
-    _, user_id = get_current_user()
-    sq = SearchQuery.create(term=term, user=user_id)
+    sq = SearchQuery.create(term=term, user=session["user_id"])
     for site in Site.select():
         # By default, enable query for all sites
         SiteQuery.create(site=site.id, query=sq.id)
@@ -275,8 +281,7 @@ def update_search_query(query_id):
 @app.route("/manage_search_queries", methods=["GET"])
 @require_user
 def manage_search_queries():
-    _, user_id = get_current_user()
-    queries = list(SearchQuery.select().where(SearchQuery.user == user_id).order_by(SearchQuery.id))
+    queries = list(SearchQuery.select().where(SearchQuery.user == session["user_id"]).order_by(SearchQuery.id))
     sites = list(Site.select())
     for query in queries:
         sites_to_query = [sq.site.id for sq in SiteQuery.select().where(SiteQuery.query == query.id)]
@@ -290,11 +295,12 @@ def manage_search_queries():
 @app.route("/blacklist_terms", methods=["GET"])
 @require_user
 def get_blacklist_terms():
-    _, user_id = get_current_user()
     requested_type = request.args.get("type")
     terms = [
         bt.term
-        for bt in BlacklistTerm.select().where((BlacklistTerm.user == user_id) & (BlacklistTerm.type == requested_type))
+        for bt in BlacklistTerm.select().where(
+            (BlacklistTerm.user == session["user_id"]) & (BlacklistTerm.type == requested_type)
+        )
     ]
     return jsonify(terms)
 
@@ -305,10 +311,9 @@ def add_blacklist_term():
     term = request.form.get("term")
     if not term:
         return jsonify({"error": "No term provided"}), 400
-    _, user_id = get_current_user()
     try:
         term_type = request.args.get("type")
-        BlacklistTerm.create(term=term, type=term_type, user=user_id)
+        BlacklistTerm.create(term=term, type=term_type, user=session["user_id"])
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -317,10 +322,11 @@ def add_blacklist_term():
 @app.route("/blacklist_terms/<term>", methods=["DELETE"])
 @require_user
 def delete_blacklist_term(term):
-    _, user_id = get_current_user()
     requested_type = request.args.get("type")
     q = BlacklistTerm.delete().where(
-        (BlacklistTerm.term == term) & (BlacklistTerm.user == user_id) & (BlacklistTerm.type == requested_type)
+        (BlacklistTerm.term == term)
+        & (BlacklistTerm.user == session["user_id"])
+        & (BlacklistTerm.type == requested_type)
     )
     deleted = q.execute()
     return jsonify({"deleted": deleted})
@@ -335,7 +341,7 @@ def manage_blacklist_terms():
 @app.route("/run_blacklist", methods=["POST"])
 @require_user
 def run_blacklist():
-    username, user_id = get_current_user()
+    user_id = session["user_id"]
 
     new_statuses = JobStatus.select().where((JobStatus.user == user_id) & (JobStatus.status == Status.NEW))
     filtered_count = 0
@@ -345,15 +351,18 @@ def run_blacklist():
             status.save()
             filtered_count += 1
 
-    return jsonify({"message": f"Blacklist run for {username}. {filtered_count} jobs filtered."})
+    return jsonify({"message": f"Blacklist run. {filtered_count} jobs filtered."})
 
 
 @app.route("/applied", methods=["GET"])
 @require_user
 def applied():
     """Applied jobs page"""
-    _, user_id = get_current_user()
-    jobs = Job.select().join(JobStatus).where((JobStatus.status == Status.APPLIED) & (JobStatus.user == user_id))
+    jobs = (
+        Job.select()
+        .join(JobStatus)
+        .where((JobStatus.status == Status.APPLIED) & (JobStatus.user == session["user_id"]))
+    )
 
     jobs_with_sites = []
     for job in jobs:

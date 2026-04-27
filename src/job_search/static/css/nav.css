@@ -38,16 +38,6 @@
     font-weight: 600;
 }
 
-.nav-username {
-    margin-left: 0.5rem;
-    padding: 0.35rem 0.6rem;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #234e76;
-    font-weight: 700;
-    border: 1px solid #dfeaf7;
-}
-
 /* ----- Hamburger toggle (mobile only) ----- */
 #menu-toggle {
     display: none; /* shown via media query below */
