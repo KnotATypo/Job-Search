@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if setup %}
+        <div class="card">
+            <h2>Auto Applier Setup</h2>
+            <form class="applier-form" method="post">
+                <label for="email">Email:</label>
+                <div class="field-with-popup">
+                    <input class="setup-field" type="text" id="email" name="email" required
+                           aria-describedby="email-error"
+                           {% if values["email"] %}value="{{ values["email"] }}"{% endif %}>
+                    <div class="error-popup" id="email-error" role="alert"
+                         {% if not errors['email'] %}hidden{% endif %}>
+                        {{ errors['email'] }}
+                        <button type="button" class="close-popup" aria-label="Close">&times;</button>
+                    </div>
+                </div>
+                <label for="password">App password:</label>
+                <div class="field-with-popup">
+                    <input class="setup-field" type="password" id="password" name="password" required
+                           aria-describedby="password-error"
+                           {% if values["password"] %}value="{{ values["password"] }}"{% endif %}>
+                    <div class="error-popup" id="password-error" role="alert"
+                         {% if not errors['password'] %}hidden{% endif %}>
+                        {{ errors['password'] }}
+                        <button type="button" class="close-popup" aria-label="Close">&times;</button>
+                    </div>
+                </div>
+                <label for="webhook">Webhook:</label>
+                <div class="field-with-popup">
+                    <input class="setup-field" type="text" id="webhook" name="webhook" required
+                           aria-describedby="webhook-error"
+                           {% if values["webhook"] %}value="{{ values["webhook"] }}"{% endif %}>
+                    <div class="error-popup" id="webhook-error" role="alert"
+                         {% if not errors['webhook'] %}hidden{% endif %}>
+                        {{ errors['webhook'] }}
+                        <button type="button" class="close-popup" aria-label="Close">&times;</button>
+                    </div>
+                </div>
+                <button class="btn btn-success">Submit</button>
+            </form>
+        </div>
+    {% endif %}
+    <style>
+        .applier-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .applier-form label {
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .setup-field {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .field-with-popup {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .field-with-popup .setup-field {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .error-popup {
+            position: absolute;
+            right: 0;
+            background: #fff6f6;
+            color: #8a1f1f;
+            border: 1px solid #f5c2c2;
+            padding: 0.5rem 0.6rem;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            z-index: 20;
+            font-size: 0.95rem;
+            width: auto;
+            /* Keep it from growing too wide; use viewport-relative fallback */
+            max-width: min(360px, 90%);
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        .error-popup[hidden] {
+            display: none;
+        }
+
+        .close-popup {
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0 0.25rem;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            color: inherit;
+        }
+    </style>
+    <script>
+        // Close error popups when their close button is clicked.
+        document.addEventListener('click', function (ev) {
+            const btn = ev.target.closest && ev.target.closest('.close-popup');
+            if (!btn) return;
+            const popup = btn.closest && btn.closest('.error-popup');
+            if (popup) {
+                popup.setAttribute('hidden', '');
+            }
+        });
+    </script>
+{% endblock %}

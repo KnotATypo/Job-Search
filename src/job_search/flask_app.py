@@ -1,5 +1,6 @@
 import atexit
 import os
+import re
 from functools import wraps
 from typing import List, Tuple
 
@@ -281,7 +282,11 @@ def update_search_query(query_id):
 @app.route("/manage_search_queries", methods=["GET"])
 @require_user
 def manage_search_queries():
-    queries = list(SearchQuery.select().where(SearchQuery.user == session["user_id"]).order_by(SearchQuery.id))
+    queries = list(
+        SearchQuery.select()
+        .where(SearchQuery.user == session["user_id"], SearchQuery.auto_apply == False)
+        .order_by(SearchQuery.id)
+    )
     sites = list(Site.select())
     for query in queries:
         sites_to_query = [sq.site.id for sq in SiteQuery.select().where(SiteQuery.query == query.id)]
@@ -369,6 +374,39 @@ def applied():
         jobs_with_sites.append((job, get_site_links(job)[1]))
 
     return render_template("applied.html", jobs=jobs_with_sites)
+
+
+@app.route("/auto_applier_settings", methods=["GET", "POST"])
+@require_user
+def auto_applier_settings():
+    if request.method == "POST":
+        errors = {}
+
+        email_address = request.form.get("email", "")
+        if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email_address):
+            errors["email"] = "Invalid email address."
+        elif "@gmail.com" not in email_address:
+            errors["email"] = "Only Gmail addresses are currently supported."
+
+        password = request.form.get("password", "")
+        if not re.match(r"(?:[a-z]{4} ){3}[a-z]{4}", password):
+            errors["password"] = "Password should be 4 sets of 4 lowercase letters."
+
+        webhook = request.form.get("webhook", "")
+        if not re.match(r"https://discord\.com/api/webhooks/\d+/\w+", webhook):
+            errors["webhook"] = "Invalid webhook URL."
+
+        return render_template(
+            "applier_settings.html",
+            setup=True,
+            errors=errors,
+            values={"email": email_address, "password": password, "webhook": webhook},
+        )
+    else:
+        user = User.get(User.id == session["user_id"])
+        if not user.email:
+            return render_template("applier_settings.html", setup=True, errors={}, values={})
+        return render_template("applier_settings.html")
 
 
 @app.before_request
