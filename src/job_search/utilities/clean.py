@@ -10,6 +10,9 @@ from tqdm import tqdm
 
 from job_search.base_site import BaseSite
 from job_search.model import Listing, Job, JobStatus, Status
+from job_search.sites.jora import Jora
+from job_search.sites.linkedin import LinkedIn
+from job_search.sites.seek import Seek
 from job_search.utilities import util
 from job_search.utilities.create_summary import create_summary
 from job_search.utilities.logger import logger, progress_bars, configure_logging
@@ -68,26 +71,23 @@ def check_expired():
         browser.get(site.build_listing_link(listing))
         try:
             sleep(1)
-            # Seek check
-            WebDriverWait(browser, 1).until_not(
-                ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation="expiredJobPage"]'))
-            )
-
-            # Jora check
-            WebDriverWait(browser, 1).until_not(
-                ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="flash-container error"]'))
-            )
-
-            # LinkedIn checks
-            WebDriverWait(browser, 1).until_not(
-                ec.presence_of_element_located((By.CSS_SELECTOR, 'span[class="not-found-cta"]'))
-            )
-            WebDriverWait(browser, 1).until_not(
-                ec.presence_of_element_located((By.CSS_SELECTOR, 'figcaption[class="closed-job__flavor--closed"]'))
-            )
-            if browser.current_url.endswith("trk=expired_jd_redirect"):
-                raise TimeoutException("Expired")
-            print()
+            if isinstance(site, Seek):
+                WebDriverWait(browser, 1).until_not(
+                    ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation="expiredJobPage"]'))
+                )
+            elif isinstance(site, Jora):
+                WebDriverWait(browser, 1).until_not(
+                    ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="flash-container error"]'))
+                )
+            elif isinstance(site, LinkedIn):
+                WebDriverWait(browser, 1).until_not(
+                    ec.presence_of_element_located((By.CSS_SELECTOR, 'span[class="not-found-cta"]'))
+                )
+                WebDriverWait(browser, 1).until_not(
+                    ec.presence_of_element_located((By.CSS_SELECTOR, 'figcaption[class="closed-job__flavor--closed"]'))
+                )
+                if browser.current_url.endswith("trk=expired_jd_redirect"):
+                    raise TimeoutException("Expired")
         except TimeoutException:
             logger.debug(f"Listing {listing.id} is expired")
             JobStatus.update(status=Status.NOT_INTERESTED).where(JobStatus.job == listing.job).execute()
