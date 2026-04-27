@@ -43,8 +43,7 @@ def run_applier(user: User):
     logger.info(f"Starting applier at {timestamp}")
 
     logger.info("Looking for new listings")
-    with db.connection_context():
-        listings = get_listings(user)
+    listings = get_listings(user)
 
     driver = new_browser()
     driver.implicitly_wait(5)
@@ -60,20 +59,17 @@ def run_applier(user: User):
             statuses[status].append(listing)
 
     logger.info("Saving listings")
-    with db.connection_context():
-        for listing in statuses["applied"] + statuses["applied_old"]:
-            # Create an AUTO_APPLIED status before saving them so they aren't saved as NEW
-            status, created = JobStatus.get_or_create(
-                job=listing.job, user=user, defaults={"status": Status.AUTO_APPLIED}
-            )
-            if not created:
-                status.status = Status.AUTO_APPLIED
-                status.save()
+    for listing in statuses["applied"] + statuses["applied_old"]:
+        # Create an AUTO_APPLIED status before saving them so they aren't saved as NEW
+        status, created = JobStatus.get_or_create(job=listing.job, user=user, defaults={"status": Status.AUTO_APPLIED})
+        if not created:
+            status.status = Status.AUTO_APPLIED
+            status.save()
 
-        SEEK.save_listings(statuses["saved"], user)
-        SEEK.save_listings(statuses["applied"], user)
-        # This will usually be jobs that were "pending" then handled manually
-        SEEK.save_listings(statuses["applied_old"], user)
+    SEEK.save_listings(statuses["saved"], user)
+    SEEK.save_listings(statuses["applied"], user)
+    # This will usually be jobs that were "pending" then handled manually
+    SEEK.save_listings(statuses["applied_old"], user)
 
     links_for_pending = ""
     for listing in statuses["pending"]:
