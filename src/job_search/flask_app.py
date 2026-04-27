@@ -25,7 +25,6 @@ from job_search.model import (
 from job_search.search import search
 from job_search.utilities import util
 from job_search.utilities.clean import clean
-from job_search.utilities.create_summary import create_summary
 from job_search.utilities.logger import logger, configure_logging
 
 INVALID_REQUEST = "Invalid request"
@@ -383,18 +382,17 @@ def _db_close(exception):
         db.close()
 
 
-def run_with_db(func):
+def run_tasks():
     with db:
-        func()
+        search()
+        clean()
 
 
 def start():
     configure_logging()
     logger.info("Scheduling tasks")
-    # TODO Make these configurable through .env or web gui
-    scheduler.add_job(run_with_db, "cron", args=[search], hour=22, minute=0)
-    scheduler.add_job(run_with_db, "cron", args=[create_summary], hour=0, minute=0)
-    scheduler.add_job(run_with_db, "cron", args=[clean], day="*/2", hour=0, minute=0)
+    # TODO Make this configurable through .env or web gui
+    scheduler.add_job(run_tasks, "cron", hour=0, minute=0)
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     logger.info("Tasks scheduled")
