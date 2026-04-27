@@ -24,6 +24,7 @@ from job_search.model import (
 )
 from job_search.search import search
 from job_search.utilities import util
+from job_search.utilities.auto_apply import run_applier
 from job_search.utilities.clean import clean
 from job_search.utilities.logger import logger, configure_logging
 
@@ -388,11 +389,19 @@ def run_tasks():
         clean()
 
 
+def run_apply():
+    with db:
+        users = User.select().where(User.email.is_null(False))
+        for user in users:
+            run_applier(user)
+
+
 def start():
     configure_logging()
     logger.info("Scheduling tasks")
     # TODO Make this configurable through .env or web gui
-    scheduler.add_job(run_tasks, "cron", hour=0, minute=0)
+    scheduler.add_job(run_tasks, "cron", hour=1, minute=0)
+    scheduler.add_job(func=run_apply, trigger="cron", hour="*/6", minute="0")
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     logger.info("Tasks scheduled")

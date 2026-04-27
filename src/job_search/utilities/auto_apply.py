@@ -38,7 +38,7 @@ SEEK = Seek()
 configure_logging()
 
 
-def auto_apply(user: User):
+def run_applier(user: User):
     timestamp = datetime.datetime.now().isoformat() + "+10:00"
     logger.info(f"Starting applier at {timestamp}")
 
@@ -236,13 +236,4 @@ def get_code(email_address: str, password: str) -> str:
 
 
 if __name__ == "__main__":
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(func=auto_apply, args=[User.get_by_id(1)], trigger="cron", hour="*/6", minute="0")
-    scheduler.start()
-    atexit.register(lambda: scheduler.shutdown())
-    try:
-        while True:
-            time.sleep(60)
-    except (KeyboardInterrupt, SystemExit):
-        scheduler.shutdown()
-        raise
+    run_applier(User.get_by_id(1))
