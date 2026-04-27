@@ -57,9 +57,13 @@ class LinkedIn(BaseSite):
 
     def extract_info(self, listing) -> Listing | None:
         links = listing.find_all("a")
+        if len(links) == 0:
+            return None
+
         link = links[0]["href"]
         if "https://au" not in link:
             return None
+
         listing_id = link[link[: link.index("?")].rindex("/") + 1 : link.index("?")]
         title = links[0].text.strip()
         if len(links) == 1:
