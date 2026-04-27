@@ -6,7 +6,8 @@
     <title>{% block title %}Job Searcher{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/svg+xml">
     <meta name="theme-color" content="#4a6da7">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nav.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -14,7 +15,8 @@
     <div class="header-content">
         <h1 class="header-title"><a href="{{ url_for('index') }}" class="header-link">{% block header_title %}Job
             Searcher{% endblock %}</a></h1>
-        <button id="menu-toggle" aria-label="Open navigation menu">&#9776;</button>
+        <button id="menu-toggle" aria-label="Open navigation menu"><span
+                style="display: inline-block; transform: translateY(-2.5px)">&#9776;</span></button>
         {% block header_extra %}{% endblock %}
     </div>
 </header>
@@ -44,156 +46,6 @@
         {% endif %}
     </div>
 </nav>
-<style>
-    html, body {
-        height: 100%;
-    }
-
-    body {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    main {
-        flex: 1 0 auto;
-    }
-
-    .header-content {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        padding: 0.5em 0.5em 0 0.5em;
-        box-sizing: border-box;
-        position: relative;
-    }
-
-    .header-title {
-        margin: 0 auto;
-        font-size: 1.5em;
-        text-align: center;
-        flex: 1;
-    }
-
-    #menu-toggle {
-        display: none;
-        font-size: 1.3em;
-        background: #4a6da7;
-        color: #fff;
-        border: none;
-        border-radius: 50%;
-        width: 2.2em;
-        height: 2.2em;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
-        cursor: pointer;
-        transition: background 0.2s, box-shadow 0.2s;
-        margin-left: auto;
-    }
-
-    #menu-toggle:active, #menu-toggle:hover {
-        background: #35507a;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-    }
-
-    @media (max-width: 700px) {
-        #menu-toggle {
-            display: block;
-        }
-
-        .navbar {
-            display: none;
-        }
-
-        .mobile-nav {
-            display: block;
-        }
-
-        .header-title {
-            font-size: 1.2em;
-        }
-
-        .header-content {
-            justify-content: center;
-        }
-    }
-
-    @media (min-width: 701px) {
-        #menu-toggle {
-            display: none;
-        }
-
-        .mobile-nav {
-            display: none;
-        }
-    }
-
-    .mobile-nav {
-        position: relative;
-    }
-
-    #menu {
-        display: flex;
-        flex-direction: column;
-        position: absolute;
-        top: 0.5em;
-        right: 0.5em;
-        left: auto;
-        background: #fff;
-        border-radius: 14px;
-        border: none;
-        box-shadow: 0 4px 24px rgba(74, 109, 167, 0.18), 0 1.5px 6px rgba(0, 0, 0, 0.08);
-        z-index: 1000;
-        min-width: 220px;
-        overflow: hidden;
-        padding: 0;
-    }
-
-    #menu.menu-hidden {
-        display: none !important;
-    }
-
-    .menu-header {
-        background: #4a6da7;
-        color: #fff;
-        font-weight: bold;
-        font-size: 1.1em;
-        padding: 1em 1.2em 0.7em 1.2em;
-        letter-spacing: 0.04em;
-    }
-
-    .menu-link {
-        display: block;
-        padding: 0.9em 1.2em;
-        text-decoration: none;
-        color: #222;
-        background: none;
-        border: none;
-        text-align: left;
-        font-size: 1em;
-        transition: background 0.15s, color 0.15s;
-    }
-
-    .menu-link:active, .menu-link:hover {
-        background: #e6eefb;
-        color: #20406b;
-    }
-
-    .menu-link:last-of-type {
-        border-bottom: none;
-    }
-
-    .menu-username {
-        padding: 0.8em 1.2em 0.9em 1.2em;
-        color: #4f5b74;
-        background: #f4f7fb;
-        font-size: 0.97em;
-        font-style: italic;
-        border-top: 1px solid #e0e6f0;
-        text-align: left;
-    }
-</style>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const menu = document.getElementById('menu');

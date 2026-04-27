@@ -1,0 +1,129 @@
+/* ============================================================
+   nav.css — desktop navbar, mobile hamburger menu, username
+   ============================================================ */
+
+/* ----- Desktop navbar ----- */
+.navbar {
+    background: var(--card-bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.nav-link {
+    display: inline-block;
+    padding: 0.5em 0.9em;
+    border-radius: 10px;
+    color: #ffffff;
+    background: var(--primary-color);
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-link:focus {
+    outline: 3px solid rgba(74, 109, 167, 0.22);
+    outline-offset: 2px;
+    background: #35507a;
+}
+
+.nav-link.nav-link-username-change {
+    background: #ffffff;
+    color: #20406b;
+    border: 1px solid #dfeaf7;
+    font-weight: 600;
+}
+
+.nav-username {
+    margin-left: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #234e76;
+    font-weight: 700;
+    border: 1px solid #dfeaf7;
+}
+
+/* ----- Hamburger toggle (mobile only) ----- */
+#menu-toggle {
+    display: none; /* shown via media query below */
+    font-size: 1.2em;
+    background: #4a6da7;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.45em 0.8em;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+/* ----- Mobile slide-down menu ----- */
+.mobile-nav {
+    display: none; /* shown via media query below */
+    position: relative;
+}
+
+#menu {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(74, 109, 167, 0.18), 0 1.5px 6px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+    min-width: 220px;
+    overflow: hidden;
+    padding: 0;
+}
+
+#menu.menu-hidden { display: none !important; }
+
+.menu-header {
+    background: #4a6da7;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1em;
+    padding: 1em 1.2em 0.7em;
+    letter-spacing: 0.04em;
+}
+
+.menu-link {
+    display: block;
+    padding: 0.9em 1.2em;
+    text-decoration: none;
+    color: #222;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 1em;
+    transition: background 0.15s, color 0.15s;
+}
+
+.menu-link:active {
+    background: #e6eefb;
+    color: #20406b;
+}
+
+.menu-username {
+    padding: 0.8em 1.2em 0.9em;
+    color: #4f5b74;
+    background: #f4f7fb;
+    font-size: 0.97em;
+    font-style: italic;
+    border-top: 1px solid #e0e6f0;
+    text-align: left;
+}
+
+/* ----- Responsive breakpoint ----- */
+@media (max-width: 700px) {
+    #menu-toggle  { display: inline-flex; }
+    .navbar       { display: none; }
+    .mobile-nav   { display: block; }
+    .header-title { font-size: 1.2em; }
+}

@@ -1,28 +1,29 @@
-/* Global Styles */
+/* ============================================================
+   base.css — global styles, layout, components
+   ============================================================ */
+
+/* ----- Reset & box model ----- */
 *, *::before, *::after {
     box-sizing: border-box;
 }
 
+/* ----- Design tokens ----- */
 :root {
-    --primary-color: #1e3a8a; /* Darker blue for header/footer */
-    --success-color: #065f46; /* Darker green for success buttons */
-    --danger-color: #991b1b; /* Darker red for danger buttons */
-    --bg-color: #121212; /* Dark background */
-    --card-bg-color: #1e1e1e; /* Slightly lighter than background */
-    --text-color: #f0f0f0; /* Light text */
+    --primary-color: #1e3a8a;
+    --success-color: #065f46;
+    --danger-color: #991b1b;
+    --bg-color: #121212;
+    --card-bg-color: #1e1e1e;
+    --text-color: #f0f0f0;
     --light-text: #ffffff;
-    --medium-text: #bbbbbb; /* Lighter medium text for better contrast */
+    --medium-text: #bbbbbb;
     --shadow-color: rgba(0, 0, 0, 0.3);
     --border-color: #444;
 }
 
-header, footer, .nav-link-username-change {
-    background-color: var(--primary-color);
-    color: var(--light-text);
-}
-
-.btn, .nav-link, .nav-link-username-change {
-    transition: background 0.2s, color 0.2s;
+/* ----- Body & typography ----- */
+html, body {
+    height: 100%;
 }
 
 body {
@@ -32,25 +33,42 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
+/* ----- Page structure ----- */
 header {
+    background-color: var(--primary-color);
+    color: var(--light-text);
     padding: 1rem;
     text-align: center;
-}
-
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 header h1 {
     margin: 0;
     font-size: 1.8rem;
     font-weight: bold;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.5em 0.5em 0;
+    position: relative;
+}
+
+.header-title {
+    margin: 0 auto;
+    font-size: 1.5em;
+    text-align: center;
+    flex: 1;
 }
 
 .header-link {
@@ -63,8 +81,18 @@ main {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    flex: 1 0 auto;
 }
 
+footer {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+    text-align: center;
+    padding: 1rem;
+    margin-top: 2rem;
+}
+
+/* ----- Flash messages ----- */
 .flash-messages {
     margin-bottom: 1.5rem;
 }
@@ -77,30 +105,30 @@ main {
     border-radius: 4px;
 }
 
+/* ----- Buttons ----- */
 .btn {
     display: inline-block;
     margin: 0.5rem 0;
     text-align: center;
     text-decoration: none;
-    box-sizing: border-box;
     padding: 0.5rem 1.1rem;
     border: none;
     border-radius: 4px;
     font-size: 1rem;
     cursor: pointer;
     font-weight: 500;
-}
-
-.btn-secondary {
-    background: rgba(255, 255, 255, 0.03);
-    color: var(--light-text);
-    border: 1px solid var(--border-color);
+    transition: background 0.2s, color 0.2s;
 }
 
 .btn-sm {
     padding: 0.25rem 0.6rem;
     font-size: 0.88rem;
     border-radius: 6px;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
 }
 
 .btn-primary {
@@ -124,18 +152,19 @@ main {
     border: none;
 }
 
-.btn-block {
-    display: block;
-    width: 100%;
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--light-text);
+    border: 1px solid var(--border-color);
 }
 
+/* ----- Cards ----- */
 .card {
     background-color: var(--card-bg-color);
     border-radius: 8px;
     box-shadow: 0 2px 4px var(--shadow-color);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    box-sizing: border-box;
     overflow: hidden;
 }
 
@@ -158,26 +187,136 @@ main {
     margin-bottom: 1rem;
 }
 
-footer {
-    color: var(--light-text);
-    text-align: center;
-    padding: 1rem;
-    margin-top: 2rem;
+/* ----- Search queries & set-username cards ----- */
+.card.search-queries-card,
+.card.set-username-card {
+    margin: 2rem auto;
+    padding: 2rem 2rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px var(--shadow-color);
+    border: 1px solid var(--border-color);
 }
 
+.card.search-queries-card {
+    max-width: 420px;
+}
+
+.card.set-username-card {
+    max-width: 400px;
+}
+
+.card.search-queries-card h2,
+.card.set-username-card h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--light-text);
+}
+
+/* ----- Forms ----- */
+.add-query-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.term-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.set-username-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.username-label {
+    font-size: 1.1rem;
+    color: var(--medium-text);
+    margin-bottom: 0.2rem;
+}
+
+/* ----- Queries list ----- */
+.queries-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.queries-list li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-color);
+}
+
+.query-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.query-main {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.query-text {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1.2;
+}
+
+/* ----- Options button ----- */
+.options-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    padding: 6px;
+    border-radius: 50%;
+    background: rgba(30, 61, 138, 0.36);
+    color: var(--light-text);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.12s, border-color 0.12s, transform 0.06s, box-shadow 0.08s;
+}
+
+/* ----- Workflow ----- */
 .workflow-stages {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     margin: 2rem 0;
     width: 100%;
-    box-sizing: border-box;
 }
 
 .stage-count {
     font-weight: bold;
 }
 
+/* ----- Job info ----- */
 .job-info {
     margin-bottom: 2rem;
 }
@@ -207,6 +346,7 @@ footer {
     margin-top: 1.5rem;
 }
 
+/* ----- Action buttons & misc ----- */
 .action-buttons {
     display: flex;
     gap: 1rem;
@@ -219,6 +359,7 @@ footer {
     font-style: italic;
 }
 
+/* ----- Status selector ----- */
 .status-selector {
     margin-top: 1.5rem;
 }
@@ -232,131 +373,7 @@ footer {
     color: var(--text-color);
 }
 
-.navbar {
-    background: var(--card-bg-color);
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    padding: 0.75rem 0;
-    box-shadow: 0 2px 8px var(--shadow-color);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.nav-link {
-    color: var(--text-color);
-    text-decoration: none;
-    font-weight: 500;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-}
-
-.nav-link-username-change {
-    margin-left: 1rem;
-    font-size: 0.98rem;
-    padding: 0.25rem 0.9rem;
-    border-radius: 4px;
-}
-
-.card.search-queries-card, .card.set-username-card {
-    background: var(--card-bg-color);
-    margin: 2rem auto;
-    padding: 2rem 2rem 1.5rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px var(--shadow-color);
-    border: 1px solid var(--border-color);
-}
-
-.card.search-queries-card { max-width: 420px; }
-.card.set-username-card { max-width: 400px; }
-
-.card.search-queries-card h2, .card.set-username-card h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    color: var(--light-text);
-}
-
-.add-query-form {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.term-input {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-size: 1rem;
-}
-
-.queries-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.queries-list li {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    color: var(--text-color);
-}
-
-.set-username-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.username-label {
-    font-size: 1.1rem;
-    color: var(--medium-text);
-    margin-bottom: 0.2rem;
-}
-
-.nav-username {
-    margin-left: auto;
-    color: var(--medium-text);
-    font-size: 1.05rem;
-    padding-left: 2rem;
-    align-self: center;
-    font-style: italic;
-}
-
-@media (max-width: 600px) {
-    .card.set-username-card {
-        padding: 1rem;
-    }
-
-    .nav-username {
-        padding-left: 0.5rem;
-        font-size: 0.98rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .action-buttons {
-        flex-direction: column;
-    }
-
-    .header-content {
-        flex-direction: column;
-    }
-
-    main {
-        padding: 1rem;
-    }
-}
-
+/* ----- Applied jobs list ----- */
 .applied-jobs-list {
     list-style: none;
     padding: 0;
@@ -405,74 +422,7 @@ footer {
     margin-top: 0.3rem;
 }
 
-@media (max-width: 600px) {
-    .list-job-title {
-        font-size: 1.1rem;
-    }
-
-    .list-job-company {
-        font-size: 1rem;
-    }
-
-    .applied-job-actions .btn {
-        font-size: 0.92rem;
-        padding: 0.5rem 1rem;
-    }
-}
-
-.visually-hidden {
-    position: absolute;
-    height: 1px;
-    width: 1px;
-    overflow: hidden;
-    clip: rect(1px, 1px, 1px, 1px);
-    white-space: nowrap;
-}
-
-.query-label {
-    display: flex;
-    align-items: center; /* vertical centering */
-    gap: 0.5rem;
-    width: 100%;
-}
-
-.query-main {
-    flex: 1 1 auto; /* take remaining space so options button can sit to the right */
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-.query-text {
-    display: inline-block;
-    vertical-align: middle; /* align with the button */
-    line-height: 1.2; /* stable line height */
-}
-
-.options-btn {
-    position: relative; /* part of the row flow */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto; /* push to the far right */
-    align-self: center; /* ensure the button itself is centered in the row */
-
-    width: 40px;
-    height: 40px;
-    padding: 6px;
-    box-sizing: border-box;
-    border-radius: 50%;
-
-    background: rgba(30,61,138,0.36);
-    color: var(--light-text);
-    border: 1px solid rgba(255,255,255,0.16);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
-    cursor: pointer;
-    overflow: visible;
-    -webkit-font-smoothing: antialiased;
-    transition: background 0.12s, border-color 0.12s, transform 0.06s, box-shadow 0.08s;
-}
-
+/* ----- Settings modal ----- */
 #settings-modal {
     display: none;
     position: fixed;
@@ -532,4 +482,48 @@ footer {
 
 #settings-modal[style*="display:flex"] {
     display: flex;
+}
+
+/* ----- Accessibility ----- */
+.visually-hidden {
+    position: absolute;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+}
+
+/* ----- Responsive ----- */
+@media (max-width: 768px) {
+    main {
+        padding: 1rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .header-content {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 600px) {
+    .card.set-username-card {
+        padding: 1rem;
+    }
+
+    .list-job-title {
+        font-size: 1.1rem;
+    }
+
+    .list-job-company {
+        font-size: 1rem;
+    }
+
+    .applied-job-actions .btn {
+        font-size: 0.92rem;
+        padding: 0.5rem 1rem;
+    }
 }
