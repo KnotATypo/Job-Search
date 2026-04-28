@@ -10,7 +10,6 @@ For each new listing, there are 3 outcomes:
 The results are then sent in a Discord message along with the links for any pending listings
 """
 
-import atexit
 import datetime
 import email
 import imaplib
@@ -19,7 +18,6 @@ import time
 from email.header import decode_header
 
 import requests
-from apscheduler.schedulers.background import BackgroundScheduler
 from selenium.common import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import Keys
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -27,7 +25,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from job_search.model import SearchQuery, Listing, JobStatus, Status, User, db
+from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job
 from job_search.sites.seek import Seek
 from job_search.utilities.logger import configure_logging, logger
 from job_search.utilities.util import new_browser
@@ -189,7 +187,12 @@ def get_listings(user: User) -> set[Listing]:
             page += 1
 
     # Remove existing listings
-    existing_listings = set(Listing.select().where(Listing.id << [l.id for l in listings]))
+    existing_listings = set(
+        Listing.select()
+        .join(Job)
+        .join(JobStatus)
+        .where(JobStatus.user == user, Listing.id << [l.id for l in listings], Listing.site == "seek")
+    )
     temp = listings - existing_listings
     logger.info(f"Found {len(listings)} listings, {len(temp)} new listings")
     listings = temp
