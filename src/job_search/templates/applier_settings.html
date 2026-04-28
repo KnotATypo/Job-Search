@@ -1,122 +1,185 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% if setup %}
-        <div class="card">
-            <h2>Auto Applier Setup</h2>
-            <form class="applier-form" method="post">
-                <label for="email">Email:</label>
-                <div class="field-with-popup">
-                    <input class="setup-field" type="text" id="email" name="email" required
-                           aria-describedby="email-error"
-                           {% if values["email"] %}value="{{ values["email"] }}"{% endif %}>
-                    <div class="error-popup" id="email-error" role="alert"
-                         {% if not errors['email'] %}hidden{% endif %}>
-                        {{ errors['email'] }}
-                        <button type="button" class="close-popup" aria-label="Close">&times;</button>
+    <div class="card search-queries-card">
+        <h2>Manage Auto Apply Queries</h2>
+        <form id="add-query-form" class="add-query-form">
+            <label for="new-term" class="visually-hidden">New search term</label>
+            <input type="text" id="new-term" class="term-input" placeholder="Add new search term" required>
+            <button type="submit" class="btn btn-success">Add</button>
+        </form>
+        <p id="applier-note" role="note" class="note">Note: These auto applier queries currently only work with Seek. If you are using these, you should disable Seek
+            for the matching searches.</p>
+        <ul id="queries-list" class="queries-list">
+            {% for query in queries %}
+                <li class="query-row">
+                    <div class="query-label">
+                        <div class="query-main">
+                            <span class="query-text">{{ query.term }}</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm options-btn"
+                                aria-label="Options for {{ query.term }}"
+                                title="Options for {{ query.term }}"
+                                onclick="openSettings({{ query.id }}, '{{ query.term }}', {{ 'true' if query.remote else 'false' }}, '{{ query.location.value }}', {{ query.sites }}, this)">
+                            <svg class="options-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
+                                 focusable="false">
+                                <path fill="currentColor"
+                                      d="M19.14 12.94c.04-.32.06-.65.06-.94s-.02-.62-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.63l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.007 7.007 0 0 0-1.64-.95L14.6 2.5a.5.5 0 0 0-.49-.5h-3.22a.5.5 0 0 0-.49.5L9.18 4.3c-.58.2-1.12.46-1.64.76L5.15 4.1a.5.5 0 0 0-.6.22L2.63 7.64a.5.5 0 0 0 .12.63l2.03 1.58c-.04.32-.06.65-.06.94s.02.62.06.94L2.75 15.03a.5.5 0 0 0-.12.63l1.92 3.32c.14.24.42.34.66.22l2.39-.96c.52.3 1.06.55 1.64.76l.52 1.8c.07.29.33.5.62.5h3.22c.29 0 .55-.21.62-.5l.52-1.8c.58-.2 1.12-.46 1.64-.76l2.39.96c.24.12.52.02.66-.22l1.92-3.32a.5.5 0 0 0-.12-.63l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"></path>
+                            </svg>
+                            <span class="visually-hidden">Options</span>
+                        </button>
                     </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Modal for configuring a search query -->
+    <div id="settings-modal">
+        <div id="settings-overlay"></div>
+        <div class="modal-content card" style="position:relative;">
+            <button type="button" aria-label="Close" onclick="closeSettings()"
+                    style="position:absolute; top:8px; right:8px; background:transparent; border:none; font-size:20px; cursor:pointer;">
+                &times;
+            </button>
+            <h3 style="margin-top:0;" id="settings-query-text"></h3>
+            <form id="settings-form">
+                <input type="hidden" id="settings-query-id">
+                <div style="margin-bottom:8px;"><label><input type="checkbox" id="settings-remote">Remote only</label>
                 </div>
-                <label for="password">App password:</label>
-                <div class="field-with-popup">
-                    <input class="setup-field" type="password" id="password" name="password" required
-                           aria-describedby="password-error"
-                           {% if values["password"] %}value="{{ values["password"] }}"{% endif %}>
-                    <div class="error-popup" id="password-error" role="alert"
-                         {% if not errors['password'] %}hidden{% endif %}>
-                        {{ errors['password'] }}
-                        <button type="button" class="close-popup" aria-label="Close">&times;</button>
-                    </div>
+                <div style="margin-bottom:8px;">
+                    <label>Location:
+                        <select id="settings-location" name="location">
+                            <option value="Australia">Australia</option>
+                            <option value="Brisbane">Brisbane</option>
+                            <option value="Melbourne">Melbourne</option>
+                            <option value="Sydney">Sydney</option>
+                            <option value="Adelaide">Adelaide</option>
+                            <option value="Perth">Perth</option>
+                            <option value="Darwin">Darwin</option>
+                            <option value="Hobart">Hobart</option>
+                        </select>
+                    </label>
                 </div>
-                <label for="webhook">Webhook:</label>
-                <div class="field-with-popup">
-                    <input class="setup-field" type="text" id="webhook" name="webhook" required
-                           aria-describedby="webhook-error"
-                           {% if values["webhook"] %}value="{{ values["webhook"] }}"{% endif %}>
-                    <div class="error-popup" id="webhook-error" role="alert"
-                         {% if not errors['webhook'] %}hidden{% endif %}>
-                        {{ errors['webhook'] }}
-                        <button type="button" class="close-popup" aria-label="Close">&times;</button>
-                    </div>
+
+                <div style="margin-bottom:8px;">
+                    <fieldset style="border:1px solid #ddd; padding:8px;" id="site-list">
+                    </fieldset>
                 </div>
-                <button class="btn btn-success">Submit</button>
+
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-danger" id="modal-delete-btn">Delete</button>
+                </div>
             </form>
         </div>
-    {% endif %}
-    <style>
-        .applier-form {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
+    </div>
 
-        .applier-form label {
-            font-weight: 600;
-            margin-top: 0.25rem;
-        }
-
-        .setup-field {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-size: 1rem;
-        }
-
-        .field-with-popup {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .field-with-popup .setup-field {
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .error-popup {
-            position: absolute;
-            right: 0;
-            background: #fff6f6;
-            color: #8a1f1f;
-            border: 1px solid #f5c2c2;
-            padding: 0.5rem 0.6rem;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            z-index: 20;
-            font-size: 0.95rem;
-            width: auto;
-            /* Keep it from growing too wide; use viewport-relative fallback */
-            max-width: min(360px, 90%);
-            overflow-wrap: anywhere;
-            word-break: break-word;
-            white-space: normal;
-        }
-
-        .error-popup[hidden] {
-            display: none;
-        }
-
-        .close-popup {
-            background: transparent;
-            border: none;
-            font-size: 1rem;
-            line-height: 1;
-            padding: 0 0.25rem;
-            margin-left: 0.5rem;
-            cursor: pointer;
-            color: inherit;
-        }
-    </style>
     <script>
-        // Close error popups when their close button is clicked.
-        document.addEventListener('click', function (ev) {
-            const btn = ev.target.closest && ev.target.closest('.close-popup');
-            if (!btn) return;
-            const popup = btn.closest && btn.closest('.error-popup');
-            if (popup) {
-                popup.setAttribute('hidden', '');
+        document.getElementById('add-query-form').addEventListener('submit', addQuery);
+
+        function addQuery(e) {
+            e.preventDefault();
+            let term_field = document.getElementById('new-term');
+            const term = term_field.value;
+            term_field.value = '';
+            fetch('/search_queries', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'term=' + encodeURIComponent(term) + '&auto_apply=true'
+            })
+                .then(() => {
+                    location.reload();
+                });
+        }
+
+        // Settings modal logic
+        let _settingsInvokedButton = null;
+
+        function openSettings(query_id, term, remote, location, sites, btn) {
+            _settingsInvokedButton = btn;
+
+            document.getElementById('settings-query-id').value = query_id;
+            document.getElementById('settings-query-text').textContent = term;
+            document.getElementById('settings-remote').checked = remote;
+            document.getElementById('settings-location').value = location;
+
+            const site_list = document.getElementById('site-list');
+            site_list.innerHTML = '<legend style="font-size:0.9em;">Sites to search</legend>';
+            for (const site in sites) {
+                const input = document.createElement('input');
+                input.type = "checkbox";
+                input.id = site + '-opt';
+                input.name = site;
+                input.checked = (sites[site].value === 'true');
+                input.disabled = true;
+
+                const label = document.createElement("label");
+                label.style.display = "block";
+                label.style.marginBottom = "4px";
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(' ' + sites[site].name))
+
+                site_list.appendChild(label);
             }
+
+            // Show modal
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = 'flex';
+            // Focus first control
+            setTimeout(() => document.getElementById('settings-remote').focus(), 20);
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = 'none';
+            if (_settingsInvokedButton) {
+                _settingsInvokedButton.disabled = false;
+                _settingsInvokedButton = null;
+            }
+        }
+
+        // Save settings
+        document.getElementById('settings-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const id = document.getElementById('settings-query-id').value;
+
+            // Build sites object dynamically by finding all '-opt' checkboxes within #site-list
+            const sites = {};
+            const siteCheckboxes = document.querySelectorAll('#site-list input[type=checkbox]');
+            siteCheckboxes.forEach((input) => {
+                let key = input.id.replace(/-opt$/, '');
+                sites[key] = !!input.checked;
+            });
+
+            const payload = {
+                remote: document.getElementById('settings-remote').checked,
+                location: document.getElementById('settings-location').value,
+                sites: sites
+            };
+
+            fetch('/search_queries/' + encodeURIComponent(id), {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
+                .then(() => {
+                    location.reload();
+                });
         });
+
+        // Delete from modal
+        document.getElementById('modal-delete-btn').addEventListener('click', function () {
+            const id = document.getElementById('settings-query-id').value;
+            if (!confirm('Delete this search query?')) return;
+            this.disabled = true;
+            fetch('/search_queries/' + encodeURIComponent(id), {method: 'DELETE'})
+                .then(() => {
+                    location.reload();
+                });
+        });
+
+        // Click outside modal content closes it
+        document.getElementById('settings-overlay').addEventListener('click', closeSettings);
     </script>
 {% endblock %}

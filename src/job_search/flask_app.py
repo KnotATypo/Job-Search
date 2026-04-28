@@ -242,10 +242,18 @@ def add_search_query():
     if not term:
         return jsonify({"error": "No term provided"}), 400
 
-    sq = SearchQuery.create(term=term, user=session["user_id"])
-    for site in Site.select():
-        # By default, enable query for all sites
-        SiteQuery.create(site=site.id, query=sq.id)
+    auto_apply = True if request.form.get("auto_apply") else False
+
+    sq = SearchQuery.create(
+        term=term, user=session["user_id"], auto_apply=auto_apply, days_since_post=2 if auto_apply else 0
+    )
+    if auto_apply:
+        # Only enable Seek for auto-apply jobs
+        SiteQuery.create(site="seek", query=sq.id)
+    else:
+        # Otherwise, enable query for all sites
+        for site in Site.select():
+            SiteQuery.create(site=site.id, query=sq.id)
 
     return jsonify({"success": True})
 
@@ -379,34 +387,53 @@ def applied():
 @app.route("/auto_applier_settings", methods=["GET", "POST"])
 @require_user
 def auto_applier_settings():
-    if request.method == "POST":
-        errors = {}
+    user = User.get(User.id == session["user_id"])
+    if not user.email:
+        if request.method == "POST":
+            errors = {}
 
-        email_address = request.form.get("email", "")
-        if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email_address):
-            errors["email"] = "Invalid email address."
-        elif "@gmail.com" not in email_address:
-            errors["email"] = "Only Gmail addresses are currently supported."
+            email_address = request.form.get("email", "")
+            if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email_address):
+                errors["email"] = "Invalid email address."
+            elif "@gmail.com" not in email_address:
+                errors["email"] = "Only Gmail addresses are currently supported."
 
-        password = request.form.get("password", "")
-        if not re.match(r"(?:[a-z]{4} ){3}[a-z]{4}", password):
-            errors["password"] = "Password should be 4 sets of 4 lowercase letters."
+            password = request.form.get("password", "")
+            if not re.match(r"(?:[a-z]{4} ){3}[a-z]{4}", password):
+                errors["password"] = "Password should be 4 sets of 4 lowercase letters."
 
-        webhook = request.form.get("webhook", "")
-        if not re.match(r"https://discord\.com/api/webhooks/\d+/\w+", webhook):
-            errors["webhook"] = "Invalid webhook URL."
+            webhook = request.form.get("webhook", "")
+            if not re.match(r"https://discord\.com/api/webhooks/\d+/\w+", webhook):
+                errors["webhook"] = "Invalid webhook URL."
 
-        return render_template(
-            "applier_settings.html",
-            setup=True,
-            errors=errors,
-            values={"email": email_address, "password": password, "webhook": webhook},
-        )
+            if len(errors) > 0:
+                return render_template(
+                    "applier_setup.html",
+                    errors=errors,
+                    values={"email": email_address, "password": password, "webhook": webhook},
+                )
+            else:
+                user.email = email_address
+                user.email_password = password
+                user.webhook_url = webhook
+                user.save()
+                return redirect(url_for("auto_applier_settings"))
+        else:
+            return render_template("applier_setup.html", errors={}, values={})
     else:
-        user = User.get(User.id == session["user_id"])
-        if not user.email:
-            return render_template("applier_settings.html", setup=True, errors={}, values={})
-        return render_template("applier_settings.html")
+        queries = list(
+            SearchQuery.select()
+            .where(SearchQuery.user == user, SearchQuery.auto_apply == True)
+            .order_by(SearchQuery.id)
+        )
+        sites = list(Site.select())
+        for query in queries:
+            sites_to_query = [sq.site.id for sq in SiteQuery.select().where(SiteQuery.query == query.id)]
+            query.sites = {
+                site.id: {"value": "true" if site.id in sites_to_query else "false", "name": site.name}
+                for site in sites
+            }
+        return render_template("applier_settings.html", queries=queries)
 
 
 @app.before_request

@@ -494,6 +494,82 @@ footer {
     white-space: nowrap;
 }
 
+.applier-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.applier-form label {
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.setup-field {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.field-with-popup {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.field-with-popup .setup-field {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.error-popup {
+    position: absolute;
+    right: 0;
+    background: #fff6f6;
+    color: #8a1f1f;
+    border: 1px solid #f5c2c2;
+    padding: 0.5rem 0.6rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    z-index: 20;
+    font-size: 0.95rem;
+    width: auto;
+    /* Keep it from growing too wide; use viewport-relative fallback */
+    max-width: min(360px, 90%);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.error-popup[hidden] {
+    display: none;
+}
+
+.close-popup {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 0.25rem;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    color: inherit;
+}
+
+.note {
+    background: #fffbe6;
+    border-left: 4px solid #ffd54f;
+    padding: 10px 12px;
+    margin: 12px 0;
+    font-size: 0.95rem;
+    color: #333;
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
 /* ----- Responsive ----- */
 @media (max-width: 768px) {
     main {

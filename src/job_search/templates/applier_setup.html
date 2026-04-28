@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="card">
+        <h2>Auto Applier Setup</h2>
+        <form class="applier-form" method="post">
+            <label for="email">Email:</label>
+            <div class="field-with-popup">
+                <input class="setup-field" type="text" id="email" name="email" required
+                       aria-describedby="email-error"
+                       {% if values["email"] %}value="{{ values["email"] }}"{% endif %}>
+                <div class="error-popup" id="email-error" role="alert"
+                     {% if not errors['email'] %}hidden{% endif %}>
+                    {{ errors['email'] }}
+                    <button type="button" class="close-popup" aria-label="Close">&times;</button>
+                </div>
+            </div>
+            <label for="password">App password:</label>
+            <div class="field-with-popup">
+                <input class="setup-field" type="text" id="password" name="password" required
+                       aria-describedby="password-error"
+                       {% if values["password"] %}value="{{ values["password"] }}"{% endif %}>
+                <div class="error-popup" id="password-error" role="alert"
+                     {% if not errors['password'] %}hidden{% endif %}>
+                    {{ errors['password'] }}
+                    <button type="button" class="close-popup" aria-label="Close">&times;</button>
+                </div>
+            </div>
+            <label for="webhook">Webhook:</label>
+            <div class="field-with-popup">
+                <input class="setup-field" type="text" id="webhook" name="webhook" required
+                       aria-describedby="webhook-error"
+                       {% if values["webhook"] %}value="{{ values["webhook"] }}"{% endif %}>
+                <div class="error-popup" id="webhook-error" role="alert"
+                     {% if not errors['webhook'] %}hidden{% endif %}>
+                    {{ errors['webhook'] }}
+                    <button type="button" class="close-popup" aria-label="Close">&times;</button>
+                </div>
+            </div>
+            <button class="btn btn-success">Submit</button>
+        </form>
+    </div>
+    <script>
+        // Close error popups when their close button is clicked.
+        document.addEventListener('click', function (ev) {
+            const btn = ev.target.closest && ev.target.closest('.close-popup');
+            if (!btn) return;
+            const popup = btn.closest && btn.closest('.error-popup');
+            if (popup) {
+                popup.setAttribute('hidden', '');
+            }
+        });
+    </script>
+{% endblock %}
