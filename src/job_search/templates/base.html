@@ -39,6 +39,8 @@
            onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Search Terms</a>
         <a href="{{ url_for('manage_blacklist_terms') }}" class="menu-link"
            onclick="document.getElementById('menu').classList.add('menu-hidden')">Manage Blacklist Terms</a>
+        <a href="{{ url_for('auto_applier_settings') }}" class="menu-link"
+           onclick="document.getElementById('menu').classList.add('menu-hidden')">Auto Applier</a>
         <a href="{{ url_for('set_user') }}" class="menu-link"
            onclick="document.getElementById('menu').classList.add('menu-hidden')">Logout</a>
         {% if session.username %}
