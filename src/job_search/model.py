@@ -38,6 +38,7 @@ class User(BaseModel):
     username = CharField(unique=True)
     email = TextField(null=True)
     email_password = TextField(null=True)
+    linkedin_password = TextField(null=True)
     webhook_url = TextField(null=True)
 
 

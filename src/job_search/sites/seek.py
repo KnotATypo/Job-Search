@@ -68,3 +68,7 @@ class Seek(BaseSite):
             query_string += "?"
         query_string += f"daterange={days}"
         return query_string
+
+    def add_quick_apply_filter(self, query_string: str) -> str:
+        # Seek does support quick apply, but there is no way to filter for it
+        return query_string

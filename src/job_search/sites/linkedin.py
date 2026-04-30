@@ -77,3 +77,6 @@ class LinkedIn(BaseSite):
 
     def add_days_filter(self, query_string: str, days: int) -> str:
         return query_string + f"&f_TPR=r{86400 * days}"
+
+    def add_quick_apply_filter(self, query_string: str) -> str:
+        return query_string + "&f_AL=true"

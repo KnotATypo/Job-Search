@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 import job_search.sites
+from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status, Site
 from job_search.utilities import util
 from job_search.utilities.logger import progress_bars, logger
-from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status, Site
 from job_search.utilities.util import storage
 
 HTML_PARSER = "html.parser"
@@ -119,6 +119,8 @@ class BaseSite:
             query_string = self.add_remote_filter(query_string)
         if query.days_since_post != 0:
             query_string = self.add_days_filter(query_string, query.days_since_post)
+        if query.auto_apply:
+            query_string = self.add_quick_apply_filter(query_string)
         return query_string
 
     def adapt_term(self, term: str) -> str:
@@ -181,6 +183,14 @@ class BaseSite:
     def add_days_filter(self, query_string: str, days: int) -> str:
         """
         Add a "days since posted" filter to the query string.
+
+        query_string -- The original query string.
+        """
+        raise NotImplementedError
+
+    def add_quick_apply_filter(self, query_string: str) -> str:
+        """
+        Add a "quick apply"/"one click apply" filter to the query string.
 
         query_string -- The original query string.
         """

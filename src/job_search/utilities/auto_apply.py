@@ -18,19 +18,23 @@ import time
 from email.header import decode_header
 
 import requests
+from bs4 import BeautifulSoup
 from selenium.common import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import Keys
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
 from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db
+from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
 from job_search.utilities.logger import configure_logging, logger
 from job_search.utilities.util import new_browser
 
-SEEK = Seek()
+Seek = Seek()
+LinkedIn = LinkedIn()
 
 
 configure_logging()
@@ -44,34 +48,44 @@ def run_applier(user: User):
     listings = get_listings(user)
 
     driver = new_browser()
-    driver.implicitly_wait(5)
 
+    # logger.info("Logging in to LinkedIn")
+    # driver = linkedin_login(user, driver)
     logger.info("Logging in to Seek")
-    login(user.email, user.email_password, driver)
+    seek_login(user, driver)
 
     logger.info("Attempting applications")
     statuses = {"pending": [], "saved": [], "applied": [], "applied_old": []}
     for listing in listings:
-        status = attempt_application(driver, listing)
-        if status != "":
-            statuses[status].append(listing)
+        if listing.site.name == "Seek":
+            status = seek_attempt_application(driver, listing)
+        elif listing.site.name == "LinkedIn":
+            status = linkedin_attempt_application(driver, listing)
+        else:
+            raise NotImplementedError(f"Site {listing.site} is not supported for auto-application")
 
-    logger.info("Saving listings")
-    for listing in statuses["applied"] + statuses["applied_old"]:
-        # Create an AUTO_APPLIED status before saving them so they aren't saved as NEW
-        status, created = JobStatus.get_or_create(job=listing.job, user=user, defaults={"status": Status.AUTO_APPLIED})
-        if not created:
-            status.status = Status.AUTO_APPLIED
-            status.save()
+        if status in ["applied", "applied_old"]:
+            # Create an AUTO_APPLIED status before saving them so they aren't saved as NEW
+            job_status, created = JobStatus.get_or_create(
+                job=listing.job, user=user, defaults={"status": Status.AUTO_APPLIED}
+            )
+            if not created:
+                job_status.status = Status.AUTO_APPLIED
+                job_status.save()
 
-    SEEK.save_listings(statuses["saved"], user)
-    SEEK.save_listings(statuses["applied"], user)
-    # This will usually be jobs that were "pending" then handled manually
-    SEEK.save_listings(statuses["applied_old"], user)
+        # "save_listings" calls to the generic implementation so using any site works
+        if status != "pending":
+            Seek.save_listings([listing], user)
+        statuses[status].append(listing)
+
+    driver.quit()
 
     links_for_pending = ""
     for listing in statuses["pending"]:
-        links_for_pending += SEEK.build_listing_link(listing) + "\n"
+        if listing.site.name == "Seek":
+            links_for_pending += Seek.build_listing_link(listing) + "\n"
+        elif listing.site.name == "LinkedIn":
+            links_for_pending += LinkedIn.build_listing_link(listing) + "\n"
 
     logger.info(
         f"Applier run complete with: Applied - {len(statuses["applied"])}, Pending - {len(statuses["pending"])}, Saved - {len(statuses["saved"])}"
@@ -98,11 +112,11 @@ def run_applier(user: User):
         logger.debug("Discord ping sent")
 
 
-def attempt_application(driver: WebDriver, listing: Listing) -> str:
+def seek_attempt_application(driver: WebDriver, listing: Listing) -> str:
     """
     Attempt to "Quick Apply" to the given listing
     """
-    driver.get(SEEK.build_listing_link(listing))
+    driver.get(Seek.build_listing_link(listing))
     time.sleep(1)
 
     # Look for apply button
@@ -142,18 +156,64 @@ def attempt_application(driver: WebDriver, listing: Listing) -> str:
     return "applied"
 
 
-def login(email_address: str, password: str, driver: WebDriver):
+def linkedin_attempt_application(driver: WebDriver, listing: Listing) -> str:
+    driver.get(LinkedIn.build_listing_link(listing))
+    time.sleep(3)
+    try:
+        driver.find_element(By.CSS_SELECTOR, 'a[aria-label="LinkedIn Apply to this job"]').click()
+    except NoSuchElementException:
+        soup = BeautifulSoup(driver.page_source, features="html.parser")
+        index = soup.text.index("Application submitted")
+        submission_text = soup.text[index - 18 : index + 21]
+        if submission_text == "Application statusApplication submitted":
+            return "applied_old"
+    shadow_root: WebElement = driver.execute_script(
+        "return arguments[0].shadowRoot", driver.find_element(By.CSS_SELECTOR, 'div[data-testid="interop-shadowdom"]')
+    )
+    time.sleep(3)
+    try:
+        shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
+        try:
+            while True:
+                shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
+                try:
+                    WebDriverWait(shadow_root, 1).until(
+                        ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]'))
+                    )
+                    return "pending"
+                except TimeoutException:
+                    pass
+        except NoSuchElementException:
+            pass
+        shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Review your application"]').click()
+        try:
+            WebDriverWait(shadow_root, 1).until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]')))
+            return "pending"
+        except TimeoutException:
+            pass
+    except NoSuchElementException:
+        pass
+    try:
+        shadow_root.find_element(By.CSS_SELECTOR, 'label[for="follow-company-checkbox"]').click()
+    except NoSuchElementException:
+        pass
+    shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Submit application"]').click()
+    time.sleep(3)
+    return "applied"
+
+
+def seek_login(user: User, driver: WebDriver):
     driver.get("https://www.seek.com")
     register_text = driver.find_element(By.CSS_SELECTOR, 'span[data-automation="register-link"]')
     register_text.find_element(By.CSS_SELECTOR, "a").click()
     try:
-        driver.find_element(By.CSS_SELECTOR, 'input[id="newEmailAddress"]').send_keys(email_address)
+        driver.find_element(By.CSS_SELECTOR, 'input[type="email"]').send_keys(user.email)
     except StaleElementReferenceException:
-        driver.find_element(By.CSS_SELECTOR, 'input[id="newEmailAddress"]').send_keys(email_address)
+        driver.find_element(By.CSS_SELECTOR, 'input[type="email"]').send_keys(user.email)
     driver.find_element(By.CSS_SELECTOR, 'button[data-cy="register"]').click()
     code_input = driver.find_element(By.CSS_SELECTOR, 'input[aria-label="verification input"]')
     time.sleep(5)
-    code = get_code(email_address, password)
+    code = get_code(user.email, user.email_password)
     code_input.send_keys(code)
     try:
         # Check that the code isn't invalid. If invalid, try to get code 2 more times
@@ -163,7 +223,7 @@ def login(email_address: str, password: str, driver: WebDriver):
             if alert.text == "Invalid code. Try again or click resend below.":
                 logger.warn("Invalid 2FA code, trying again")
                 code_input.send_keys(Keys.BACKSPACE * 6)
-                code = get_code(email_address, password)
+                code = get_code(user.email, user.email_password)
                 code_input.send_keys(code)
             else:
                 time.sleep(5)
@@ -175,25 +235,52 @@ def login(email_address: str, password: str, driver: WebDriver):
         logger.debug("Successfully logged in")
 
 
+def linkedin_login(user: User, driver: WebDriver) -> WebDriver:
+    driver.get("https://www.linkedin.com/login")
+    cont = True
+    while cont:
+        try:
+            username_element = driver.find_element(By.CSS_SELECTOR, 'input[id="username"]')
+            cont = False
+        except NoSuchElementException:
+            driver.quit()
+            time.sleep(1)
+            driver = new_browser()
+            driver.get("https://www.linkedin.com/login")
+    username_element.send_keys(user.email)
+    driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(user.linkedin_password)
+    driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+    time.sleep(1)
+
+    try:
+        if driver.find_element(By.TAG_NAME, "h1").text == "Let’s do a quick security check":
+            time.sleep(60)
+    except NoSuchElementException:
+        pass
+
+    return driver
+
+
 def get_listings(user: User) -> set[Listing]:
     queries = list(SearchQuery.select().where(SearchQuery.auto_apply == True, SearchQuery.user == user))
     listings = set()
 
     # Collect listings
-    for q in queries:
-        last_length = -1
-        page = 0
-        while last_length != len(listings):
-            last_length = len(listings)
-            listings.update(SEEK.get_listings_from_page(q, page))
-            page += 1
+    for site in [Seek]:
+        for q in queries:
+            last_length = -1
+            page = 0
+            while last_length != len(listings):
+                last_length = len(listings)
+                listings.update(site.get_listings_from_page(q, page))
+                page += 1
 
     # Remove existing listings
     existing_listings = set(
         Listing.select()
         .join(Job)
         .join(JobStatus)
-        .where(JobStatus.user == user, Listing.id << [l.id for l in listings], Listing.site == "seek")
+        .where(JobStatus.user == user, Listing.id << [l.id for l in listings], Listing.site << ["seek", "linkedin"])
     )
     temp = listings - existing_listings
     logger.info(f"Found {len(listings)} listings, {len(temp)} new listings")

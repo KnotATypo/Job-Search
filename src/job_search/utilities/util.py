@@ -52,6 +52,7 @@ def new_browser(headless=True) -> webdriver.Chrome:
         fix_hairline=True,
     )
 
+    driver.implicitly_wait(5)
     return driver
 
 
