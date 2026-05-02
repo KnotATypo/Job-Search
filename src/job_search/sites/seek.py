@@ -11,8 +11,8 @@ from job_search.utilities.util import get_page_soup
 class Seek(BaseSite):
     def __init__(self):
         super().__init__(
-            "https://www.seek.com.au/%%QUERY%%-jobs?page=%%PAGE%%",
-            "https://www.seek.com.au/job/%%ID%%",
+            "https://au.seek.com/%%QUERY%%-jobs?page=%%PAGE%%",
+            "https://au.seek.com/job/%%ID%%",
             "Seek",
         )
 

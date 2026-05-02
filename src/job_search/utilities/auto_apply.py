@@ -25,7 +25,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job
+from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db
 from job_search.sites.seek import Seek
 from job_search.utilities.logger import configure_logging, logger
 from job_search.utilities.util import new_browser
@@ -167,8 +167,10 @@ def login(email_address: str, password: str, driver: WebDriver):
                 code_input.send_keys(code)
             else:
                 time.sleep(5)
-        logger.error(f"Could not validate 2FA code: {alert.text}")
-        raise Exception("Could not validate 2FA code")
+        # Seek has recently moved url
+        if "Welcome to our new URL" not in alert.text:
+            logger.error(f"Could not validate 2FA code: {alert.text}")
+            raise Exception("Could not validate 2FA code")
     except NoSuchElementException:
         logger.debug("Successfully logged in")
 
@@ -235,4 +237,5 @@ def get_code(email_address: str, password: str) -> str:
 
 
 if __name__ == "__main__":
-    run_applier(User.get_by_id(1))
+    with db.connection_context():
+        run_applier(User.get_by_id(1))
