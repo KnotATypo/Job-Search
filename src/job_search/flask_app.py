@@ -367,15 +367,31 @@ def run_blacklist():
     return jsonify({"message": f"Blacklist run. {filtered_count} jobs filtered."})
 
 
-@app.route("/applied", methods=["GET"])
+@app.route("/applied", methods=["GET", "POST"])
 @require_user
 def applied():
-    """Applied jobs page"""
-    jobs = (
-        Job.select()
-        .join(JobStatus)
-        .where((JobStatus.status == Status.APPLIED) & (JobStatus.user == session["user_id"]))
-    )
+    """Get applied jobs"""
+    if request.method == "POST":
+        term = request.form.get("search-job-field", "")
+        auto_applied = request.form.get("auto-applied")
+
+        status_to_match = Status.AUTO_APPLIED if auto_applied == "true" else Status.APPLIED
+        jobs = set(
+            Job.select()
+            .join(JobStatus)
+            .where(
+                (JobStatus.status == status_to_match)
+                & (JobStatus.user == session["user_id"])
+                & ((Job.title.ilike("%" + term + "%")) | (Job.company.ilike("%" + term + "%")))
+            )
+        )
+
+    else:
+        jobs = (
+            Job.select()
+            .join(JobStatus)
+            .where((JobStatus.status == Status.APPLIED), (JobStatus.user == session["user_id"]))
+        )
 
     jobs_with_sites = []
     for job in jobs:

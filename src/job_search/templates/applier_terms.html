@@ -8,7 +8,8 @@
             <input type="text" id="new-term" class="term-input" placeholder="Add new search term" required>
             <button type="submit" class="btn btn-success">Add</button>
         </form>
-        <p id="applier-note" role="note" class="note">Note: These auto applier queries currently only work with Seek. If you are using these, you should disable Seek
+        <p id="applier-note" role="note" class="note">Note: These auto applier queries currently only work with Seek. If
+            you are using these, you should disable Seek
             for the matching searches.</p>
         <ul id="queries-list" class="queries-list">
             {% for query in queries %}
@@ -32,6 +33,17 @@
                 </li>
             {% endfor %}
         </ul>
+    </div>
+
+    <div class="card">
+        <h2>Search Auto-Applied Jobs</h2>
+        <form id="search-job-form" class="add-query-form" action="/applied" method="POST">
+            <label for="search-job-field" class="visually-hidden">Search job field</label>
+            <input type="text" id="search-job-field" name="search-job-field" class="term-input"
+                   placeholder="Search jobs" required>
+            <input type="hidden" name="auto-applied" value="true"/>
+            <button type="submit" class="btn btn-success">Search</button>
+        </form>
     </div>
 
     <!-- Modal for configuring a search query -->
