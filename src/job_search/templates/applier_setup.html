@@ -3,7 +3,7 @@
 {% block content %}
     <div class="card">
         <h2>Auto Applier Setup</h2>
-        <form class="applier-form" method="post">
+        <form class="applier-form" method="post" action="/auto_applier_setup">
             <label for="email">Email:</label>
             <div class="field-with-popup">
                 <input class="setup-field" type="text" id="email" name="email" required
@@ -26,7 +26,7 @@
                     <button type="button" class="close-popup" aria-label="Close">&times;</button>
                 </div>
             </div>
-            <p id="applier-note" role="note" class="note"><a href="https://support.google.com/accounts/answer/185833" target="_blank">
+            <p id="applier-note-password" role="note" class="note"><a href="https://support.google.com/accounts/answer/185833" target="_blank">
                 Documentation for generating password</a></p>
             <label for="webhook">Webhook:</label>
             <div class="field-with-popup">
@@ -39,7 +39,7 @@
                     <button type="button" class="close-popup" aria-label="Close">&times;</button>
                 </div>
             </div>
-        <p id="applier-note" role="note" class="note"><a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank">
+        <p id="applier-note-webhook" role="note" class="note"><a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank">
                 Documentation for generating webhook</a></p>
             <button class="btn btn-success">Submit</button>
         </form>
