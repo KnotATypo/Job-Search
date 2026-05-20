@@ -16,6 +16,7 @@ import imaplib
 import re
 import time
 from email.header import decode_header
+from typing import Any, List
 
 import requests
 from bs4 import BeautifulSoup
@@ -44,15 +45,17 @@ def run_applier(user: User):
     timestamp = datetime.datetime.now().isoformat() + "+10:00"
     logger.info(f"Starting applier at {timestamp}")
 
-    logger.info("Looking for new listings")
-    listings = get_listings(user)
-
-    driver = new_browser()
+    driver = new_browser(headless=False)
 
     # logger.info("Logging in to LinkedIn")
     # driver = linkedin_login(user, driver)
     logger.info("Logging in to Seek")
     seek_login(user, driver)
+
+    update_pending(user, driver)
+
+    logger.info("Looking for new listings")
+    listings = get_listings(user)
 
     logger.info("Attempting applications")
     statuses = {"pending": [], "saved": [], "applied": [], "applied_old": []}
@@ -64,18 +67,10 @@ def run_applier(user: User):
         else:
             raise NotImplementedError(f"Site {listing.site} is not supported for auto-application")
 
-        for curr_status, new_status in [
-            (["applied", "applied_old"], Status.AUTO_APPLIED),
-            (["pending"], Status.AUTO_NEW),
-        ]:
-            if status in curr_status:
-                # Create status before saving them so they aren't saved as NEW
-                job_status, created = JobStatus.get_or_create(
-                    job=listing.job, user=user, defaults={"status": new_status}
-                )
-                if not created:
-                    job_status.status = new_status
-                    job_status.save()
+        if status in ["applied", "applied_old"]:
+            update_status(listing, Status.AUTO_APPLIED, user)
+        if status in ["pending"]:
+            update_status(listing, Status.AUTO_NEW, user)
 
         # "save_listings" calls to the generic implementation so using any site works
         Seek.save_listings([listing], user)
@@ -83,17 +78,54 @@ def run_applier(user: User):
 
     driver.quit()
 
-    links_for_pending = ""
-    for listing in statuses["pending"]:
-        if listing.site.name == "Seek":
-            links_for_pending += Seek.build_listing_link(listing) + "\n"
-        elif listing.site.name == "LinkedIn":
-            links_for_pending += LinkedIn.build_listing_link(listing) + "\n"
+    send_ping(statuses, timestamp, user)
 
+
+def update_status(listing: Listing, new_status: Status, user: User):
+    # Create status before saving them so they aren't saved as NEW
+    job_status, created = JobStatus.get_or_create(job=listing.job, user=user, defaults={"status": new_status})
+    if not created:
+        job_status.status = new_status
+        job_status.save()
+
+
+def update_pending(user, driver):
+    pending = (
+        JobStatus.select()
+        .join(Job)
+        .join(Listing)
+        .where(
+            JobStatus.status == Status.AUTO_NEW,
+            JobStatus.user == user,
+        )
+    )
+    pending_listings: List[List[Listing]] = [[x for x in x.job.listing_set if x.site.name == "Seek"] for x in pending]
+    for listings in pending_listings:
+        for l in listings:
+            result = seek_attempt_application(driver, l)
+            if result == "applied_old":
+                update_status(l, Status.AUTO_APPLIED, user)
+            elif l.timestamp < datetime.datetime.now() - datetime.timedelta(days=5):
+                # If this listing is more than 5 days old, move it on it a normal listing
+                JobStatus.get(job=l.job, user=user).delete_instance()
+                Seek.save_listings([l], user)
+
+
+def send_ping(statuses: dict[str, list[Any]], timestamp: str, user: User):
+    """
+    Send ping with information about applied jobs with links to pending jobs.
+    """
     logger.info(
         f"Applier run complete with: Applied - {len(statuses["applied"])}, Pending - {len(statuses["pending"])}, Saved - {len(statuses["saved"])}"
     )
     if user.webhook_url is not None:
+        links_for_pending = ""
+        for listing in statuses["pending"]:
+            if listing.site.name == "Seek":
+                links_for_pending += Seek.build_listing_link(listing) + "\n"
+            elif listing.site.name == "LinkedIn":
+                links_for_pending += LinkedIn.build_listing_link(listing) + "\n"
+
         response = requests.post(
             user.webhook_url,
             json={
