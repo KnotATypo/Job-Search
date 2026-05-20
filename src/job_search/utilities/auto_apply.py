@@ -64,18 +64,21 @@ def run_applier(user: User):
         else:
             raise NotImplementedError(f"Site {listing.site} is not supported for auto-application")
 
-        if status in ["applied", "applied_old"]:
-            # Create an AUTO_APPLIED status before saving them so they aren't saved as NEW
-            job_status, created = JobStatus.get_or_create(
-                job=listing.job, user=user, defaults={"status": Status.AUTO_APPLIED}
-            )
-            if not created:
-                job_status.status = Status.AUTO_APPLIED
-                job_status.save()
+        for curr_status, new_status in [
+            (["applied", "applied_old"], Status.AUTO_APPLIED),
+            (["pending"], Status.AUTO_NEW),
+        ]:
+            if status in curr_status:
+                # Create status before saving them so they aren't saved as NEW
+                job_status, created = JobStatus.get_or_create(
+                    job=listing.job, user=user, defaults={"status": new_status}
+                )
+                if not created:
+                    job_status.status = new_status
+                    job_status.save()
 
         # "save_listings" calls to the generic implementation so using any site works
-        if status != "pending":
-            Seek.save_listings([listing], user)
+        Seek.save_listings([listing], user)
         statuses[status].append(listing)
 
     driver.quit()
@@ -314,6 +317,7 @@ def get_code(email_address: str, password: str) -> str:
             logger.debug(f"Email {msg_id}: {subject}")
             if re.match(r"\d{6} is your code for SEEK", subject) is not None:
                 code = subject[:6]
+                imap.store(msg_id, "+FLAGS", "\\Seen")
                 imap.store(msg_id, "+FLAGS", "\\Deleted")
                 break
 

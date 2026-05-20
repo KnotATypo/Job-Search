@@ -50,6 +50,7 @@ class Job(BaseModel):
 
 class Status(Enum):
     NEW = "New"
+    AUTO_NEW = "Auto New"
     INTERESTED = "Interested"
     LIKED = "Liked"
     APPLIED = "Applied"
