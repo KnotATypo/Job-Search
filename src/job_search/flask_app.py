@@ -1,4 +1,5 @@
 import atexit
+import datetime
 import os
 import re
 from functools import wraps
@@ -25,7 +26,7 @@ from job_search.model import (
 )
 from job_search.search import search
 from job_search.utilities import util
-from job_search.utilities.auto_apply import run_applier
+from job_search.utilities.auto_apply import run_applier, notify_user
 from job_search.utilities.clean import clean
 from job_search.utilities.logger import logger, configure_logging
 
@@ -481,12 +482,20 @@ def run_apply():
             run_applier(user)
 
 
+def run_apply_notify():
+    with db:
+        users = User.select().where(User.webhook_url.is_null(False))
+        for user in users:
+            notify_user(user, datetime.datetime.now() - datetime.timedelta(hours=24))
+
+
 def start():
     configure_logging()
     logger.info("Scheduling tasks")
     # TODO Make this configurable through .env or web gui
     scheduler.add_job(run_tasks, "cron", hour=1, minute=0)
-    scheduler.add_job(func=run_apply, trigger="cron", hour="*/6", minute="0")
+    scheduler.add_job(run_apply, trigger="cron", hour="*", minute="0")
+    scheduler.add_job(run_apply_notify, trigger="cron", hour="10", minute="0")
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     logger.info("Tasks scheduled")

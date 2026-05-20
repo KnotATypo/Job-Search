@@ -16,7 +16,7 @@ import imaplib
 import re
 import time
 from email.header import decode_header
-from typing import Any, List
+from typing import List
 
 import requests
 from bs4 import BeautifulSoup
@@ -45,14 +45,12 @@ def run_applier(user: User):
     timestamp = datetime.datetime.now().isoformat() + "+10:00"
     logger.info(f"Starting applier at {timestamp}")
 
-    driver = new_browser(headless=False)
+    driver = new_browser()
 
     # logger.info("Logging in to LinkedIn")
     # driver = linkedin_login(user, driver)
     logger.info("Logging in to Seek")
     seek_login(user, driver)
-
-    update_pending(user, driver)
 
     logger.info("Looking for new listings")
     listings = get_listings(user)
@@ -78,7 +76,9 @@ def run_applier(user: User):
 
     driver.quit()
 
-    send_ping(statuses, timestamp, user)
+    logger.info(
+        f"Applier run complete with: Applied - {len(statuses["applied"])}, Pending - {len(statuses["pending"])}, Saved - {len(statuses["saved"])}"
+    )
 
 
 def update_status(listing: Listing, new_status: Status, user: User):
@@ -97,9 +97,11 @@ def update_pending(user, driver):
         .where(
             JobStatus.status == Status.AUTO_NEW,
             JobStatus.user == user,
+            Listing.site.name == "Seek",
         )
     )
-    pending_listings: List[List[Listing]] = [[x for x in x.job.listing_set if x.site.name == "Seek"] for x in pending]
+
+    pending_listings: List[List[Listing]] = [list(x.job.listing_set) for x in pending]
     for listings in pending_listings:
         for l in listings:
             result = seek_attempt_application(driver, l)
@@ -111,40 +113,53 @@ def update_pending(user, driver):
                 Seek.save_listings([l], user)
 
 
-def send_ping(statuses: dict[str, list[Any]], timestamp: str, user: User):
+def notify_user(user: User, since: datetime.datetime):
     """
     Send ping with information about applied jobs with links to pending jobs.
     """
-    logger.info(
-        f"Applier run complete with: Applied - {len(statuses["applied"])}, Pending - {len(statuses["pending"])}, Saved - {len(statuses["saved"])}"
+    driver = new_browser()
+    update_pending(user, driver)
+    driver.quit()
+
+    if user.webhook_url is None:
+        return
+    pending = (
+        JobStatus.select().join(Job).join(Listing).where(JobStatus.status == Status.AUTO_NEW, Listing.timestamp > since)
     )
-    if user.webhook_url is not None:
-        links_for_pending = ""
-        for listing in statuses["pending"]:
+    applied = (
+        JobStatus.select()
+        .join(Job)
+        .join(Listing)
+        .where(JobStatus.status == Status.AUTO_APPLIED, Listing.timestamp > since)
+    )
+
+    links_for_pending = ""
+    for job_status in pending:
+        for listing in job_status.job.listing_set:
             if listing.site.name == "Seek":
                 links_for_pending += Seek.build_listing_link(listing) + "\n"
-            elif listing.site.name == "LinkedIn":
-                links_for_pending += LinkedIn.build_listing_link(listing) + "\n"
+            # elif listing.site.name == "LinkedIn":
+            #     links_for_pending += LinkedIn.build_listing_link(listing) + "\n"
 
-        response = requests.post(
-            user.webhook_url,
-            json={
-                "embeds": [
-                    {
-                        "title": "Job Bot Auto-Applier",
-                        "description": links_for_pending,
-                        "fields": [
-                            {"name": "Applied", "value": len(statuses["applied"]), "inline": True},
-                            {"name": "Pending", "value": len(statuses["pending"]), "inline": True},
-                            {"name": "Saved", "value": len(statuses["saved"]), "inline": True},
-                        ],
-                        "timestamp": timestamp,
-                    }
-                ]
-            },
-        )
-        response.raise_for_status()
-        logger.debug("Discord ping sent")
+    response = requests.post(
+        user.webhook_url,
+        json={
+            "embeds": [
+                {
+                    "title": "Job Bot Auto-Applier",
+                    "description": links_for_pending,
+                    "fields": [
+                        {"name": "Applied", "value": len(applied), "inline": True},
+                        {"name": "Pending", "value": len(pending), "inline": True},
+                    ],
+                    "timestamp": since.strftime("%Y-%m-%d %H:%M:%S"),
+                }
+            ]
+        },
+    )
+
+    response.raise_for_status()
+    logger.debug("Discord ping sent")
 
 
 def seek_attempt_application(driver: WebDriver, listing: Listing) -> str:
