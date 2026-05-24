@@ -57,11 +57,11 @@ def check_expired():
     """
     logger.info("Checking expired listings")
     listings: List[Listing]
-    listings = (
+    listings = list(
         Listing.select()
         .join(Job)
         .join(JobStatus)
-        .where(JobStatus.status << [Status.NEW, Status.INTERESTED, Status.LIKED])
+        .where(JobStatus.status << [Status.NEW, Status.INTERESTED, Status.LIKED, Status.AUTO_NEW])
     )
 
     browser = new_browser()
