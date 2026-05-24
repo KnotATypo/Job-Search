@@ -65,32 +65,32 @@ def check_expired():
     )
 
     browser = new_browser()
-
+    browser.implicitly_wait(1)
     for listing in tqdm(listings, desc="Checking expired listings", unit="listing", disable=not progress_bars):
         site: BaseSite = BaseSite.get_site_instance(listing.site)
         browser.get(site.build_listing_link(listing))
         try:
-            sleep(1)
             if isinstance(site, Seek):
-                WebDriverWait(browser, 1).until_not(
+                WebDriverWait(browser, 1).until(
                     ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation="expiredJobPage"]'))
                 )
             elif isinstance(site, Jora):
-                WebDriverWait(browser, 1).until_not(
+                WebDriverWait(browser, 1).until(
                     ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="flash-container error"]'))
                 )
             elif isinstance(site, LinkedIn):
-                WebDriverWait(browser, 1).until_not(
+                WebDriverWait(browser, 1).until(
                     ec.presence_of_element_located((By.CSS_SELECTOR, 'span[class="not-found-cta"]'))
                 )
-                WebDriverWait(browser, 1).until_not(
+                WebDriverWait(browser, 1).until(
                     ec.presence_of_element_located((By.CSS_SELECTOR, 'figcaption[class="closed-job__flavor--closed"]'))
                 )
                 if browser.current_url.endswith("trk=expired_jd_redirect"):
                     raise TimeoutException("Expired")
-        except TimeoutException:
             logger.debug(f"Listing {listing.id} is expired")
             JobStatus.update(status=Status.NOT_INTERESTED).where(JobStatus.job == listing.job).execute()
+        except TimeoutException:
+            pass
 
 
 def missing_descriptions():
