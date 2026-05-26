@@ -88,7 +88,7 @@ def check_expired():
                 if browser.current_url.endswith("trk=expired_jd_redirect"):
                     raise TimeoutException("Expired")
             logger.debug(f"Listing {listing.id} is expired")
-            JobStatus.update(status=Status.NOT_INTERESTED).where(JobStatus.job == listing.job).execute()
+            JobStatus.update(status=Status.EXPIRED).where(JobStatus.job == listing.job).execute()
         except TimeoutException:
             pass
 

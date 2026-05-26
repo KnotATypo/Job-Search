@@ -58,6 +58,7 @@ class Status(Enum):
     NOT_INTERESTED = "Not Interested"
     BLACKLIST = "Blacklist"
     COMPLETE = "Complete"
+    EXPIRED = "Expired"
 
 
 class JobStatus(BaseModel):
