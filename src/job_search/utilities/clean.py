@@ -1,4 +1,3 @@
-from time import sleep
 from typing import List
 
 from dotenv import load_dotenv
@@ -9,14 +8,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from tqdm import tqdm
 
 from job_search.base_site import BaseSite
-from job_search.model import Listing, Job, JobStatus, Status, User
-from job_search.sites.jora import Jora
-from job_search.sites.linkedin import LinkedIn
-from job_search.sites.seek import Seek
+from job_search.model import Listing, Job, JobStatus, Status, User, db
 from job_search.utilities.browser_util import linkedin_login, new_browser
 from job_search.utilities.create_summary import create_summary
-from job_search.utilities.logger import logger, progress_bars, configure_logging
 from job_search.utilities.job_util import storage, pass_blacklist
+from job_search.utilities.logger import logger, progress_bars, configure_logging
 
 load_dotenv()
 
@@ -29,8 +25,8 @@ def clean():
     - Create summaries
     """
     configure_logging()
-
     logger.info("Starting clean")
+
     # reapply_blacklist()
     check_expired()
     missing_descriptions()
@@ -58,43 +54,49 @@ def check_expired():
     logger.info("Checking expired listings")
     listings: List[Listing]
     listings = list(
-        Listing.select()
+        Listing.select(Listing, Job, JobStatus)
         .join(Job)
         .join(JobStatus)
         .where(JobStatus.status << [Status.NEW, Status.INTERESTED, Status.LIKED, Status.AUTO_NEW])
+        .order_by(Listing.timestamp.asc())
     )
 
-    driver = new_browser(headless=False)
-    driver = linkedin_login(User(1), driver)
+    driver = new_browser()
+    if (driver := linkedin_login(User.get_by_id(1), driver)) is None:
+        logger.warn("LinkedIn failed to login")
+        driver = new_browser()
+        # Remove LinkedIn listings if we failed it log in
+        listings = [l for l in listings if l.site.id != "linkedin"]
+
+    site_lookup = {l: BaseSite.get_site_instance(l.site) for l in listings}
 
     driver.implicitly_wait(1)
+    to_expire = []
     for listing in tqdm(listings, desc="Checking expired listings", unit="listing", disable=not progress_bars):
-        if listing.site.id != "linkedin":
-            continue
-        site: BaseSite = BaseSite.get_site_instance(listing.site)
+        site: BaseSite = site_lookup[listing]
         driver.get(site.build_listing_link(listing))
         try:
-            if isinstance(site, Seek):
+            if listing.site.id == "seek":
                 WebDriverWait(driver, 1).until(
                     ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation="expiredJobPage"]'))
                 )
-            elif isinstance(site, Jora):
+            elif listing.site.id == "jora":
                 WebDriverWait(driver, 1).until(
                     ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="flash-container error"]'))
                 )
-            elif isinstance(site, LinkedIn):
+            elif listing.site.id == "linkedin":
                 WebDriverWait(driver, 1).until(
-                    ec.presence_of_element_located((By.CSS_SELECTOR, 'span[class="not-found-cta"]'))
+                    ec.presence_of_element_located((By.CSS_SELECTOR, 'svg[id="signal-error-small"]'))
                 )
-                WebDriverWait(driver, 1).until(
-                    ec.presence_of_element_located((By.CSS_SELECTOR, 'figcaption[class="closed-job__flavor--closed"]'))
-                )
-                if driver.current_url.endswith("trk=expired_jd_redirect"):
-                    raise TimeoutException("Expired")
             logger.debug(f"Listing {listing.id} is expired")
-            JobStatus.update(status=Status.EXPIRED).where(JobStatus.job == listing.job).execute()
+            to_expire.append(listing.job)
         except TimeoutException:
             pass
+
+    with db.connection_context():
+        JobStatus.update(status=Status.EXPIRED).where(JobStatus.job << to_expire).execute()
+
+    driver.quit()
 
 
 def missing_descriptions():

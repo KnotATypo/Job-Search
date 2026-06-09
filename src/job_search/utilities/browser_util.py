@@ -132,12 +132,12 @@ def seek_login(user: User, driver: WebDriver):
         logger.debug("Successfully logged in")
 
 
-def linkedin_login(user: User, driver: WebDriver) -> WebDriver:
-    driver.get("https://www.linkedin.com/login")
+def linkedin_login(user: User, driver: WebDriver) -> WebDriver | None:
+    driver.get("https://au.linkedin.com/jobs")
     cont = True
     while cont:
         try:
-            username_element = driver.find_element(By.CSS_SELECTOR, 'input[id="username"]')
+            username_element = driver.find_element(By.CSS_SELECTOR, 'input[id="session_key"]')
             cont = False
         except NoSuchElementException:
             driver.quit()
@@ -151,7 +151,8 @@ def linkedin_login(user: User, driver: WebDriver) -> WebDriver:
 
     try:
         if driver.find_element(By.TAG_NAME, "h1").text == "Let’s do a quick security check":
-            time.sleep(60)
+            driver.quit()
+            return None
     except NoSuchElementException:
         pass
 
