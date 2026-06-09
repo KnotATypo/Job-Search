@@ -3,10 +3,9 @@ from typing import List
 
 from bs4 import Tag
 
-from job_search.utilities import util
 from job_search.model import Listing, SearchQuery, Location
 from job_search.base_site import BaseSite, NotSupportedError
-from job_search.utilities.util import get_page_soup
+from job_search.utilities.browser_util import get_page_soup
 
 
 class Jora(BaseSite):

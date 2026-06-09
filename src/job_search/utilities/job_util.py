@@ -1,11 +1,7 @@
 import os
 import re
 
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium_stealth import stealth
 
 from job_search.utilities.logger import logger
 from job_search.model import Job, BlacklistTerm, User
@@ -23,51 +19,6 @@ if os.getenv("S3_ENDPOINT_URL") is not None:  # Default to S3 if available
         logger.info("Unable to find S3 details. Defaulting to local file storage")
 else:
     storage = FileStorage()
-
-
-def new_browser(headless=True) -> webdriver.Chrome:
-    """
-    Creates a new Chrome browser instance with the selenium_stealth additions
-
-    headless -- Sets the headless options for the browser (default True)
-    """
-    options = Options()
-    if headless:
-        options.add_argument("--headless")
-
-    # Flag needed to run in Docker
-    options.add_argument("--no-sandbox")
-
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    driver = webdriver.Chrome(options=options)
-
-    stealth(
-        driver,
-        languages=["en-US", "en"],
-        vendor="Google Inc.",
-        platform="Win32",
-        webgl_vendor="Intel Inc.",
-        renderer="Intel Iris OpenGL Engine",
-        fix_hairline=True,
-    )
-
-    driver.implicitly_wait(5)
-    return driver
-
-
-def get_page_soup(link: str) -> BeautifulSoup:
-    """
-    Returns a BeautifulSoup object for the given URL
-
-    link -- The URL to get the page from
-    """
-    browser = new_browser()
-    browser.get(link)
-    content = browser.page_source
-    soup = BeautifulSoup(content, features="html.parser")
-    browser.close()
-    return soup
 
 
 def get_or_create_job(title: str, company: str) -> Job:

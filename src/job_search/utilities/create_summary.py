@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from job_search.utilities.logger import logger, progress_bars, configure_logging
 from job_search.model import Listing
-from job_search.utilities.util import storage
+from job_search.utilities.job_util import storage
 
 load_dotenv()
 

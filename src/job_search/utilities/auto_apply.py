@@ -11,17 +11,12 @@ The results are then sent in a Discord message along with the links for any pend
 """
 
 import datetime
-import email
-import imaplib
-import re
 import time
-from email.header import decode_header
 from typing import List
 
 import requests
 from bs4 import BeautifulSoup
-from selenium.common import TimeoutException, NoSuchElementException, StaleElementReferenceException
-from selenium.webdriver import Keys
+from selenium.common import TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -31,8 +26,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
+from job_search.utilities.browser_util import seek_login
 from job_search.utilities.logger import configure_logging, logger
-from job_search.utilities.util import new_browser
+from job_search.utilities.browser_util import new_browser
 
 Seek = Seek()
 LinkedIn = LinkedIn()
@@ -252,65 +248,6 @@ def linkedin_attempt_application(driver: WebDriver, listing: Listing) -> str:
     return "applied"
 
 
-def seek_login(user: User, driver: WebDriver):
-    driver.get("https://www.seek.com")
-    register_text = driver.find_element(By.CSS_SELECTOR, 'span[data-automation="register-link"]')
-    register_text.find_element(By.CSS_SELECTOR, "a").click()
-    try:
-        driver.find_element(By.CSS_SELECTOR, 'input[type="email"]').send_keys(user.email)
-    except StaleElementReferenceException:
-        driver.find_element(By.CSS_SELECTOR, 'input[type="email"]').send_keys(user.email)
-    driver.find_element(By.CSS_SELECTOR, 'button[data-cy="register"]').click()
-    code_input = driver.find_element(By.CSS_SELECTOR, 'input[aria-label="verification input"]')
-    time.sleep(5)
-    code = get_code(user.email, user.email_password)
-    code_input.send_keys(code)
-    try:
-        # Check that the code isn't invalid. If invalid, try to get code 2 more times
-        time.sleep(2)
-        for _ in range(2):
-            alert = driver.find_element(By.CSS_SELECTOR, 'div[role="alert"]')
-            if alert.text == "Invalid code. Try again or click resend below.":
-                logger.warn("Invalid 2FA code, trying again")
-                code_input.send_keys(Keys.BACKSPACE * 6)
-                code = get_code(user.email, user.email_password)
-                code_input.send_keys(code)
-            else:
-                time.sleep(5)
-        # Seek has recently moved url
-        if "Welcome to our new URL" not in alert.text:
-            logger.error(f"Could not validate 2FA code: {alert.text}")
-            raise Exception("Could not validate 2FA code")
-    except NoSuchElementException:
-        logger.debug("Successfully logged in")
-
-
-def linkedin_login(user: User, driver: WebDriver) -> WebDriver:
-    driver.get("https://www.linkedin.com/login")
-    cont = True
-    while cont:
-        try:
-            username_element = driver.find_element(By.CSS_SELECTOR, 'input[id="username"]')
-            cont = False
-        except NoSuchElementException:
-            driver.quit()
-            time.sleep(1)
-            driver = new_browser()
-            driver.get("https://www.linkedin.com/login")
-    username_element.send_keys(user.email)
-    driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(user.linkedin_password)
-    driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
-    time.sleep(1)
-
-    try:
-        if driver.find_element(By.TAG_NAME, "h1").text == "Let’s do a quick security check":
-            time.sleep(60)
-    except NoSuchElementException:
-        pass
-
-    return driver
-
-
 def get_listings(user: User) -> set[Listing]:
     queries = list(SearchQuery.select().where(SearchQuery.auto_apply == True, SearchQuery.user == user))
     listings = set()
@@ -337,41 +274,6 @@ def get_listings(user: User) -> set[Listing]:
     listings = temp
 
     return listings
-
-
-def get_code(email_address: str, password: str) -> str:
-    imap = imaplib.IMAP4_SSL("imap.gmail.com")
-    imap.login(email_address, password)
-
-    code = ""
-    while code == "":
-        imap.select("INBOX")
-        _, search_data = imap.search(None, "UNSEEN")
-        ids = search_data[0].split()[-3:]
-
-        for raw_id in reversed(ids):
-            msg_id = raw_id.decode()
-            # Use BODY.PEEK[] to avoid marking the message as seen on fetch
-            _, msg = imap.fetch(msg_id, "(BODY.PEEK[])")
-            if msg[0] is None:
-                continue
-            msg = email.message_from_bytes(msg[0][1])
-
-            subject, _ = decode_header(msg["Subject"])[0]
-            if isinstance(subject, bytes):
-                continue
-
-            logger.debug(f"Email {msg_id}: {subject}")
-            if re.match(r"\d{6} is your code for SEEK", subject) is not None:
-                code = subject[:6]
-                imap.store(msg_id, "+FLAGS", "\\Seen")
-                imap.store(msg_id, "+FLAGS", "\\Deleted")
-                break
-
-    imap.close()
-    imap.logout()
-
-    return code
 
 
 if __name__ == "__main__":

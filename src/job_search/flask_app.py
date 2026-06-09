@@ -25,9 +25,9 @@ from job_search.model import (
     Status,
 )
 from job_search.search import search
-from job_search.utilities import util
 from job_search.utilities.auto_apply import run_applier, notify_user
 from job_search.utilities.clean import clean
+from job_search.utilities.job_util import pass_blacklist
 from job_search.utilities.logger import logger, configure_logging
 
 INVALID_REQUEST = "Invalid request"
@@ -360,7 +360,7 @@ def run_blacklist():
     new_statuses = JobStatus.select().where((JobStatus.user == user_id) & (JobStatus.status == Status.NEW))
     filtered_count = 0
     for status in new_statuses:
-        if not util.pass_blacklist(status.job, user_id):
+        if not pass_blacklist(status.job, user_id):
             status.status = Status.BLACKLIST
             status.save()
             filtered_count += 1

@@ -8,9 +8,8 @@ from tqdm import tqdm
 
 import job_search.sites
 from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status, Site
-from job_search.utilities import util
 from job_search.utilities.logger import progress_bars, logger
-from job_search.utilities.util import storage
+from job_search.utilities.job_util import storage, pass_blacklist
 
 HTML_PARSER = "html.parser"
 
@@ -87,7 +86,7 @@ class BaseSite:
             JobStatus.get_or_create(
                 user=user,
                 job=listing.job,
-                defaults={"status": Status.NEW if util.pass_blacklist(listing.job, user) else Status.BLACKLIST},
+                defaults={"status": Status.NEW if pass_blacklist(listing.job, user) else Status.BLACKLIST},
             )
 
             if (existing_listing := Listing.get_or_none(id=listing.id)) is None:

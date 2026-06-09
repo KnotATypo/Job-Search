@@ -2,10 +2,10 @@ from typing import List
 
 from bs4 import Tag
 
-from job_search.utilities import util
 from job_search.model import Listing, SearchQuery, Location
 from job_search.base_site import BaseSite
-from job_search.utilities.util import get_page_soup
+from job_search.utilities.browser_util import get_page_soup
+from job_search.utilities.job_util import get_or_create_job
 
 
 class Seek(BaseSite):
@@ -55,7 +55,7 @@ class Seek(BaseSite):
             company = company_field.string
         else:
             company = "None"
-        return Listing(id=listing_id, site=self.SITE_STRING, job=util.get_or_create_job(title, company))
+        return Listing(id=listing_id, site=self.SITE_STRING, job=get_or_create_job(title, company))
 
     def add_remote_filter(self, query_string: str) -> str:
         index = query_string.index("?")
