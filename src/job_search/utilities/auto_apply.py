@@ -11,6 +11,8 @@ The results are then sent in a Discord message along with the links for any pend
 """
 
 import datetime
+import functools
+import operator
 import time
 from typing import List
 
@@ -23,10 +25,11 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db
+from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db, BlacklistTerm
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
 from job_search.utilities.browser_util import seek_login
+from job_search.utilities.job_util import pass_blacklist
 from job_search.utilities.logger import configure_logging, logger
 from job_search.utilities.browser_util import new_browser
 
@@ -41,15 +44,15 @@ def run_applier(user: User):
     timestamp = datetime.datetime.now().isoformat() + "+10:00"
     logger.info(f"Starting applier at {timestamp}")
 
+    logger.info("Looking for new listings")
+    listings = get_listings(user)
+
     driver = new_browser()
 
     # logger.info("Logging in to LinkedIn")
     # driver = linkedin_login(user, driver)
     logger.info("Logging in to Seek")
     seek_login(user, driver)
-
-    logger.info("Looking for new listings")
-    listings = get_listings(user)
 
     logger.info("Attempting applications")
     statuses = {"pending": [], "saved": [], "applied": [], "applied_old": []}
@@ -263,15 +266,24 @@ def get_listings(user: User) -> set[Listing]:
                 page += 1
 
     # Remove existing listings
-    existing_listings = set(
-        Listing.select()
-        .join(Job)
-        .join(JobStatus)
-        .where(JobStatus.user == user, Listing.id << [l.id for l in listings], Listing.site << ["seek", "linkedin"])
+    existing_jobs = set(
+        Job.select().join(JobStatus).where(JobStatus.user == user, Job.id << [l.job.id for l in listings])
     )
-    temp = listings - existing_listings
+    existing_listings = functools.reduce(operator.iconcat, [list(j.listing_set) for j in existing_jobs], [])
+    temp = listings - set(existing_listings)
     logger.info(f"Found {len(listings)} listings, {len(temp)} new listings")
     listings = temp
+
+    # Run blacklist
+    blacklisted_listings = set()
+    for listing in listings:
+        if not pass_blacklist(listing.job, user, auto_applier=True):
+            update_status(listing, Status.BLACKLIST, user)
+            blacklisted_listings.add(listing)
+    listings -= blacklisted_listings
+    logger.info(f"{len(listings)} listings passed blacklist")
+
+    exit()
 
     return listings
 

@@ -130,6 +130,7 @@ class BlacklistTerm(BaseModel):
     term = CharField()
     type = CharField()
     user = ForeignKeyField(User)
+    auto_applier = BooleanField(default=True)
 
 
 db.create_tables([Job, JobStatus, Listing, PageCount, SearchQuery, Site, SiteQuery, BlacklistTerm, User], safe=True)

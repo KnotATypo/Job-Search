@@ -40,14 +40,18 @@ def get_or_create_job(title: str, company: str) -> Job:
     return job
 
 
-def pass_blacklist(job: Job, user: User) -> bool:
+def pass_blacklist(job: Job, user: User, auto_applier=False) -> bool:
     """
     Applies the blacklist terms for the user to the given job
 
     job -- The job to apply the blacklist to
     """
 
-    blacklist = BlacklistTerm.select().join(User, on=(BlacklistTerm.user == User.id)).where(User.id == user)
+    blacklist = (
+        BlacklistTerm.select()
+        .join(User, on=(BlacklistTerm.user == User.id))
+        .where(User.id == user, BlacklistTerm.auto_applier == auto_applier)
+    )
     for term in blacklist:
         # Title terms are case-insensitive and fuzzy, company terms are case-sensitive and exact
         if (term.type == "title" and term.term.lower() in job.title.lower()) or (
