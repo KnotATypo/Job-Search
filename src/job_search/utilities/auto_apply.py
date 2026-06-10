@@ -283,8 +283,6 @@ def get_listings(user: User) -> set[Listing]:
     listings -= blacklisted_listings
     logger.info(f"{len(listings)} listings passed blacklist")
 
-    exit()
-
     return listings
 
 
