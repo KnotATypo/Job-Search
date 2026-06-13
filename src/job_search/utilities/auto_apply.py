@@ -14,7 +14,7 @@ import datetime
 import functools
 import operator
 import time
-from typing import List
+from typing import List, Set
 
 import requests
 from bs4 import BeautifulSoup
@@ -25,13 +25,15 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db, BlacklistTerm
+from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
+from job_search.utilities.browser_util import new_browser
 from job_search.utilities.browser_util import seek_login
 from job_search.utilities.job_util import pass_blacklist
 from job_search.utilities.logger import configure_logging, logger
-from job_search.utilities.browser_util import new_browser
+
+SEEK_CONTINUE_BUTTON = 'button[data-testid="continue-button"]'
 
 Seek = Seek()
 LinkedIn = LinkedIn()
@@ -49,8 +51,6 @@ def run_applier(user: User):
 
     driver = new_browser()
 
-    # logger.info("Logging in to LinkedIn")
-    # driver = linkedin_login(user, driver)
     logger.info("Logging in to Seek")
     seek_login(user, driver)
 
@@ -174,33 +174,33 @@ def seek_attempt_application(driver: WebDriver, listing: Listing) -> str:
     except NoSuchElementException:
         # There is no apply button, so the job has already been applied to
         driver.find_element(By.CSS_SELECTOR, 'span[id="applied-date-message"]')
-        logger.debug(f"Listing {listing} has already been applied to")
+        logger.debug(f"Listing {listing.id} has already been applied to")
         return "applied_old"
 
     if apply_button.text == "Apply⁠":
-        logger.debug(f"Listing {listing} has no quick apply")
+        logger.debug(f"Listing {listing.id} has no quick apply")
         return "saved"
     elif apply_button.text != "Quick apply":
         logger.error(f'Apply button has unrecognised value "{apply_button.text}"')
-        raise Exception
+        raise NotImplementedError
     apply_button.click()
 
     driver.find_element(By.CSS_SELECTOR, 'input[data-testid="coverLetter-method-none"]').click()
-    driver.find_element(By.CSS_SELECTOR, 'button[data-testid="continue-button"]').click()
+    driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
     time.sleep(1)
 
     if "Answer employer questions" in driver.page_source:
-        driver.find_element(By.CSS_SELECTOR, 'button[data-testid="continue-button"]').click()
+        driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
         try:
             WebDriverWait(driver, 1).until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[id="errorPanel"]')))
-            logger.debug(f"Listing {listing} requires user input")
+            logger.debug(f"Listing {listing.id} requires user input")
             return "pending"
         except TimeoutException:
             pass
 
-    driver.find_element(By.CSS_SELECTOR, 'button[data-testid="continue-button"]').click()
+    driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
     driver.find_element(By.CSS_SELECTOR, 'button[data-testid="review-submit-application"]').click()
-    logger.debug(f"Listing {listing} has been applied to")
+    logger.debug(f"Listing {listing.id} has been applied to")
 
     return "applied"
 
@@ -275,12 +275,13 @@ def get_listings(user: User) -> set[Listing]:
     listings = temp
 
     # Run blacklist
-    blacklisted_listings = set()
+    blacklisted_listings: Set[Listing] = set()
     for listing in listings:
         if not pass_blacklist(listing.job, user, auto_applier=True):
             update_status(listing, Status.BLACKLIST, user)
             blacklisted_listings.add(listing)
     listings -= blacklisted_listings
+    site.save_listings(list(blacklisted_listings), user)
     logger.info(f"{len(listings)} listings passed blacklist")
 
     return listings

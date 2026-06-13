@@ -159,7 +159,7 @@ def update_status():
 
     flash(f"Marked '{job.title}' as {new_status}")
 
-    return redirect(url_for(redirect_page))
+    return redirect(url_for(redirect_page if redirect_page is not None else "index"))
 
 
 @app.route("/reading_list", methods=["GET"])
@@ -296,12 +296,7 @@ def manage_search_queries():
         .where(SearchQuery.user == session["user_id"], SearchQuery.auto_apply == False)
         .order_by(SearchQuery.id)
     )
-    sites = list(Site.select())
-    for query in queries:
-        sites_to_query = [sq.site.id for sq in SiteQuery.select().where(SiteQuery.query == query.id)]
-        query.sites = {
-            site.id: {"value": "true" if site.id in sites_to_query else "false", "name": site.name} for site in sites
-        }
+    queries = add_sites(queries)
 
     return render_template("manage_search_queries.html", queries=queries)
 
@@ -447,14 +442,18 @@ def auto_applier_terms():
             .where(SearchQuery.user == user, SearchQuery.auto_apply == True)
             .order_by(SearchQuery.id)
         )
-        sites = list(Site.select())
-        for query in queries:
-            sites_to_query = [sq.site.id for sq in SiteQuery.select().where(SiteQuery.query == query.id)]
-            query.sites = {
-                site.id: {"value": "true" if site.id in sites_to_query else "false", "name": site.name}
-                for site in sites
-            }
+        queries = add_sites(queries)
         return render_template("applier_terms.html", queries=queries)
+
+
+def add_sites(queries: list[SearchQuery]) -> list[SearchQuery]:
+    sites = list(Site.select())
+    for query in queries:
+        sites_to_query = [sq.site.id for sq in SiteQuery.select().where(SiteQuery.query == query.id)]
+        query.sites = {
+            site.id: {"value": "true" if site.id in sites_to_query else "false", "name": site.name} for site in sites
+        }
+    return queries
 
 
 @app.before_request
@@ -464,7 +463,7 @@ def _db_connect():
 
 
 @app.teardown_request
-def _db_close(exception):
+def _db_close(_):
     if not db.is_closed():
         db.close()
 

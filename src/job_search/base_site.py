@@ -93,7 +93,7 @@ class BaseSite:
                 Listing.create(
                     id=listing.id, job=listing.job, site=listing.site, summary="", timestamp=datetime.datetime.now()
                 )
-                logger.info(f"Created new listing {listing} for job {listing.job}")
+                logger.info(f"Created new listing {listing.id} for job {listing.job}")
             else:
                 listing = existing_listing
 
@@ -208,4 +208,5 @@ class BaseSite:
         site_classes = {cls.__name__.lower(): cls for cls in BaseSite.__subclasses__()}
         if site_string not in site_classes:
             raise NotSupportedError(f"Site {site_string} is not supported.")
+        # noinspection PyCallingNonCallable
         return site_classes[site_string]()

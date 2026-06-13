@@ -14,7 +14,7 @@ if os.getenv("S3_ENDPOINT_URL") is not None:  # Default to S3 if available
     try:
         storage = S3Storage()
         logger.info(f"Using S3 for storage at: {os.getenv('S3_ENDPOINT_URL')}")
-    except Exception as e:
+    except NotImplementedError as e:
         storage = FileStorage()
         logger.info("Unable to find S3 details. Defaulting to local file storage")
 else:
@@ -35,7 +35,7 @@ def get_or_create_job(title: str, company: str) -> Job:
         job = Job.get_by_id(existing_jobs[job_fuzzy])
     else:
         job = Job.create(title=title, company=company)
-        logger.debug(f"Added new job {job}")
+        logger.debug(f"Added new job {job.id}")
 
     return job
 

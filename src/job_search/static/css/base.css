@@ -353,12 +353,6 @@ footer {
     margin-top: 2rem;
 }
 
-.progress {
-    text-align: right;
-    color: var(--light-text);
-    font-style: italic;
-}
-
 /* ----- Status selector ----- */
 .status-selector {
     margin-top: 1.5rem;

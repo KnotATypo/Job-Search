@@ -1,7 +1,5 @@
 from typing import List
 
-from bs4 import Tag
-
 from job_search.model import Listing, SearchQuery, Location
 from job_search.base_site import BaseSite
 from job_search.utilities.browser_util import get_page_soup
@@ -19,7 +17,7 @@ class Seek(BaseSite):
     def get_listing_description(self, listing_id) -> str | None:
         link = self.build_listing_link(listing_id)
         soup = get_page_soup(link)
-        body: Tag = soup.find("div", attrs={"data-automation": "jobAdDetails"})
+        body = soup.find("div", attrs={"data-automation": "jobAdDetails"})
         if body is None:
             return None
         return body.contents[0].text

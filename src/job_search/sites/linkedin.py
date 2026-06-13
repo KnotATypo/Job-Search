@@ -22,9 +22,8 @@ class LinkedIn(BaseSite):
             soup = get_page_soup(link)
             body = soup.find("div", attrs={"class": "show-more-less-html__markup"})
             error_count += 1
-        if body is not None:
-            body = body.text
-        return body
+        # noinspection PyUnresolvedReferences
+        return None if body is None else body.text
 
     def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Listing]:
         link = self.build_page_link(query, page_number * 10)

@@ -1,10 +1,9 @@
 import re
 from typing import List
 
-from bs4 import Tag
-
-from job_search.model import Listing, SearchQuery, Location
 from job_search.base_site import BaseSite, NotSupportedError
+from job_search.model import Listing, SearchQuery, Location
+from job_search.utilities import job_util
 from job_search.utilities.browser_util import get_page_soup
 
 
@@ -19,7 +18,7 @@ class Jora(BaseSite):
     def get_listing_description(self, listing_id) -> str | None:
         link = self.build_listing_link(listing_id)
         soup = get_page_soup(link)
-        body: Tag = soup.find("div", attrs={"id": "job-description-container"})
+        body = soup.find("div", attrs={"id": "job-description-container"})
         if body is not None:
             body = body.text
         return body
@@ -29,7 +28,7 @@ class Jora(BaseSite):
         soup = get_page_soup(link)
         if soup.text.find("We have looked through all the results for you") != -1:
             return []
-        last_page_number_div = soup.find_all("div", "search-results-page-number")
+        last_page_number_div = soup.find_all("div", attrs={"class": "search-results-page-number"})
         if not last_page_number_div:
             return []
         last_page = int(re.findall(r"\d+", last_page_number_div[0].text)[-1])
@@ -61,7 +60,7 @@ class Jora(BaseSite):
         listing_id = link[link.rindex("/") + 1 : link.index("?")]
         title = listing.text
         company = listing.parent.parent.parent.parent.find("span", attrs={"class", "job-company"}).text
-        return Listing(id=listing_id, site=self.SITE_STRING, job=util.get_or_create_job(title, company))
+        return Listing(id=listing_id, site=self.SITE_STRING, job=job_util.get_or_create_job(title, company))
 
     def add_remote_filter(self, query_string: str) -> str:
         raise NotSupportedError

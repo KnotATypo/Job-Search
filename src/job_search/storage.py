@@ -3,6 +3,8 @@ import tarfile
 from abc import ABC, abstractmethod
 
 import boto3
+
+# noinspection PyPackageRequirements
 import botocore
 
 from job_search.utilities.logger import logger
@@ -66,7 +68,8 @@ class FileStorage(Storage):
                 return f.read()
         elif listing_id in self.archived_names:
             with tarfile.open(self.data_archive, "r") as tar:
-                return tar.extractfile(listing_id).read().decode("utf-8")
+                file = tar.extractfile(listing_id)
+                return None if file is None else file.read().decode("utf-8")
         else:
             return None
 
@@ -90,8 +93,9 @@ class S3Storage(Storage):
         s3_access_key = os.getenv("S3_ACCESS_KEY")
         if not (s3_endpoint_url and s3_key_id and s3_access_key):
             logger.warn("Please provide S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
-            raise Exception("S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
+            raise NotImplementedError("S3_ENDPOINT_URL, S3_KEY_ID and S3_ACCESS_KEY to use S3")
 
+        # noinspection PyUnresolvedReferences
         s3 = boto3.resource(
             "s3",
             endpoint_url=s3_endpoint_url,
@@ -114,6 +118,7 @@ class S3Storage(Storage):
         return obj["Body"].read().decode("utf-8")
 
     def description_downloaded(self, listing_id: str) -> bool:
+        # noinspection PyUnresolvedReferences
         try:
             self.bucket.Object(listing_id + ".txt").load()
             return True

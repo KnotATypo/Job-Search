@@ -27,7 +27,7 @@ def clean():
     configure_logging()
     logger.info("Starting clean")
 
-    # reapply_blacklist()
+    reapply_blacklist()
     check_expired()
     missing_descriptions()
     create_summary()

@@ -34,15 +34,13 @@ def create_summary():
     )
     cursor = connection.cursor()
     # Get each listing with their summary and a pipe separated list of associated job statuses
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT l.id, summary, STRING_AGG(js.status, '|')
         FROM listing l
                  JOIN job j ON j.id = l.job_id
                  JOIN jobstatus js ON j.id = js.job_id
         GROUP BY l.id
-        """
-    )
+        """)
     need_blacklist = []
     need_summary = []
     for listing in cursor.fetchall():

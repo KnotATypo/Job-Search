@@ -37,6 +37,7 @@ def new_browser(headless=True) -> webdriver.Chrome:
     options.add_experimental_option("useAutomationExtension", False)
     driver = webdriver.Chrome(options=options)
 
+    # noinspection PyTypeChecker
     stealth(
         driver,
         languages=["en-US", "en"],
@@ -66,40 +67,6 @@ def get_page_soup(link: str) -> BeautifulSoup:
 
 
 def seek_login(user: User, driver: WebDriver):
-    def get_code(email_address: str, password: str) -> str:
-        imap = imaplib.IMAP4_SSL("imap.gmail.com")
-        imap.login(email_address, password)
-
-        code = ""
-        while code == "":
-            imap.select("INBOX")
-            _, search_data = imap.search(None, "UNSEEN")
-            ids = search_data[0].split()[-3:]
-
-            for raw_id in reversed(ids):
-                msg_id = raw_id.decode()
-                # Use BODY.PEEK[] to avoid marking the message as seen on fetch
-                _, msg = imap.fetch(msg_id, "(BODY.PEEK[])")
-                if msg[0] is None:
-                    continue
-                msg = email.message_from_bytes(msg[0][1])
-
-                subject, _ = decode_header(msg["Subject"])[0]
-                if isinstance(subject, bytes):
-                    continue
-
-                logger.debug(f"Email {msg_id}: {subject}")
-                if re.match(r"\d{6} is your code for SEEK", subject) is not None:
-                    code = subject[:6]
-                    imap.store(msg_id, "+FLAGS", "\\Seen")
-                    imap.store(msg_id, "+FLAGS", "\\Deleted")
-                    break
-
-        imap.close()
-        imap.logout()
-
-        return code
-
     driver.get("https://www.seek.com")
     register_text = driver.find_element(By.CSS_SELECTOR, 'span[data-automation="register-link"]')
     register_text.find_element(By.CSS_SELECTOR, "a").click()
@@ -110,7 +77,7 @@ def seek_login(user: User, driver: WebDriver):
     driver.find_element(By.CSS_SELECTOR, 'button[data-cy="register"]').click()
     code_input = driver.find_element(By.CSS_SELECTOR, 'input[aria-label="verification input"]')
     time.sleep(5)
-    code = get_code(user.email, user.email_password)
+    code = get_seek_code(user.email, user.email_password)
     code_input.send_keys(code)
     try:
         # Check that the code isn't invalid. If invalid, try to get code 2 more times
@@ -120,21 +87,53 @@ def seek_login(user: User, driver: WebDriver):
             if alert.text == "Invalid code. Try again or click resend below.":
                 logger.warn("Invalid 2FA code, trying again")
                 code_input.send_keys(Keys.BACKSPACE * 6)
-                code = get_code(user.email, user.email_password)
+                code = get_seek_code(user.email, user.email_password)
                 code_input.send_keys(code)
             else:
                 time.sleep(5)
-        # Seek has recently moved url
-        if "Welcome to our new URL" not in alert.text:
-            logger.error(f"Could not validate 2FA code: {alert.text}")
-            raise Exception("Could not validate 2FA code")
     except NoSuchElementException:
         logger.debug("Successfully logged in")
+
+
+def get_seek_code(email_address: str, password: str) -> str:
+    imap = imaplib.IMAP4_SSL("imap.gmail.com")
+    imap.login(email_address, password)
+
+    auth_code = ""
+    while auth_code == "":
+        imap.select("INBOX")
+        _, search_data = imap.search(None, "UNSEEN")
+        ids = search_data[0].split()[-3:]
+
+        for raw_id in reversed(ids):
+            msg_id = raw_id.decode()
+            # Use BODY.PEEK[] to avoid marking the message as seen on fetch
+            _, msg = imap.fetch(msg_id, "(BODY.PEEK[])")
+            if msg[0] is None:
+                continue
+            msg = email.message_from_bytes(msg[0][1])
+
+            subject, _ = decode_header(msg["Subject"])[0]
+            if isinstance(subject, bytes):
+                continue
+
+            logger.debug(f"Email {msg_id}: {subject}")
+            if re.match(r"\d{6} is your code for SEEK", subject) is not None:
+                auth_code = subject[:6]
+                imap.store(msg_id, "+FLAGS", "\\Seen")
+                imap.store(msg_id, "+FLAGS", "\\Deleted")
+                break
+
+    imap.close()
+    imap.logout()
+
+    return auth_code
 
 
 def linkedin_login(user: User, driver: WebDriver) -> WebDriver | None:
     driver.get("https://au.linkedin.com/jobs")
     cont = True
+    username_element = None
     while cont:
         try:
             username_element = driver.find_element(By.CSS_SELECTOR, 'input[id="session_key"]')
@@ -144,6 +143,9 @@ def linkedin_login(user: User, driver: WebDriver) -> WebDriver | None:
             time.sleep(1)
             driver = new_browser()
             driver.get("https://www.linkedin.com/login")
+    if username_element is None:
+        logger.error("Login failed, cannot find username field")
+        raise NoSuchElementException("Login failed, cannot find username field")
     username_element.send_keys(user.email)
     driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(user.linkedin_password)
     driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
