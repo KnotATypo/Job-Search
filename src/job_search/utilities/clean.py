@@ -68,7 +68,7 @@ def check_expired():
         # Remove LinkedIn listings if we failed it log in
         listings = [l for l in listings if l.site.id != "linkedin"]
 
-    site_lookup = {l: BaseSite.get_site_instance(l.site) for l in listings}
+    site_lookup = {l: BaseSite.get_site_instance(l.site.name) for l in listings}
 
     driver.implicitly_wait(1)
     to_expire = []
@@ -115,7 +115,7 @@ def missing_descriptions():
 
     for listing in tqdm(listings, desc="Fetching Descriptions", unit="listing", disable=not progress_bars):
         try:
-            description = BaseSite.get_site_instance(listing.site).get_listing_description(listing.id)
+            description = BaseSite.get_site_instance(listing.site.name).get_listing_description(listing.id)
             if description is not None:
                 storage.write_description(description, listing.id)
                 logger.info(f"Description saved for listing {listing.id}")

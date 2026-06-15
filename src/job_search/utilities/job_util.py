@@ -1,11 +1,12 @@
 import os
 import re
+from datetime import datetime
 
 from dotenv import load_dotenv
 
-from job_search.utilities.logger import logger
-from job_search.model import Job, BlacklistTerm, User
+from job_search.model import Job, BlacklistTerm, User, Listing
 from job_search.storage import S3Storage, FileStorage, Storage
+from job_search.utilities.logger import logger
 
 load_dotenv()
 
@@ -21,8 +22,27 @@ else:
     storage = FileStorage()
 
 
+def get_or_create_listing(l_id: str, site_string: str, title: str, company: str) -> Listing:
+    """
+    Returns an existing listing or creates a new listing if it is new
+    """
+    if (listing := Listing.get_or_none(Listing.id == l_id)) is not None:
+        return listing
+    listing = Listing.create(id=l_id, site=site_string, job=get_or_create_job(title, company))
+    logger.info(f"Created new listing {listing.id} for job {listing.job.id}")
+    return listing
+
+
 def get_or_create_job(title: str, company: str) -> Job:
+    """
+    Returns an existing job or creates a new job if it is new.
+    Note: A job will be considered "new" if the last occurrence of the job was more than 14 days ago
+    """
+
     def _get_fuzzy_job(inner_title: str, inner_company: str) -> str:
+        """
+        Turns the title and company into a fuzzy string by removing any non-word characters and the "ptyltd" suffix
+        """
         return (
             re.sub(r"\W", "", inner_title.lower())
             + "-"
@@ -32,10 +52,13 @@ def get_or_create_job(title: str, company: str) -> Job:
     existing_jobs = {_get_fuzzy_job(j.title, j.company): j.id for j in Job.select()}
 
     if (job_fuzzy := _get_fuzzy_job(title, company)) in existing_jobs:
-        job = Job.get_by_id(existing_jobs[job_fuzzy])
-    else:
-        job = Job.create(title=title, company=company)
-        logger.debug(f"Added new job {job.id}")
+        db_job = Job.get_by_id(existing_jobs[job_fuzzy])
+        max_timestamp = max(x.timestamp for x in db_job.listing_set)
+        # Checks if the most recent associate timestamp is less than 14 days ago
+        if abs((max_timestamp - datetime.now()).days) <= 14:
+            return db_job
+    job = Job.create(title=title, company=company)
+    logger.debug(f"Added new job {job.id}")
 
     return job
 

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from ollama import Client
 from tqdm import tqdm
 
+from job_search.base_site import BaseSite
 from job_search.utilities.logger import logger, progress_bars, configure_logging
 from job_search.model import Listing
 from job_search.utilities.job_util import storage
@@ -35,7 +36,7 @@ def create_summary():
     cursor = connection.cursor()
     # Get each listing with their summary and a pipe separated list of associated job statuses
     cursor.execute("""
-        SELECT l.id, summary, STRING_AGG(js.status, '|')
+        SELECT l.id, summary, STRING_AGG(js.status, '|'), site_id
         FROM listing l
                  JOIN job j ON j.id = l.job_id
                  JOIN jobstatus js ON j.id = js.job_id
@@ -43,8 +44,10 @@ def create_summary():
         """)
     need_blacklist = []
     need_summary = []
-    for listing in cursor.fetchall():
-        has_blacklist = [x == "BLACKLIST" for x in listing[2].split("|")]
+    for listing in tqdm(cursor.fetchall(), desc="Fetching", disable=not progress_bars):
+        statuses = listing[2].split("|")
+
+        has_blacklist = [x == "BLACKLIST" for x in statuses]
         if all(has_blacklist):
             if listing[1] != "blacklist":
                 # Listings with only blacklist status jobs and without the "blacklist" summary
@@ -52,7 +55,7 @@ def create_summary():
         elif any(has_blacklist) and listing[1] == "blacklist":
             # Listings that have previously been given the "blacklist" summary, but now have an associated job that isn't blacklisted
             need_summary.append(listing[0])
-        elif listing[1] in ["", "N/A", "blacklist"] and any(x in ["NEW", "INTERESTED"] for x in listing[2].split("|")):
+        elif listing[1] in ["", "N/A", "blacklist"] and any(x in ["NEW", "INTERESTED"] for x in statuses):
             # Remaining jobs without summaries that are still relevant to users, or jobs that have been un-blacklisted
             need_summary.append(listing[0])
     connection.close()
@@ -65,7 +68,13 @@ def create_summary():
     need_summary = Listing.select().where(Listing.id << need_summary)
     # Remove any listings that we don't have a description for
     need_summary = [listing for listing in need_summary if storage.description_downloaded(listing.id)]
-    for listing in tqdm(need_summary, disable=not progress_bars):
+    for listing in tqdm(need_summary, disable=not progress_bars, desc="Summarising"):
+        # Download description if we haven't already
+        if not storage.description_downloaded(listing[0]):
+            description = BaseSite.get_site_instance(listing[3]).get_listing_description(listing[0])
+            if description is not None:
+                storage.write_description(description, listing[0])
+
         summarise_and_save(listing)
         logger.info(f"Summary saved for listing {listing.id}")
 

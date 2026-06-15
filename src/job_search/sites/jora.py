@@ -3,8 +3,8 @@ from typing import List
 
 from job_search.base_site import BaseSite, NotSupportedError
 from job_search.model import Listing, SearchQuery, Location
-from job_search.utilities import job_util
 from job_search.utilities.browser_util import get_page_soup
+from job_search.utilities.job_util import get_or_create_listing
 
 
 class Jora(BaseSite):
@@ -60,7 +60,7 @@ class Jora(BaseSite):
         listing_id = link[link.rindex("/") + 1 : link.index("?")]
         title = listing.text
         company = listing.parent.parent.parent.parent.find("span", attrs={"class", "job-company"}).text
-        return Listing(id=listing_id, site=self.SITE_STRING, job=job_util.get_or_create_job(title, company))
+        return get_or_create_listing(listing_id, self.SITE_STRING, title, company)
 
     def add_remote_filter(self, query_string: str) -> str:
         raise NotSupportedError

@@ -79,7 +79,7 @@ class Listing(BaseModel):
     id = TextField(primary_key=True)
     job = ForeignKeyField(Job)
     site = ForeignKeyField(Site)
-    summary = TextField()
+    summary = TextField(null=True)
     timestamp = DateTimeField(default=datetime.datetime.now)
 
 

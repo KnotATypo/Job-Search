@@ -230,7 +230,7 @@ def get_site_links(job: Job) -> Tuple[List[Listing], List[Tuple[str, str]]]:
     listings = list(Listing.select().where(Listing.job == job))
     sites = []
     for listing in listings:
-        site_instance = BaseSite.get_site_instance(listing.site)
+        site_instance = BaseSite.get_site_instance(listing.site.name)
         sites.append((listing.site.name, site_instance.build_listing_link(listing.id)))
 
     return listings, sites

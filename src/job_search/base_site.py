@@ -1,15 +1,15 @@
-import datetime
 import importlib
 import pkgutil
+import sys
 from typing import List
 
 from dotenv import load_dotenv
 from tqdm import tqdm
 
 import job_search.sites
-from job_search.model import PageCount, Listing, SearchQuery, User, Location, JobStatus, Status, Site
+from job_search.model import PageCount, Listing, SearchQuery, Location, JobStatus, Status
+from job_search.utilities.job_util import pass_blacklist
 from job_search.utilities.logger import progress_bars, logger
-from job_search.utilities.job_util import storage, pass_blacklist
 
 HTML_PARSER = "html.parser"
 
@@ -63,7 +63,17 @@ class BaseSite:
                 listings = self.get_listings_from_page(query, page_num)
                 if len(listings) == 0:
                     break
-                self.save_listings(listings, query.user)
+
+                for listing in listings:
+                    # Create a status for the job if it doesn't already exist
+                    JobStatus.get_or_create(
+                        user=query.user,
+                        job=listing.job,
+                        defaults={
+                            "status": Status.NEW if pass_blacklist(listing.job, query.user) else Status.BLACKLIST
+                        },
+                    )
+
                 page_num += 1
                 if page_num > expected_pages:
                     pbar.total += 1
@@ -73,35 +83,6 @@ class BaseSite:
         page_count.save()
 
         logger.info(f"Completed query {friendly_query}")
-
-    def save_listings(self, listings: List[Listing], user: User) -> None:
-        """
-        Saves the provided listings into the database and writes the body of the listing to the filesystem.
-
-        listings -- List of Listings.
-        user_id -- The id of the user to save the listings for.
-        """
-        for listing in listings:
-            # Create a status for the job if it doesn't already exist
-            JobStatus.get_or_create(
-                user=user,
-                job=listing.job,
-                defaults={"status": Status.NEW if pass_blacklist(listing.job, user) else Status.BLACKLIST},
-            )
-
-            if (existing_listing := Listing.get_or_none(id=listing.id)) is None:
-                Listing.create(
-                    id=listing.id, job=listing.job, site=listing.site, summary="", timestamp=datetime.datetime.now()
-                )
-                logger.info(f"Created new listing {listing.id} for job {listing.job}")
-            else:
-                listing = existing_listing
-
-            # Even if the listing exists, the description might not
-            if not storage.description_downloaded(listing.id):
-                description = self.get_listing_description(listing.id)
-                if description is not None:
-                    storage.write_description(description, listing.id)
 
     def build_page_link(self, query: SearchQuery, page_number: int):
         """
@@ -196,15 +177,18 @@ class BaseSite:
         raise NotImplementedError
 
     @classmethod
-    def get_site_instance(cls, site: Site):
+    def get_site_instance(cls, site_name: str):
         """
         Gets an instance of the site class corresponding to the given site.
 
         site_string -- The plain text name of the site.
         """
         for _, module_name, _ in pkgutil.iter_modules(job_search.sites.__path__):
-            importlib.import_module(f"job_search.sites.{module_name}")
-        site_string = site.name.lower()
+            mod_name = f"job_search.sites.{module_name}"
+            if mod_name not in sys.modules:
+                importlib.import_module(mod_name)
+
+        site_string = site_name.lower()
         site_classes = {cls.__name__.lower(): cls for cls in BaseSite.__subclasses__()}
         if site_string not in site_classes:
             raise NotSupportedError(f"Site {site_string} is not supported.")

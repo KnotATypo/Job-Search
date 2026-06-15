@@ -69,8 +69,6 @@ def run_applier(user: User):
         if status in ["pending"]:
             update_status(listing, Status.AUTO_NEW, user)
 
-        # "save_listings" calls to the generic implementation so using any site works
-        Seek.save_listings([listing], user)
         statuses[status].append(listing)
 
     driver.quit()
@@ -109,7 +107,6 @@ def update_pending(user, driver):
             elif l.timestamp < datetime.datetime.now() - datetime.timedelta(days=5):
                 # If this listing is more than 5 days old, move it on it a normal listing
                 JobStatus.get(job=l.job, user=user).delete_instance()
-                Seek.save_listings([l], user)
 
 
 def notify_user(user: User, since: datetime.datetime):
@@ -281,7 +278,6 @@ def get_listings(user: User) -> set[Listing]:
             update_status(listing, Status.BLACKLIST, user)
             blacklisted_listings.add(listing)
     listings -= blacklisted_listings
-    site.save_listings(list(blacklisted_listings), user)
     logger.info(f"{len(listings)} listings passed blacklist")
 
     return listings
