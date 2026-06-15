@@ -1,3 +1,4 @@
+from time import sleep
 from typing import List
 
 from job_search.base_site import BaseSite
@@ -27,7 +28,8 @@ class LinkedIn(BaseSite):
 
     def get_listings_from_page(self, query: SearchQuery, page_number: int) -> List[Listing]:
         link = self.build_page_link(query, page_number * 10)
-        soup = get_page_soup(link)
+        while "Join LinkedIn" in (soup := get_page_soup(link)).text:
+            sleep(1)
         cards = soup.find_all("li")
         if len(cards) == 0:
             return []

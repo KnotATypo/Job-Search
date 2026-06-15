@@ -470,6 +470,8 @@ def _db_close(_):
 
 def run_tasks():
     with db:
+        # Run search twice since often we get different ones on a second run
+        search()
         search()
         clean()
 
