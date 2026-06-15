@@ -8,7 +8,7 @@ summarisation. Currently, it supports LinkedIn, Seek, and Jora for Australian jo
 ### Prerequisites
 
 - Python 3.13
-- Chrome or Chromium browser (for web scraping)
+- Chrome or Chromium driver (for web scraping)
 - PostgreSQL
 - Ollama
 

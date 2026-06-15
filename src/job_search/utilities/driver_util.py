@@ -20,11 +20,11 @@ from job_search.utilities.logger import logger
 load_dotenv()
 
 
-def new_browser(headless=True) -> webdriver.Chrome:
+def new_driver(headless=True) -> webdriver.Chrome:
     """
-    Creates a new Chrome browser instance with the selenium_stealth additions
+    Creates a new Chrome driver instance with the selenium_stealth additions
 
-    headless -- Sets the headless options for the browser (default True)
+    headless -- Sets the headless options for the driver (default True)
     """
     options = Options()
     if headless:
@@ -58,11 +58,11 @@ def get_page_soup(link: str) -> BeautifulSoup:
 
     link -- The URL to get the page from
     """
-    browser = new_browser()
-    browser.get(link)
-    content = browser.page_source
+    driver = new_driver()
+    driver.get(link)
+    content = driver.page_source
     soup = BeautifulSoup(content, features="html.parser")
-    browser.close()
+    driver.close()
     return soup
 
 
@@ -141,7 +141,7 @@ def linkedin_login(user: User, driver: WebDriver) -> WebDriver | None:
         except NoSuchElementException:
             driver.quit()
             time.sleep(1)
-            driver = new_browser()
+            driver = new_driver()
             driver.get("https://www.linkedin.com/login")
     if username_element is None:
         logger.error("Login failed, cannot find username field")

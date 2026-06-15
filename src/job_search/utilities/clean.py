@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from job_search.base_site import BaseSite
 from job_search.model import Listing, Job, JobStatus, Status, User, db
-from job_search.utilities.browser_util import linkedin_login, new_browser
+from job_search.utilities.driver_util import linkedin_login, new_driver
 from job_search.utilities.create_summary import create_summary
 from job_search.utilities.job_util import storage, pass_blacklist
 from job_search.utilities.logger import logger, progress_bars, configure_logging
@@ -61,10 +61,10 @@ def check_expired():
         .order_by(Listing.timestamp.asc())
     )
 
-    driver = new_browser()
+    driver = new_driver()
     if (driver := linkedin_login(User.get_by_id(1), driver)) is None:
         logger.warn("LinkedIn failed to login")
-        driver = new_browser()
+        driver = new_driver()
         # Remove LinkedIn listings if we failed it log in
         listings = [l for l in listings if l.site.id != "linkedin"]
 

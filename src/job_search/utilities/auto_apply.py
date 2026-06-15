@@ -28,8 +28,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
-from job_search.utilities.browser_util import new_browser
-from job_search.utilities.browser_util import seek_login
+from job_search.utilities.driver_util import new_driver
+from job_search.utilities.driver_util import seek_login
 from job_search.utilities.job_util import pass_blacklist
 from job_search.utilities.logger import configure_logging, logger
 
@@ -49,7 +49,7 @@ def run_applier(user: User):
     logger.info("Looking for new listings")
     listings = get_listings(user)
 
-    driver = new_browser()
+    driver = new_driver()
 
     logger.info("Logging in to Seek")
     seek_login(user, driver)
@@ -113,7 +113,7 @@ def notify_user(user: User, since: datetime.datetime):
     """
     Send ping with information about applied jobs with links to pending jobs.
     """
-    driver = new_browser()
+    driver = new_driver()
     update_pending(user, driver)
     driver.quit()
 

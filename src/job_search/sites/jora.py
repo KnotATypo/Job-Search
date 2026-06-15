@@ -3,7 +3,7 @@ from typing import List
 
 from job_search.base_site import BaseSite, NotSupportedError
 from job_search.model import Listing, SearchQuery, Location
-from job_search.utilities.browser_util import get_page_soup
+from job_search.utilities.driver_util import get_page_soup
 from job_search.utilities.job_util import get_or_create_listing
 
 
