@@ -19,7 +19,6 @@ from typing import List, Set
 import requests
 from bs4 import BeautifulSoup
 from selenium.common import TimeoutException, NoSuchElementException
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
@@ -28,8 +27,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from job_search.model import SearchQuery, Listing, JobStatus, Status, User, Job, db
 from job_search.sites.linkedin import LinkedIn
 from job_search.sites.seek import Seek
-from job_search.utilities.driver_util import new_driver
-from job_search.utilities.driver_util import seek_login
+from job_search.utilities.driver_util import seek_login, driver_pool, linkedin_login
 from job_search.utilities.job_util import pass_blacklist
 from job_search.utilities.logger import configure_logging, logger
 
@@ -49,18 +47,15 @@ def run_applier(user: User):
     logger.info("Looking for new listings")
     listings = get_listings(user)
 
-    driver = new_driver()
-
     logger.info("Logging in to Seek")
-    seek_login(user, driver)
 
     logger.info("Attempting applications")
     statuses = {"pending": [], "saved": [], "applied": [], "applied_old": []}
     for listing in listings:
         if listing.site.name == "Seek":
-            status = seek_attempt_application(driver, listing)
+            status = seek_attempt_application(listing, user)
         elif listing.site.name == "LinkedIn":
-            status = linkedin_attempt_application(driver, listing)
+            status = linkedin_attempt_application(listing, user)
         else:
             raise NotImplementedError(f"Site {listing.site} is not supported for auto-application")
 
@@ -70,8 +65,6 @@ def run_applier(user: User):
             update_status(listing, Status.AUTO_NEW, user)
 
         statuses[status].append(listing)
-
-    driver.quit()
 
     logger.info(
         f"Applier run complete with: Applied - {len(statuses["applied"])}, Pending - {len(statuses["pending"])}, Saved - {len(statuses["saved"])}"
@@ -86,7 +79,7 @@ def update_status(listing: Listing, new_status: Status, user: User):
         job_status.save()
 
 
-def update_pending(user, driver):
+def update_pending(user):
     pending = (
         JobStatus.select()
         .join(Job)
@@ -101,7 +94,7 @@ def update_pending(user, driver):
     pending_listings: List[List[Listing]] = [list(x.job.listing_set) for x in pending]
     for listings in pending_listings:
         for l in listings:
-            result = seek_attempt_application(driver, l)
+            result = seek_attempt_application(l, user)
             if result == "applied_old":
                 update_status(l, Status.AUTO_APPLIED, user)
             elif l.timestamp < datetime.datetime.now() - datetime.timedelta(days=5):
@@ -113,9 +106,7 @@ def notify_user(user: User, since: datetime.datetime):
     """
     Send ping with information about applied jobs with links to pending jobs.
     """
-    driver = new_driver()
-    update_pending(user, driver)
-    driver.quit()
+    update_pending(user)
 
     if user.webhook_url is None:
         return
@@ -158,93 +149,108 @@ def notify_user(user: User, since: datetime.datetime):
     logger.debug("Discord ping sent")
 
 
-def seek_attempt_application(driver: WebDriver, listing: Listing) -> str:
+def seek_attempt_application(listing: Listing, user: User) -> str:
     """
     Attempt to "Quick Apply" to the given listing
     """
-    driver.get(Seek.build_listing_link(listing))
-    time.sleep(1)
+    with driver_pool.provide() as slot:
+        if not slot.seek_loggedin:
+            seek_login(user, slot)
 
-    # Look for apply button
-    try:
-        apply_button = driver.find_element(By.CSS_SELECTOR, 'a[data-automation="job-detail-apply"]')
-    except NoSuchElementException:
-        # There is no apply button, so the job has already been applied to
-        driver.find_element(By.CSS_SELECTOR, 'span[id="applied-date-message"]')
-        logger.debug(f"Listing {listing.id} has already been applied to")
-        return "applied_old"
+        driver = slot.driver
+        driver.get(Seek.build_listing_link(listing))
+        time.sleep(1)
 
-    if apply_button.text == "Apply⁠":
-        logger.debug(f"Listing {listing.id} has no quick apply")
-        return "saved"
-    elif apply_button.text != "Quick apply":
-        logger.error(f'Apply button has unrecognised value "{apply_button.text}"')
-        raise NotImplementedError
-    apply_button.click()
-
-    driver.find_element(By.CSS_SELECTOR, 'input[data-testid="coverLetter-method-none"]').click()
-    driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
-    time.sleep(1)
-
-    if "Answer employer questions" in driver.page_source:
-        driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
+        # Look for apply button
         try:
-            WebDriverWait(driver, 1).until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[id="errorPanel"]')))
-            logger.debug(f"Listing {listing.id} requires user input")
-            return "pending"
-        except TimeoutException:
-            pass
+            apply_button = driver.find_element(By.CSS_SELECTOR, 'a[data-automation="job-detail-apply"]')
+        except NoSuchElementException:
+            # There is no apply button, so the job has already been applied to
+            driver.find_element(By.CSS_SELECTOR, 'span[id="applied-date-message"]')
+            logger.debug(f"Listing {listing.id} has already been applied to")
+            return "applied_old"
 
-    driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
-    driver.find_element(By.CSS_SELECTOR, 'button[data-testid="review-submit-application"]').click()
+        if apply_button.text == "Apply⁠":
+            logger.debug(f"Listing {listing.id} has no quick apply")
+            return "saved"
+        elif apply_button.text != "Quick apply":
+            logger.error(f'Apply button has unrecognised value "{apply_button.text}"')
+            raise NotImplementedError
+        apply_button.click()
+
+        driver.find_element(By.CSS_SELECTOR, 'input[data-testid="coverLetter-method-none"]').click()
+        driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
+        time.sleep(1)
+
+        if "Answer employer questions" in driver.page_source:
+            driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
+            try:
+                WebDriverWait(driver, 1).until(
+                    ec.presence_of_element_located((By.CSS_SELECTOR, 'div[id="errorPanel"]'))
+                )
+                logger.debug(f"Listing {listing.id} requires user input")
+                return "pending"
+            except TimeoutException:
+                pass
+
+        driver.find_element(By.CSS_SELECTOR, SEEK_CONTINUE_BUTTON).click()
+        driver.find_element(By.CSS_SELECTOR, 'button[data-testid="review-submit-application"]').click()
     logger.debug(f"Listing {listing.id} has been applied to")
 
     return "applied"
 
 
-def linkedin_attempt_application(driver: WebDriver, listing: Listing) -> str:
-    driver.get(LinkedIn.build_listing_link(listing))
-    time.sleep(3)
-    try:
-        driver.find_element(By.CSS_SELECTOR, 'a[aria-label="LinkedIn Apply to this job"]').click()
-    except NoSuchElementException:
-        soup = BeautifulSoup(driver.page_source, features="html.parser")
-        index = soup.text.index("Application submitted")
-        submission_text = soup.text[index - 18 : index + 21]
-        if submission_text == "Application statusApplication submitted":
-            return "applied_old"
-    shadow_root: WebElement = driver.execute_script(
-        "return arguments[0].shadowRoot", driver.find_element(By.CSS_SELECTOR, 'div[data-testid="interop-shadowdom"]')
-    )
-    time.sleep(3)
-    try:
-        shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
+def linkedin_attempt_application(listing: Listing, user: User) -> str:
+    with driver_pool.provide() as slot:
+        if not slot.linkedin_loggedin:
+            linkedin_login(user, slot)
+
+        driver = slot.driver
+        driver.get(LinkedIn.build_listing_link(listing))
+        time.sleep(3)
         try:
-            while True:
-                shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
-                try:
-                    WebDriverWait(shadow_root, 1).until(
-                        ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]'))
-                    )
-                    return "pending"
-                except TimeoutException:
-                    pass
+            driver.find_element(By.CSS_SELECTOR, 'a[aria-label="LinkedIn Apply to this job"]').click()
+        except NoSuchElementException:
+            soup = BeautifulSoup(driver.page_source, features="html.parser")
+            index = soup.text.index("Application submitted")
+            submission_text = soup.text[index - 18 : index + 21]
+            if submission_text == "Application statusApplication submitted":
+                return "applied_old"
+        shadow_root: WebElement = driver.execute_script(
+            "return arguments[0].shadowRoot",
+            driver.find_element(By.CSS_SELECTOR, 'div[data-testid="interop-shadowdom"]'),
+        )
+        time.sleep(3)
+        try:
+            shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
+            try:
+                while True:
+                    shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
+                    try:
+                        WebDriverWait(shadow_root, 1).until(
+                            ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]'))
+                        )
+                        return "pending"
+                    except TimeoutException:
+                        pass
+            except NoSuchElementException:
+                pass
+            shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Review your application"]').click()
+            try:
+                WebDriverWait(shadow_root, 1).until(
+                    ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]'))
+                )
+                return "pending"
+            except TimeoutException:
+                pass
         except NoSuchElementException:
             pass
-        shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Review your application"]').click()
         try:
-            WebDriverWait(shadow_root, 1).until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]')))
-            return "pending"
-        except TimeoutException:
+            shadow_root.find_element(By.CSS_SELECTOR, 'label[for="follow-company-checkbox"]').click()
+        except NoSuchElementException:
             pass
-    except NoSuchElementException:
-        pass
-    try:
-        shadow_root.find_element(By.CSS_SELECTOR, 'label[for="follow-company-checkbox"]').click()
-    except NoSuchElementException:
-        pass
-    shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Submit application"]').click()
-    time.sleep(3)
+        shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Submit application"]').click()
+        time.sleep(3)
     return "applied"
 
 

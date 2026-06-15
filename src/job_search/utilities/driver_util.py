@@ -1,8 +1,11 @@
+import atexit
 import email
 import imaplib
 import re
 import time
+from contextlib import contextmanager
 from email.header import decode_header
+from queue import Queue
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -20,53 +23,22 @@ from job_search.utilities.logger import logger
 load_dotenv()
 
 
-def new_driver(headless=True) -> webdriver.Chrome:
-    """
-    Creates a new Chrome driver instance with the selenium_stealth additions
-
-    headless -- Sets the headless options for the driver (default True)
-    """
-    options = Options()
-    if headless:
-        options.add_argument("--headless")
-
-    # Flag needed to run in Docker
-    options.add_argument("--no-sandbox")
-
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    driver = webdriver.Chrome(options=options)
-
-    # noinspection PyTypeChecker
-    stealth(
-        driver,
-        languages=["en-US", "en"],
-        vendor="Google Inc.",
-        platform="Win32",
-        webgl_vendor="Intel Inc.",
-        renderer="Intel Iris OpenGL Engine",
-        fix_hairline=True,
-    )
-
-    driver.implicitly_wait(5)
-    return driver
-
-
 def get_page_soup(link: str) -> BeautifulSoup:
     """
     Returns a BeautifulSoup object for the given URL
 
     link -- The URL to get the page from
     """
-    driver = new_driver()
-    driver.get(link)
-    content = driver.page_source
-    soup = BeautifulSoup(content, features="html.parser")
-    driver.close()
+    with driver_pool.provide() as slot:
+        driver = slot.driver
+        driver.get(link)
+        content = driver.page_source
+        soup = BeautifulSoup(content, features="html.parser")
     return soup
 
 
-def seek_login(user: User, driver: WebDriver):
+def seek_login(user: User, slot: DriverSlot):
+    driver = slot.driver
     driver.get("https://www.seek.com")
     register_text = driver.find_element(By.CSS_SELECTOR, 'span[data-automation="register-link"]')
     register_text.find_element(By.CSS_SELECTOR, "a").click()
@@ -92,6 +64,7 @@ def seek_login(user: User, driver: WebDriver):
             else:
                 time.sleep(5)
     except NoSuchElementException:
+        slot.seek_loggedin = True
         logger.debug("Successfully logged in")
 
 
@@ -130,32 +103,86 @@ def get_seek_code(email_address: str, password: str) -> str:
     return auth_code
 
 
-def linkedin_login(user: User, driver: WebDriver) -> WebDriver | None:
-    driver.get("https://au.linkedin.com/jobs")
-    cont = True
-    username_element = None
-    while cont:
+def linkedin_login(user: User, slot: DriverSlot):
+    while not slot.linkedin_loggedin:
+        driver = slot.driver
+        driver.get("https://au.linkedin.com/jobs")
+        username_element = driver.find_element(By.CSS_SELECTOR, 'input[id="session_key"]')
+        if username_element is None:
+            slot.replace()
+            continue
+
+        username_element.send_keys(user.email)
+        driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(user.linkedin_password)
+        driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+        time.sleep(1)
+
         try:
-            username_element = driver.find_element(By.CSS_SELECTOR, 'input[id="session_key"]')
-            cont = False
+            if driver.find_element(By.TAG_NAME, "h1").text == "Let’s do a quick security check":
+                slot.replace()
         except NoSuchElementException:
-            driver.quit()
-            time.sleep(1)
-            driver = new_driver()
-            driver.get("https://www.linkedin.com/login")
-    if username_element is None:
-        logger.error("Login failed, cannot find username field")
-        raise NoSuchElementException("Login failed, cannot find username field")
-    username_element.send_keys(user.email)
-    driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(user.linkedin_password)
-    driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
-    time.sleep(1)
+            slot.linkedin_loggedin = True
 
-    try:
-        if driver.find_element(By.TAG_NAME, "h1").text == "Let’s do a quick security check":
-            driver.quit()
-            return None
-    except NoSuchElementException:
-        pass
 
-    return driver
+class DriverSlot:
+    driver: WebDriver
+    seek_loggedin: bool
+    linkedin_loggedin: bool
+
+    def __init__(self):
+        self.new_driver()
+        self.seek_loggedin = False
+        self.linkedin_loggedin = False
+
+    def replace(self):
+        self.driver.quit()
+        self.seek_loggedin = False
+        self.linkedin_loggedin = False
+        self.new_driver()
+
+    def new_driver(self):
+        options = Options()
+        options.add_argument("--headless")
+
+        # Flag needed to run in Docker
+        options.add_argument("--no-sandbox")
+
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+        self.driver = webdriver.Chrome(options=options)
+
+        # noinspection PyTypeChecker
+        stealth(
+            self.driver,
+            languages=["en-US", "en"],
+            vendor="Google Inc.",
+            platform="Win32",
+            webgl_vendor="Intel Inc.",
+            renderer="Intel Iris OpenGL Engine",
+            fix_hairline=True,
+        )
+
+        self.driver.implicitly_wait(5)
+
+
+class DriverPool:
+    pool: Queue[DriverSlot] = Queue()
+
+    def __init__(self):
+        self.pool.put(DriverSlot())
+
+    @contextmanager
+    def provide(self):
+        driver = self.pool.get()
+        try:
+            yield driver
+        finally:
+            self.pool.put(driver)
+
+    def quit_all(self):
+        while not self.pool.empty():
+            self.pool.get().driver.quit()
+
+
+driver_pool = DriverPool()
+atexit.register(lambda: driver_pool.quit_all())
