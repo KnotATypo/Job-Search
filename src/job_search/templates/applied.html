@@ -3,31 +3,35 @@
 {% block content %}
     <div class="card">
         <h2 class="card-title">Applied Jobs</h2>
-        {% if jobs %}
-            <ul class="applied-jobs-list">
-                {% for job, sites in jobs %}
-                    <li class="applied-job-item">
-                        <div class="list-job-title">{{ job.title }}</div>
-                        <div class="list-job-company">{{ job.company }}</div>
-                        <div class="applied-job-actions">
-                            <div class="applied-listing-buttons">
-                                {% for site_name, site_url in sites %}
-                                    <a href="{{ site_url }}" target="_blank" class="btn btn-primary">
-                                        {{ site_name }}
-                                    </a>
-                                {% endfor %}
+        {% if grouped_jobs %}
+            {% for label, items in grouped_jobs %}
+                <h3 class="applied-group-label">{{ label }}</h3>
+                <ul class="applied-jobs-list">
+                    {% for job, sites, timestamp in items %}
+                        <li class="applied-job-item">
+                            <div class="list-job-title">{{ job.title }}</div>
+                            <div class="list-job-company">{{ job.company }}</div>
+                            <div class="applied-job-actions">
+                                <div class="applied-listing-buttons">
+                                    {% for site_name, site_url in sites %}
+                                        <a href="{{ site_url }}" target="_blank" class="btn btn-primary">
+                                            {{ site_name }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                                <form method="POST" action="{{ url_for('update_status') }}"
+                                      class="applied-complete-form">
+                                    <input type="hidden" name="job_id" value="{{ job.id }}">
+                                    <input type="hidden" name="redirect_page" value="applied">
+                                    <button type="submit" name="status" value="COMPLETE" class="btn btn-danger btn-sm">
+                                        Hide/Complete
+                                    </button>
+                                </form>
                             </div>
-                            <form method="POST" action="{{ url_for('update_status') }}" class="applied-complete-form">
-                                <input type="hidden" name="job_id" value="{{ job.id }}">
-                                <input type="hidden" name="redirect_page" value="applied">
-                                <button type="submit" name="status" value="COMPLETE" class="btn btn-danger btn-sm">
-                                    Hide/Complete
-                                </button>
-                            </form>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
         {% else %}
             <p>No jobs with 'Applied' status found.</p>
         {% endif %}

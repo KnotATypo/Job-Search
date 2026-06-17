@@ -70,6 +70,15 @@ class JobStatus(BaseModel):
         primary_key = CompositeKey("user", "job")
 
 
+class JobTimestamp(BaseModel):
+    """
+    Interface for the "jobtimestamp" view which allows easier quering of job timestamps.
+    """
+
+    job = ForeignKeyField(Job, primary_key=True)
+    timestamp = DateTimeField()
+
+
 class Site(BaseModel):
     id = TextField(primary_key=True)
     name = TextField()

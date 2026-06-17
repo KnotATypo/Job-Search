@@ -4,7 +4,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 
-from job_search.model import Job, BlacklistTerm, User, Listing
+from job_search.model import Job, BlacklistTerm, User, Listing, JobTimestamp
 from job_search.storage import S3Storage, FileStorage, Storage
 from job_search.utilities.logger import logger
 
@@ -53,9 +53,8 @@ def get_or_create_job(title: str, company: str) -> Job:
 
     if (job_fuzzy := _get_fuzzy_job(title, company)) in existing_jobs:
         db_job = Job.get_by_id(existing_jobs[job_fuzzy])
-        max_timestamp = max(x.timestamp for x in db_job.listing_set)
         # Checks if the most recent associate timestamp is less than 14 days ago
-        if abs((max_timestamp - datetime.now()).days) <= 14:
+        if abs((JobTimestamp.get(job=db_job).timestamp - datetime.now()).days) <= 14:
             return db_job
     job = Job.create(title=title, company=company)
     logger.debug(f"Added new job {job.id}")

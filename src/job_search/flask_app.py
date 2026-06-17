@@ -23,6 +23,7 @@ from job_search.model import (
     JobStatus,
     db,
     Status,
+    JobTimestamp,
 )
 from job_search.search import search
 from job_search.utilities.auto_apply import run_applier, notify_user
@@ -381,7 +382,6 @@ def applied():
                 & ((Job.title.ilike("%" + term + "%")) | (Job.company.ilike("%" + term + "%")))
             )
         )
-
     else:
         jobs = (
             Job.select()
@@ -389,11 +389,42 @@ def applied():
             .where((JobStatus.status == Status.APPLIED), (JobStatus.user == session["user_id"]))
         )
 
-    jobs_with_sites = []
+    entries: list[tuple[Job, list[tuple[str, str]], datetime.datetime]] = []
     for job in jobs:
-        jobs_with_sites.append((job, get_site_links(job)[1]))
+        sites = get_site_links(job)[1]
+        ts = JobTimestamp.get_or_none(job=job).timestamp
+        entries.append((job, sites, ts))
+    entries.sort(key=lambda e: e[2], reverse=True)
 
-    return render_template("applied.html", jobs=jobs_with_sites)
+    # Group entries into human-readable relative date buckets
+    def _label_for_days(days: int) -> str:
+        if days == 0:
+            return "Today"
+        if days == 1:
+            return "Yesterday"
+        if days < 7:
+            return f"{days} days ago"
+        if days < 14:
+            return "A week ago"
+        if days < 30:
+            weeks = days // 7
+            return f"{weeks} weeks ago"
+        if days < 90:
+            months = days // 30
+            return f"{months} months ago"
+        return "Older"
+
+    grouped_jobs: list[tuple[str, list[tuple[Job, list[tuple[str, str]], datetime.datetime]]]] = []
+    seen = {}
+    now = datetime.datetime.now()
+    for job, sites, ts in entries:
+        label = _label_for_days((now.date() - ts.date()).days)
+        if label not in seen:
+            seen[label] = []
+            grouped_jobs.append((label, seen[label]))
+        seen[label].append((job, sites, ts))
+
+    return render_template("applied.html", grouped_jobs=grouped_jobs)
 
 
 @app.route("/auto_applier_setup", methods=["POST"])
