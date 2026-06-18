@@ -20,7 +20,6 @@ import requests
 from bs4 import BeautifulSoup
 from selenium.common import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -206,50 +205,38 @@ def linkedin_attempt_application(listing: Listing, user: User) -> str:
             linkedin_login(user, slot)
 
         driver = slot.driver
-        driver.get(LinkedIn.build_listing_link(listing))
-        time.sleep(3)
+        driver.get(LinkedIn.build_listing_link(listing) + "apply/")
+        time.sleep(2)
+
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        if "The job you were looking for was not found. Redirecting you to the home page" in soup.text:
+            # Occasionally the page doesn't load properly, and it tries to redirect us to the home page
+            return "pending"
+
+        if element_present(driver, 'div[class="post-apply-timeline"]'):
+            return "applied_old"
+
         try:
-            driver.find_element(By.CSS_SELECTOR, 'a[aria-label="LinkedIn Apply to this job"]').click()
+            while True:
+                driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
+                if element_present(driver, 'li-icon[type="error-pebble-icon"]'):
+                    return "pending"
         except NoSuchElementException:
-            soup = BeautifulSoup(driver.page_source, features="html.parser")
-            index = soup.text.index("Application submitted")
-            submission_text = soup.text[index - 18 : index + 21]
-            if submission_text == "Application statusApplication submitted":
-                return "applied_old"
-        shadow_root: WebElement = driver.execute_script(
-            "return arguments[0].shadowRoot",
-            driver.find_element(By.CSS_SELECTOR, 'div[data-testid="interop-shadowdom"]'),
-        )
-        time.sleep(3)
+            pass
+
         try:
-            shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
-            try:
-                while True:
-                    shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Continue to next step"]').click()
-                    try:
-                        WebDriverWait(shadow_root, 1).until(
-                            ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]'))
-                        )
-                        return "pending"
-                    except TimeoutException:
-                        pass
-            except NoSuchElementException:
-                pass
-            shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Review your application"]').click()
-            try:
-                WebDriverWait(shadow_root, 1).until(
-                    ec.presence_of_element_located((By.CSS_SELECTOR, 'div[role="alert"]'))
-                )
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Review your application"]').click()
+            if element_present(driver, 'li-icon[type="error-pebble-icon"]'):
                 return "pending"
-            except TimeoutException:
-                pass
         except NoSuchElementException:
             pass
+
         try:
-            shadow_root.find_element(By.CSS_SELECTOR, 'label[for="follow-company-checkbox"]').click()
+            driver.find_element(By.CSS_SELECTOR, 'label[for="follow-company-checkbox"]').click()
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Submit application"]').click()
         except NoSuchElementException:
-            pass
-        shadow_root.find_element(By.CSS_SELECTOR, 'button[aria-label="Submit application"]').click()
+            return "pending"
+
         time.sleep(3)
     return "applied"
 
@@ -287,6 +274,14 @@ def get_listings(user: User) -> set[Listing]:
     logger.info(f"{len(listings)} listings passed blacklist")
 
     return listings
+
+
+def element_present(driver, selector: str) -> bool:
+    try:
+        WebDriverWait(driver, 1).until(ec.presence_of_element_located((By.CSS_SELECTOR, selector)))
+        return True
+    except TimeoutException:
+        return False
 
 
 if __name__ == "__main__":
