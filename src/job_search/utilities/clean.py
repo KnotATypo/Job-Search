@@ -65,12 +65,11 @@ def check_expired():
         if not slot.linkedin_loggedin:
             linkedin_login(User.get_by_id(1), slot)
 
-        site_lookup = {l: BaseSite.get_site_instance(l.site.name) for l in listings}
-
         driver = slot.driver
         driver.implicitly_wait(1)
+        counter = 0
         for listing in tqdm(listings, desc="Checking expired listings", unit="listing", disable=not progress_bars):
-            site: BaseSite = site_lookup[listing]
+            site: BaseSite = BaseSite.get_site_instance(listing.site.name)
             driver.get(site.build_listing_link(listing))
             try:
                 if listing.site.id == "seek":
@@ -85,10 +84,13 @@ def check_expired():
                     WebDriverWait(driver, 1).until(
                         ec.presence_of_element_located((By.CSS_SELECTOR, 'svg[id="signal-error-small"]'))
                     )
+                counter += 1
                 logger.debug(f"Listing {listing.id} is expired")
-                JobStatus.update(status=Status.EXPIRED).where(JobStatus.job == listing.job)
+                JobStatus.update(status=Status.EXPIRED).where(JobStatus.job == listing.job).execute()
             except TimeoutException:
                 pass
+
+        logger.info(f"Expired listings: {counter}")
 
 
 def missing_descriptions():
