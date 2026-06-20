@@ -73,9 +73,10 @@ def check_expired():
             driver.get(site.build_listing_link(listing))
             try:
                 if listing.site.id == "seek":
-                    WebDriverWait(driver, 1).until(
-                        ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation="expiredJobPage"]'))
-                    )
+                    if "404 Page Not Found" not in driver.title:
+                        WebDriverWait(driver, 1).until(
+                            ec.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation="expiredJobPage"]'))
+                        )
                 elif listing.site.id == "jora":
                     WebDriverWait(driver, 1).until(
                         ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="flash-container error"]'))
