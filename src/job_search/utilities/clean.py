@@ -57,13 +57,16 @@ def check_expired():
         Listing.select(Listing, Job, JobStatus)
         .join(Job)
         .join(JobStatus)
-        .where(JobStatus.status << [Status.NEW, Status.INTERESTED, Status.LIKED, Status.AUTO_NEW])
+        .where(
+            JobStatus.status << [Status.NEW, Status.INTERESTED, Status.LIKED, Status.AUTO_NEW],
+            Listing.site != "linkedin",
+        )
         .order_by(Listing.timestamp.asc())
     )
 
     with driver_pool.provide() as slot:
-        if not slot.linkedin_loggedin:
-            linkedin_login(User.get_by_id(1), slot)
+        # if not slot.linkedin_loggedin:
+        #     linkedin_login(User.get_by_id(1), slot)
 
         driver = slot.driver
         driver.implicitly_wait(1)
@@ -81,10 +84,10 @@ def check_expired():
                     WebDriverWait(driver, 1).until(
                         ec.presence_of_element_located((By.CSS_SELECTOR, 'div[class="flash-container error"]'))
                     )
-                elif listing.site.id == "linkedin":
-                    WebDriverWait(driver, 1).until(
-                        ec.presence_of_element_located((By.CSS_SELECTOR, 'svg[id="signal-error-small"]'))
-                    )
+                #                 elif listing.site.id == "linkedin":
+                #                     WebDriverWait(driver, 1).until(
+                #                         ec.presence_of_element_located((By.CSS_SELECTOR, 'svg[id="signal-error-small"]'))
+                #                     )
                 counter += 1
                 logger.debug(f"Listing {listing.id} is expired")
                 JobStatus.update(status=Status.EXPIRED).where(JobStatus.job == listing.job).execute()
